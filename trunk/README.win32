@@ -1,0 +1,195 @@
+Introduction
+============
+The win32 port of sg3_utils contains those utilities that are _not_ specific
+to Linux. One utility for listing available devices, sg_scan, has a
+Windows-specific version for this port.
+
+The dd variants from the sg3_utils package (e.g. sg_dd) rely on too many
+Linux idiosyncracies to be easily ported. A new package called 'ddpt'
+contains a utility with similar functionality to sg_dd and is available
+for Windows.
+
+Two build environments are caterered for: cygwin (see www.cygwin.com) and
+MinGW ("Minimalist GNU for Windows", see www.mingw.org). Both are based in
+the gcc compiler (although other C compilers should have little problem with
+the source code). Cygwin is a more sophisticated, commercial product that
+results in executables that depend on cygwin1.dll . No licensing is required
+since sg3_utils is open source (with either BSD or GPL licenses) but users
+will need to fetch that dll. On the other hand MinGW (and its companion MSYS
+shell) builds freestanding console executables. The Unix library support is
+not as advanced with MinGW which has led to some timing functions being
+compiled out when sg3_utils is built for MinGW.
+
+Supported Utilities
+===================
+Here is a list of utilities that have been ported:
+    sg_format
+    sg_get_config
+    sg_get_lba_status
+    sg_ident
+    sg_inq          [dropped ATA IDENTIFY DEVICE capability]
+    sg_logs
+    sg_luns
+    sg_modes
+    sg_persist
+    sg_opcodes
+    sg_prevent
+    sg_raw
+    sg_rdac
+    sg_read_block_limits
+    sg_read_buffer
+    sg_read_long
+    sg_readcap
+    sg_reassign
+    sg_requests
+    sg_rmsn
+    sg_rtpg
+    sg_safte
+    sg_sat_identify
+    sg_sat_phy_event
+    sg_sat_set_features
+    sg_scan         [this is Windows specific]
+    sg_senddiag
+    sg_ses
+    sg_start
+    sg_stpg
+    sg_sync
+    sg_turs
+    sg_unmap
+    sg_verify
+    sg_vpd
+    sg_wr_mode
+    sg_write_buffer
+    sg_write_long
+    sg_write_same
+
+Most utility names are indicative of the main SCSI command that they execute.
+Some utilities are slightly higher level, for example sg_ses fetches SCSI
+Enclosure Services (SES) status pages and can send control pages. Each
+utility has a man page (placed in section 8). There is summary of the mapping
+between utility names and the SCSI commands they execute in the COVERAGE
+file. An overview of sg3_utils can be found at:
+http://sg.danny.cz/sg/sg3_utils.html .
+A copy of the "sg3_utils.html" file is in the "doc" subdirectory.
+
+
+See the INSTALL file (towards the end) for instructions on how to build
+sg3_utils on Windows operating systems. Some man pages have examples which
+use linux device names which hopefully will not confuse Windows users.
+
+Two pass-through variants
+=========================
+The sg_pt_win32.c file uses the Windows SCSI Pass Through interface.
+That is often shortened to SPT or SPTI. There are two DeviceIoControl()
+ioctl variants provided: IOCTL_SCSI_PASS_THROUGH and
+IOCTL_SCSI_PASS_THROUGH_DIRECT. The former involves double handling of
+data (and perhaps an upper limit on the data length associated with
+one SCSI command; MS documentation mentions 16 KB). The "direct"
+variant passes a pointer from the user space and to be faster looks
+and more versatile.
+
+However the "direct" variant has potentially (unquantified) alignment
+requirements and may not be (well) implemented by the hardware driver.
+In practice some users have reported errors (e.g. 1117: a non-descript
+IO error) when the direct variant is used.
+
+Hence the non-direct variant is the default. The default size limit
+on the data buffer is set at 16 KB but if the user asks for more
+the data buffer will be extended. The OS or the hardware drivers
+may reject the extended data buffer but we tried.
+
+The package can be built using the direct variant with:
+   ./configure --enable-win32-spt-direct
+rather than:
+   ./configure
+prior to the 'make' call.
+
+Details
+=======
+The ported utilities listed above, all use SCSI command functions declared in
+sg_cmds_basic.h and sg_cmds_extra.h . Those SCSI command functions are
+implemented in the corresponding ".c" files. The ".c" files pass SCSI commands
+to the host operating system via an interface declared in sg_pt.h . There are
+currently four implementations of that interface depending on the host
+operating system:
+  - sg_pt_linux.c
+  - sg_pt_freebsd.c
+  - sg_pt_osf1.c  [Tru64]
+  - sg_pt_win32.c
+
+The ASPI32 interface which requires a dll from Adaptec ia not supported.
+
+The sg_scan utility is a special version for Windows and it attempts to show
+the various available storage device names, one per line. Here is an example
+of sg_scan's output:
+
+# sg_scan
+PD0     [C]     FUJITSU   MHY2160BH         0000
+PD1     [DF]    WD        2500BEV External  1.05  WD-WXE90
+CDROM0  [E]     MATSHITA DVD/CDRW UJDA775  CB03
+
+Here is an example with added bus type:
+
+# sg_scan -b
+PD0     [C]     <Ata  >  FUJITSU   MHY2160BH         0000
+PD1     [DF]    <Usb  >  WD        2500BEV External  1.05  WD-WXE90
+CDROM0  [E]     <Atapi>  MATSHITA DVD/CDRW UJDA775  CB03
+
+Here is an example with added SCSI adapter scan:
+
+# sg_scan -b -s
+PD0     [C]     <Ata  >  ST380011A  8.01
+PD1             <Scsi >  SEAGATE   ST373455SS        2189
+PD2             <Scsi >  ATA       ST3160812AS       D
+PD3             <Scsi >  SEAGATE   ST336754SS        0003
+CDROM0  [F]     <Atapi>  HL-DT-ST DVDRAM GSA-4163B  A103
+TAPE0           <Scsi >  SONY      SDT-7000          0192
+
+SCSI0:0,0,0   claimed=1 pdt=0h dubious  ST380011  A                 8.01
+SCSI1:0,0,0   claimed=1 pdt=5h          HL-DT-ST  DVDRAM GSA-4163B  A103
+SCSI2:0,6,0   claimed=1 pdt=1h          SONY      SDT-7000          0192
+SCSI5:0,17,0  claimed=1 pdt=0h          SEAGATE   ST373455SS        2189
+SCSI5:0,19,0  claimed=1 pdt=0h          ATA       ST3160812AS       D
+SCSI5:0,21,0  claimed=1 pdt=0h          SEAGATE   ST336754SS        0003
+SCSI5:0,112,0 claimed=0 pdt=10h         LSI       PSEUDO DEVICE     2.34
+
+The storage devices scanned are PhysicalDrive<n> (shorted form PD<n> used),
+CDROM<n> (which includes DVD and BD drives) and TAPE<n>. There is also an
+optional SCSI adapter scan with device names of the form SCSI<n>:<b>:<t>:<l> .
+These only come into play for devices that are not claimed by one of the
+storage class drivers. The "LSI PSEUDO DEVICE" device above is an example
+of an unclaimed device. The SCSI adapter scan does not show USB and IEEE
+1394 connected devices.
+
+Volume names (e.g. "C:") that match a storage device (or perhaps a
+partition within that device) are shown in brackets. Notice there can be
+zero, one or more volume names for each storage device. Up to four volume
+names are listed in brackets, if there are more a "+" is added after the
+fourth.
+
+Several utilities have conditional compilation sections based on
+the SG_LIB_MINGW define. For those who want to try native C compilers
+on Windows setting the SG_LIB_MINGW define may help.
+
+Build environments
+==================
+This package has various Makefiles so that these utilities can be built
+in either a cygwin and MinGW environment, called Makefile.win32 and
+Makefile.mingw respectively. The executables produced are console
+applications that can be executed in either a cygwin, MSYS or "cmd" shell.
+See the INSTALL file for more details.
+
+Binary and Text files
+=====================
+A problem has been reported with binary output being written in a MinGW
+environment (or executables build by MinGW). Windows has a concept of text
+and binary files which is not found in Unix. Recent versions of MinGW
+default to opening files in text mode. This can lead to binary output
+(such as when the '--raw' option is given) having 0xa (i.e. LF) translated
+to 0xd,0xa (i.e. CR,LF). sg3_utils version 1.26 attempts to fix this
+problem by changing what it knows to be binary output files to "binary
+mode" with the setmode() Windows command.
+
+
+Doug Gilbert
+20th September 2009

@@ -1,0 +1,31 @@
+# This file is an example for the sg_persist utility.
+# It discusses using "TransportID"s which are defined (most recently)
+# in SPC-4 revison 20 section 7.5.4 titled: "TransportID identifiers".
+#
+# The sg_persist utility can take one or more "transportID"s from stdin when
+# either the '--transport-id=-" or "-X -" option is given on the command
+# line.
+
+# To see transport IDs decoded after they have been read in (e.g. to check
+# they are well formed) use the verbose flag 3 times (i.e. "... -vvv ...").
+
+# Here is a simple example (for SPI) of a comma separted hex list:
+1,0,0,7,0,0,0,1         # SPI, initiator address=7, relative_port_num=1
+
+# and here is the transport specific format for the same thing:
+# spi,1,7
+
+# An example for SAS follows, first as a hex string, then in transport
+# specific format (incremented by 1)
+6,0,0,0,50,6,5,b0,0,6,f2,60
+sas,500605b00006f261
+
+# For iSCSI the hex list form is awkward, better to use the transport
+# specific format. [The leading spaces are ignored.]
+    iqn.5886.com.acme.diskarrays-sn-a8675309
+
+
+        # Leading spaces and tabs before a '#' are ok.
+             
+
+# dpg 20090824

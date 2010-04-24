@@ -1,0 +1,31 @@
+Various html files used to be included in this directory but they were
+beginning to bloat the size of the source tarball so they have been
+removed in version 1.24 .
+
+Here are the urls of the files that were previously here plus a brief
+summary:
+
+http://sg.danny.cz/sg/sg3_utils.html
+    - overview and examples of this package
+
+http://sg.danny.cz/sg/sg_dd.html
+    - discussion and examples of the sg_dd utility which is a dd variant
+      (also discusses the sgm_dd, sgp_dd and sg_read utilities)
+
+http://sg.danny.cz/sg/sg_io.html
+    - discussion of Linux SG_IO ioctl (SCSI pass-through)
+
+http://sg.danny.cz/sg/tools.html
+    - overview of around 25 storage and SCSI tools
+
+
+There are two versions of sg_scan: one for Linux and the other for Windows.
+They have different man pages: sg_scan.8.linux and sg_scan.8.win32 with
+the Makefile logic (rule in Makefile.am) copying the appropriate one to
+sg_scan.8 . sg_scan is not supported for other ports.
+
+In FreeBSD use 'camcontrol devlist' to list SCSI related devices.
+
+
+Doug Gilbert
+1st October 2009
