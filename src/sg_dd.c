@@ -2681,7 +2681,7 @@ bypass_copy:
         free(wrkBuff);
     if (free_zeros_buff)
         free(free_zeros_buff);
-    if (STDIN_FILENO != infd)
+    if (STDIN_FILENO != infd && infd >= 0)
         close(infd);
     if (! ((STDOUT_FILENO == outfd) || (FT_DEV_NULL & out_type)))
         close(outfd);
