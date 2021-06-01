@@ -2657,7 +2657,7 @@ decode_format_presets_vpd(uint8_t * buff, int len, bool do_hex)
     uint8_t * bp;
 
     if (do_hex) {
-        hex2stdout(buff, len, (1 == do_hex) ? 0 : -1);
+        hex2stdout(buff, len, 0);
         return;
     }
     if (len < 4) {
@@ -2706,7 +2706,7 @@ decode_con_pos_range_vpd(uint8_t * buff, int len, bool do_hex)
     uint8_t * bp;
 
     if (do_hex) {
-        hex2stdout(buff, len, (1 == do_hex) ? 0 : -1);
+        hex2stdout(buff, len, 0);
         return;
     }
     if (len < 64) {
