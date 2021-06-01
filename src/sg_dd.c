@@ -2479,7 +2479,7 @@ main(int argc, char * argv[])
             } else if (FT_DEV_NULL & out_type)
                 ;
             else {
-                off64_t offset = blocks * blk_sz;
+                off64_t offset = (off64_t)blocks * blk_sz;
                 off64_t off_res;
 
                 if (verbose > 2)
