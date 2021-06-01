@@ -622,7 +622,7 @@ sg_ll_test_unit_ready_com(struct sg_pt_base * ptvp, int sg_fd, int pack_id,
     bool local_cdb = true;
     int res, ret, sense_cat;
     uint8_t tur_cdb[TUR_CMDLEN] = {TUR_CMD, 0, 0, 0, 0, 0};
-    uint8_t sense_b[SENSE_BUFF_LEN];
+    uint8_t sense_b[SENSE_BUFF_LEN] = {0};
 
     if (verbose) {
         char b[128];
