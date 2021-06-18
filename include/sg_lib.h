@@ -505,6 +505,10 @@ bool sg_exit2str(int exit_status, bool longer, int b_len, char * b);
                                     *       [sk,asc,ascq: 0xa,*,*] */
 #define SG_LIB_CAT_ABORTED_COMMAND 11 /* interpreted from sense buffer
                                        *       [sk,asc,ascq: 0xb,! 0x10,*] */
+#define SG_LIB_CAT_STANDBY 12 /* interpreted from sense buffer
+                               *      [sk,asc, ascq: 0x2, 0x4, 0xb] */
+#define SG_LIB_CAT_UNAVAILABLE 13 /* interpreted from sense buffer
+                                   *      [sk,asc, ascq: 0x2, 0x4, 0xc] */
 #define SG_LIB_CAT_MISCOMPARE 14 /* sense key, probably verify
                                   *       [sk,asc,ascq: 0xe,*,*] */
 #define SG_LIB_FILE_ERROR 15    /* device or other file problem */
