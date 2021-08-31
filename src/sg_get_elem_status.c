@@ -295,7 +295,7 @@ main(int argc, char * argv[])
             }
             if (0 == maxlen)
                 maxlen = DEF_GPES_BUFF_LEN;
-            else if (n < MIN_MAXLEN) {
+            else if (maxlen < MIN_MAXLEN) {
                 pr2serr("Warning: --maxlen=LEN less than %d ignored\n",
                         MIN_MAXLEN);
                 maxlen = DEF_GPES_BUFF_LEN;
