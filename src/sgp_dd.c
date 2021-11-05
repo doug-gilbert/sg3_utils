@@ -60,7 +60,7 @@
 #include <linux/fs.h>           /* for BLKSSZGET and friends */
 
 #ifdef __STDC_VERSION__
-#if __STDC_VERSION__ >= 201112L
+#if __STDC_VERSION__ >= 201112L && defined(HAVE_STDATOMIC_H)
 #ifndef __STDC_NO_ATOMICS__
 
 #define HAVE_C11_ATOMICS
