@@ -2399,7 +2399,7 @@ main(int argc, char * argv[])
             res = blocks * blk_sz;
             if (iflag.zero && iflag.ff && (blk_sz >= 4)) {
                 uint32_t pos = (uint32_t)skip;
-                uint off;
+                uint32_t off;
 
                 for (k = 0, off = 0; k < blocks; ++k, off += blk_sz, ++pos) {
                     for (j = 0; j < (blk_sz - 3); j += 4)
