@@ -1384,15 +1384,15 @@ fi
 
 echo "$found new or changed device(s) found.          "
 if [ ! -z "$FOUNDDEVS" ] ; then
-  printf "%s" "$FOUNDDEVS"
+  echo -e "$FOUNDDEVS"
 fi
 echo "$updated remapped or resized device(s) found."
 if [ ! -z "$CHGDEVS" ] ; then
-  printf "%s" "$CHGDEVS"
+  echo -e "$CHGDEVS"
 fi
 echo "$rmvd device(s) removed.                 "
 if [ ! -z "$RMVDDEVS" ] ; then
-  printf "%s" "$RMVDDEVS"
+  echo -e "$RMVDDEVS"
 fi
 
 # Local Variables:
