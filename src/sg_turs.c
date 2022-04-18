@@ -25,6 +25,7 @@
 #include <time.h>
 #include <errno.h>
 #include <getopt.h>
+#include <pthread.h> // nanosleep() for MinGW
 #define __STDC_FORMAT_MACROS 1
 #include <inttypes.h>
 
