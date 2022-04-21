@@ -25,7 +25,7 @@
  * assumes that cp[0] is the null character and does nothing (and returns
  * 0). Linux kernel has a similar function called  scnprintf().  */
 
-
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdbool.h>
 
