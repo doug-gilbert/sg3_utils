@@ -1161,6 +1161,7 @@ if [ "@$1" = @--help ] || [ "@$1" = @-h ] || [ "@$1" = "@-?" ] ; then
     echo "--update:        same as -u"
     echo "--version:       same as -V"
     echo "--wide:          same as -w"
+    echo "--no_lip_scan:   don't scan FC Host with issue_lip"
     echo ""
     echo "Host numbers may thus be specified either directly on cmd line (deprecated)"
     echo "or with the --hosts=LIST parameter (recommended)."
@@ -1221,6 +1222,7 @@ lipreset=-1
 timeout=30
 declare -i scan_flags=0
 ignore_rev=0
+no_lip_scan=0
 
 # Scan options
 opt="$1"
@@ -1266,6 +1268,7 @@ while [ ! -z "$opt" ] && [ -z "${opt##-*}" ] ; do
     -sync) sync=2 ;;
     -update) update=1;;
     -wide) opt_idsearch=$(seq -s ' ' 0 15) ;;
+    -no_lip_scan) no_lip_scan=1 ;;
     *) echo "Unknown option -$opt !" ;;
   esac
   shift
@@ -1334,7 +1337,7 @@ elif [ $resize -eq 1 ] ; then
 else
   for host in $hosts; do
   echo -n "Scanning host $host "
-  if [ -e "/sys/class/fc_host/host$host" ] ; then
+  if [ $no_lip_scan -eq 0 ] && [ -e "/sys/class/fc_host/host$host" ] ; then
     # It's pointless to do a target scan on FC
     issue_lip=/sys/class/fc_host/host$host/issue_lip
     if [ -e "$issue_lip" ] && [ "$lipreset" -ge 0 ] ; then
