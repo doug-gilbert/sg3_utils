@@ -94,6 +94,7 @@ main(int argc, char * argv[])
     int ret = 0;
     uint32_t max_block_size;
     uint16_t min_block_size;
+    uint8_t granularity;
     const char * device_name = NULL;
 
     while (1) {
@@ -192,6 +193,9 @@ main(int argc, char * argv[])
       }
 
       max_block_size = sg_get_unaligned_be32(readBlkLmtBuff + 0);
+      // first byte contains granularity field
+      granularity = (max_block_size >> 24) & 0x1F;
+      max_block_size = max_block_size & 0xFFFFFF;
       min_block_size = sg_get_unaligned_be16(readBlkLmtBuff + 4);
       k = min_block_size / 1024;
       pr2serr("Read Block Limits results:\n");
@@ -208,6 +212,9 @@ main(int argc, char * argv[])
         pr2serr(", %d KB", k);
       if (m != 0)
         pr2serr(", %d MB", m);
+      pr2serr("\n");
+      pr2serr("\tGranularity: %u",
+              (unsigned int)granularity);
       pr2serr("\n");
     } else {
         char b[80];
