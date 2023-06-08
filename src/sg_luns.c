@@ -935,7 +935,7 @@ main(int argc, char * argv[])
         jap = sgj_named_subarray_r(jsp, jo2p, "lun_list");
         luns = (list_len / 8);
         if (! op->do_quiet)
-            sgj_pr_hr(jsp, "Lun list length = %d which imples %d lun "
+            sgj_pr_hr(jsp, "Lun list length = %d which implies %d lun "
                       "entr%s\n", list_len, luns,
                       ((1 == luns) ? "y" : "ies"));
         if ((list_len + 8) > op->maxlen) {
