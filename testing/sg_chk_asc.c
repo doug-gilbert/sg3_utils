@@ -28,10 +28,11 @@
  * https://www.t10.org/lists/asc-num.txt
  */
 
-static const char * version_str = "1.10 20230513";
+static const char * version_str = "1.11 20230821";
 
 
 #define MAX_LINE_LEN 1024
+#define DEF_OFFSET 24
 
 
 static struct option long_options[] = {
@@ -65,7 +66,7 @@ int main(int argc, char * argv[])
     int k, j, res, c, num, len;
     unsigned int asc, ascq;
     FILE * fp;
-    int offset = 24;
+    int offset = DEF_OFFSET;
     int verbose = 0;
     char file_name[256];
     char line[MAX_LINE_LEN];
@@ -138,7 +139,7 @@ int main(int argc, char * argv[])
         len = strlen(line);
         if (len < 1)
             continue;
-        if (! isdigit(line[0]))
+        if (! isxdigit(line[0]))
             continue;
         num = sscanf(line, "%xh/%xh", &asc, &ascq);
         if (1 == num)
@@ -149,7 +150,7 @@ int main(int argc, char * argv[])
                         k + 1, num);
             continue;
         }
-        if (len < 26)
+        if (len < (DEF_OFFSET + 2))
             continue;
 #if 0
 strncpy(b , line, sizeof(b) - 1);

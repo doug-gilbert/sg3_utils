@@ -4,8 +4,8 @@ PREFIX=/usr/local
 INSTDIR=$(DESTDIR)/$(PREFIX)/bin
 MANDIR=$(DESTDIR)/$(PREFIX)/man
 
-EXECS = sg_sense_test sg_queue_tst bsg_queue_tst sg_chk_asc sg_tst_nvme \
-	sg_tst_ioctl sg_tst_bidi tst_sg_lib sgs_dd sg_tst_excl \
+EXECS = sg_sense_test sg_queue_tst bsg_queue_tst sg_chk_asc sg_chk_inq_vd \
+	sg_tst_nvme sg_tst_ioctl sg_tst_bidi tst_sg_lib sgs_dd sg_tst_excl \
 	sg_tst_excl2 sg_tst_excl3 sg_tst_context sg_tst_async sgh_dd \
 	sg_mrq_dd sg_iovec_tst sg_take_snap sg_tst_json_builder
 	
@@ -83,6 +83,10 @@ sg_tst_ioctl: sg_tst_ioctl.o $(LIBFILESOLD)
 
 # building sg_chk_asc depends on a prior successful make in ../lib
 sg_chk_asc: sg_chk_asc.o ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_pr2serr.o
+	$(LD) -o $@ $(LDFLAGS) $^
+
+# building sg_chk_asc depends on a prior successful make in ../lib and ../src/sg_inq_data.o
+sg_chk_inq_vd: sg_chk_inq_vd.o ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_pr2serr.o ../src/sg_inq_data.o
 	$(LD) -o $@ $(LDFLAGS) $^
 
 sg_tst_nvme: sg_tst_nvme.o $(LIBFILESNEW)
