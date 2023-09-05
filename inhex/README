@@ -2,18 +2,19 @@
         ========================================
 
 The files in this folder contain hexadecimal data (in ASCII) and associated
-comments (prefixed with the hash mark symbol: '#' ). Files containing
-hexadecimal data have the extension ".hex". There is at least one file
-containing binary data and it has the extension ".raw".
+comments. Comments start with the hash mark symbol: '#' and extend to the
+end of that line. Files containing hexadecimal data have the extension ".hex".
+There is at least one file containing binary data and it has the extension
+".raw".
 
 The utility that each hex file is associated with can be determined in most
-case by prepending "sg_" to these filenames. Then go to the 'src' folder (a
-sibling folder to this one) and look for a match or partial match on
-the name.
+cases by prepending "sg_" to those filenames. The beginning of such a
+filename should match an executable whose source should be found in the
+'src' sibling directory.
 
 For example:
     vpd_dev_id.hex
-after prepending 'sg_' becomes:
+after prepending 'sg_' the filename becomes:
     sg_vpd_dev_id.hex
 which is a partial match on the sg_vpd utility.
 The remaining 'dev_id.hex' is meant to suggest that the 'device identifier'
@@ -92,4 +93,4 @@ that support --inhex and don't have hex data already. Special cases are
 also welcome. They help the author test this code.
 
 Douglas Gilbert
-18th July 2022
+5th September 2023

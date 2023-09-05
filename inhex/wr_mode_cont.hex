@@ -1,0 +1,20 @@
+# Using Caching mode page [0x8] [SBC-4]
+#
+# want to change WCE from 1 to 0
+# Possible invocation:
+#   sg_wr_mode -p 8 --cfile=wr_mode_cont.hex --mfile=wr_mode_mask.hex /dev/sdc
+#
+# As shown, that invocaton will not save the change so the next power cycle
+# (or reset) will revert that change. Add the --save option to make the
+# change persist through a power cycle.
+#
+# Assume WCE is set like this:
+# 08 12 14 00 ff ff 00 00  ff ff ff ff 80 14 00 00
+# 00 00 00 00
+#
+# This is the new cotents we want (byte 2 changes from 14 to 10 (hex)):
+08 12 10 00 ff ff 00 00  ff ff ff ff 80 14 00 00
+00 00 00 00
+#
+# To change it back, swap which hex string above is commented, or power
+# cycle the disk.

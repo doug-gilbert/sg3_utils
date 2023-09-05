@@ -1,0 +1,11 @@
+#
+# sg_wr_mode utility hex data file
+# See wr_mode_cont.hex for more information
+#
+# With a 20 byte long Caching mode page, this mask may be shorter.
+# Missing 12 trailing bytes are equivalent to 16 zero bytes.
+#
+# Following is a mask for the WCE bit field:
+00 00 04 00
+
+# 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00

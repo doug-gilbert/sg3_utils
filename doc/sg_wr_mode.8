@@ -1,13 +1,13 @@
-.TH SG_WR_MODE "8" "June 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SG_WR_MODE "8" "September 2023" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_wr_mode \- write (modify) SCSI mode page
 .SH SYNOPSIS
 .B sg_wr_mode
 [\fI\-\-cfile=CF\fR] [\fI\-\-contents=H,H...\fR] [\fI\-\-dbd\fR]
 [\fI\-\-force\fR] [\fI\-\-help\fR] [\fI\-\-len=10|6\fR]
-[\fI\-\-mask=M,M...\fR] [\fI\-\-page=PG_H[,SPG_H]\fR] [\fI\-\-raw\fR]
-[\fI\-\-rtd\fR] [\fI\-\-save\fR] [\fI\-\-six\fR] [\fI\-\-verbose\fR]
-[\fI\-\-version\fR] \fIDEVICE\fR
+[\fI\-\-mask=M,M...\fR] [\fI\-\-mfile=MF\fR] [\fI\-\-page=PG_H[,SPG_H]\fR]
+[\fI\-\-raw\fR] [\fI\-\-rtd\fR] [\fI\-\-save\fR] [\fI\-\-six\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fIDEVICE\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 Writes a modified mode page to \fIDEVICE\fR. Uses the SCSI MODE SENSE (6
@@ -64,7 +64,7 @@ Arguments to long options are mandatory for short options as well.
 where \fICF\fR is a file name containing the mode page. See the "HEX,
 BINARY AND JSON FORMATS" section in the sg3_utils manpage for more
 information. If the \fI\-\-raw\fR option is also given then the contents of
-\fIFN\fR are treated as binary.
+\fICF\fR are treated as binary.
 .TP
 \fB\-c\fR, \fB\-\-contents\fR=\fIH,H...\fR
 where \fIH,H...\fR is a string of comma separated hex numbers each of
@@ -108,6 +108,12 @@ If the mask string is shorter than the contents string then the remaining
 bytes are taken from the contents string. If the contents string is shorter
 than the existing mode page then the remaining bytes are taken from the
 existing mode page (i.e. they are left unaltered).
+.TP
+\fB\-M\fR, \fB\-\-mfile\fR=\fIMF\fR
+where \fIMF\fR is a file name containing the mode page mask. See the "HEX,
+BINARY AND JSON FORMATS" section in the sg3_utils manpage for more
+information. If the \fI\-\-raw\fR option is also given then the contents of
+\fIMF\fR are treated as binary.
 .TP
 \fB\-p\fR, \fB\-\-page\fR=\fIPG_H\fR
 where \fIPG_H\fR is the page code value to fetch and modify. The page code
@@ -210,6 +216,10 @@ after the next power cycle. The output from sg_modes is abridged.
  $ sg_modes \-p 1a /dev/hdc
  >> Power condition (mmc), page_control: current
  00     1a 0a 00 03 00 00 00 37  00 00 01 2c
+.PP
+See inhex/wr_mode_cont.hex and wr_mode_mask.hex files in the source tarball
+for an example of using this utility with the \fI\-\-cfile=CF\fR and
+\fI\-\-mfile=MF\fR options.
 .SH EXIT STATUS
 The exit status of sg_wr_mode is 0 when it is successful. Otherwise see
 the sg3_utils(8) man page.

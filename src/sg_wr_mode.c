@@ -32,7 +32,7 @@
  * mode page on the given device.
  */
 
-static const char * version_str = "1.31 20230831";
+static const char * version_str = "1.32 20230901";
 
 #define ME "sg_wr_mode: "
 
@@ -50,6 +50,7 @@ static const struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"len", required_argument, 0, 'l'},
     {"mask", required_argument, 0, 'm'},
+    {"mfile", required_argument, 0, 'M'},
     {"page", required_argument, 0, 'p'},
     {"raw", no_argument, 0, 'r'},
     {"rtd", no_argument, 0, 'R'},
@@ -66,7 +67,8 @@ usage()
 {
     pr2serr("Usage: sg_wr_mode [--cfile=CF] [--contents=H,H...] [--dbd] "
             "[--force]\n"
-            "                  [--help] [--len=10|6] [--mask=M,M...]\n"
+            "                  [--help] [--len=10|6] [--mask=M,M...] "
+            "[--mfile=MF]\n"
             "                  [--page=PG_H[,SPG_H]] [--raw] [--rtd] "
             "[--save]\n"
             "                  [--six] [--verbose] [--version] DEVICE\n"
@@ -89,6 +91,7 @@ usage()
             "string of hex\n"
             "                                numbers that mask contents"
             " to write\n"
+            "    --mfile=MF | -M MF        mask in a file called MF\n"
             "    --page=PG_H | -p PG_H     page_code to be written (in hex)\n"
             "    --page=PG_H,SPG_H | -p PG_H,SPG_H    page and subpage code "
             "to be\n"
@@ -176,8 +179,8 @@ build_mode_page(const char * inp, bool is_file, bool as_binary,
  * Can also be (single) space separated list but needs to be quoted on the
  * command line. Returns 0 if ok, or 1 if error. */
 static int
-build_mask(const char * inp, uint8_t * mask_arr, int * mask_arr_len,
-           int max_arr_len)
+build_mask(const char * inp, bool is_file, bool as_binary,
+           uint8_t * mask_arr, int * mask_arr_len, int max_arr_len)
 {
     int in_len, k;
     unsigned int h;
@@ -192,9 +195,10 @@ build_mask(const char * inp, uint8_t * mask_arr, int * mask_arr_len,
     in_len = strlen(inp);
     if (0 == in_len)
         *mask_arr_len = 0;
-    if ('-' == inp[0]) {        /* read from stdin */
-        pr2serr("'--mask' does not accept input from stdin\n");
-        return 1;
+
+    if (is_file || ('-' == inp[0])) {
+        return sg_f2hex_arr(inp, as_binary, false, mask_arr, mask_arr_len,
+                            max_arr_len);
     } else {        /* hex string on command line */
         k = strspn(inp, "0123456789aAbBcCdDeEfF, ");
         if (in_len != k) {
@@ -273,7 +277,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "6c:C:dfhl:m:p:rRsvV", long_options,
+        c = getopt_long(argc, argv, "6c:C:dfhl:m:M:p:rRsvV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -309,9 +313,17 @@ main(int argc, char * argv[])
             break;
         case 'm':
             memset(mask_in, 0xff, mask_in_sz);
-            if (0 != build_mask(optarg, mask_in, &mask_in_len,
+            if (0 != build_mask(optarg, false, do_raw, mask_in, &mask_in_len,
                                 mask_in_sz)) {
                 pr2serr("bad argument to '--mask'\n");
+                return SG_LIB_SYNTAX_ERROR;
+            }
+            got_mask = true;
+            break;
+        case 'M':
+            if (0 != build_mask(optarg, true, do_raw, mask_in, &mask_in_len,
+                                mask_in_sz)) {
+                pr2serr("bad argument or unable to decode '--mfile'\n");
                 return SG_LIB_SYNTAX_ERROR;
             }
             got_mask = true;
@@ -388,9 +400,9 @@ main(int argc, char * argv[])
             return ret;
         }
         if (verbose > 5) {
-	    pr2serr("Decoded contents:\n");
+            pr2serr("Decoded contents:\n");
             hex2stderr(read_in, read_in_len, 1);
-	}
+        }
         got_contents = true;
     }
 
