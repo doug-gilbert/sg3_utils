@@ -40,7 +40,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"
 
-static const char * version_str = "1.73 20230618";
+static const char * version_str = "1.74 20230914";
 
 
 #define MY_NAME "sg_format"
@@ -251,7 +251,8 @@ usage()
                "                       to FM (def: 0 --> default format)\n"
                "    --timeout=SECS|-m SECS    FORMAT UNIT/MEDIUM command "
                "timeout in seconds\n"
-               "    --verbose|-v    increase verbosity\n"
+               "    --verbose|-v    increase verbosity, can use multiple "
+               "times\n"
                "    --verify|-y     sets VERIFY bit in FORMAT MEDIUM (tape)\n"
                "    --version|-V    print version details and exit\n"
                "    --wait|-w       format commands wait until format "

@@ -2,12 +2,14 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20230905] [svn: r1049]
+Changelog for pre-release sg3_utils-1.49 [20230914] [svn: r1050]
   - apply https://github.com/doug-gilbert/sg3_utils/pull/39
     and its revision [20230807] mainly for Android
   - sg_inq: update version descriptors to T10 table 20230814
   - sg_wr_mode: fix --contents and --cfile= handling
     https://github.com/doug-gilbert/sg3_utils/issues/40
+  - lib/sg_pt_solaris.c : fix compilation issue per
+    https://github.com/doug-gilbert/sg3_utils/pull/41
     - add --mfile=MF option for decoding mask in the MF file
   - testing/sg_chk_inq_vd.c: test internal table against T10
     version descriptor file

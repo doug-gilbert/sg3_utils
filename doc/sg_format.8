@@ -1,4 +1,4 @@
-.TH SG_FORMAT "8" "May 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SG_FORMAT "8" "September 2023" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_format \- format, format with preset, resize SCSI disk; format tape
 .SH SYNOPSIS
@@ -357,7 +357,9 @@ long option form is \fI\-\-tmo=SECS\fR.
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the level of verbosity, (i.e. debug output). "\-vvv" gives
-a lot more debug output.
+a lot more debug output. For example giving the option once will show
+the SCSI commands (CDBs) issued. Giving this option multiple times will
+additionally show the data buffers (metadata) sent and received.
 .TP
 \fB\-y\fR, \fB\-\-verify\fR
 set the VERIFY bit in the FORMAT MEDIUM cdb. The default is that the VERIFY

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2021 Douglas Gilbert.
+ * Copyright (c) 2007-2023 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_solaris version 1.15 20210617 */
+/* sg_pt_solaris version 1.16 20230914 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +32,7 @@
 
 #include "sg_pt.h"
 #include "sg_lib.h"
-
+#include "sg_pr2serr.h"
 
 #define DEF_TIMEOUT 60       /* 60 seconds */
 
@@ -543,7 +543,7 @@ check_pt_file_handle(int device_fd, const char * device_name, int vb)
  * if there is no valid file handle. */
 int
 get_pt_file_handle(const struct sg_pt_base * vp)
-{   
+{
     const struct sg_pt_solaris_scsi * ptp = &vp->impl;
 
     return ptp->dev_fd;
