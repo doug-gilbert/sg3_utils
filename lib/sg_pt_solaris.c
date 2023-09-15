@@ -32,7 +32,7 @@
 
 #include "sg_pt.h"
 #include "sg_lib.h"
-
+#include "sg_pr2serr.h"
 
 #define DEF_TIMEOUT 60       /* 60 seconds */
 
