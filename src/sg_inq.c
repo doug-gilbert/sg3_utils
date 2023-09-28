@@ -53,7 +53,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.49 20230821";  /* spc6r09, sbc5r04 */
+static const char * version_str = "2.50 20230926";  /* spc6r10, sbc5r04 */
 
 #define MY_NAME "sg_inq"
 
@@ -2285,7 +2285,7 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
 
     /* N.B. rp[2] full byte is 'version' in SPC-2,3,4 but in SPC [spc-r11a "
      * (1997)] bits 6,7: ISO/IEC version; bits 3-5: ECMA version; bits 0-2:
-     * SCSI version. Pattern broken by SPC-6 which 0xd .*/
+     * SCSI version. Pattern broken by SPC-6 which is 0xd .*/
     ansi_version = rp[2] & 0xf;
     pdt = rp[0] & PDT_MASK;
     if (op->do_export) {

@@ -590,6 +590,7 @@ struct sg_lib_simple_value_name_t sg_version_descriptor_arr[] = {
     {0x1f20, "SAT-5 (no version claimed)"},
     {0x1f25, "SAT-5 BSR INCITS 577 revision 10"},
     {0x1f40, "SAT-6 (no version claimed)"},
+    {0x1f60, "SNT (no version claimed)"},
     {0x20a0, "SPL (no version claimed)"},
     {0x20a3, "SPL T10/2124-D revision 6a"},
     {0x20a5, "SPL T10/2124-D revision 7"},

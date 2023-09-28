@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021 Douglas Gilbert
+ * Copyright (c) 2018-2023 Douglas Gilbert
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -39,7 +39,7 @@
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "1.07 20210225";
+static const char * version_str = "1.08 20230919";
 
 
 #define ME "sg_tst_nvme: "
@@ -74,27 +74,6 @@ static struct option long_options[] = {
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
-};
-
-/* Assume index is less than 16 */
-static const char * sg_ansi_version_arr[16] =
-{
-    "no conformance claimed",
-    "SCSI-1",           /* obsolete, ANSI X3.131-1986 */
-    "SCSI-2",           /* obsolete, ANSI X3.131-1994 */
-    "SPC",              /* withdrawn, ANSI INCITS 301-1997 */
-    "SPC-2",            /* ANSI INCITS 351-2001, ISO/IEC 14776-452 */
-    "SPC-3",            /* ANSI INCITS 408-2005, ISO/IEC 14776-453 */
-    "SPC-4",            /* ANSI INCITS 513-2015 */
-    "SPC-5",
-    "ecma=1, [8h]",
-    "ecma=1, [9h]",
-    "ecma=1, [Ah]",
-    "ecma=1, [Bh]",
-    "reserved [Ch]",
-    "reserved [Dh]",
-    "reserved [Eh]",
-    "reserved [Fh]",
 };
 
 #define MAX_DEV_NAMES 8
@@ -446,6 +425,8 @@ static void
 std_inq_decode(const char * prefix, uint8_t * b, int len, int vb)
 {
     int pqual, n;
+    char d[32];
+    static const int dlen = sizeof(d);
 
     if (len < 4)
         return;
@@ -463,7 +444,7 @@ std_inq_decode(const char * prefix, uint8_t * b, int len, int vb)
     printf("      PQual=%d  Device_type=%d  RMB=%d  LU_CONG=%d  "
            "version=0x%02x ", pqual, b[0] & 0x1f, !!(b[1] & 0x80),
            !!(b[1] & 0x40), (unsigned int)b[2]);
-    printf(" [%s]\n", sg_ansi_version_arr[b[2] & 0xf]);
+    printf(" [%s]\n", sg_get_scsi_ansi_version_str(b[2] & 0xf, dlen, d));
     printf("      [AERC=%d]  [TrmTsk=%d]  NormACA=%d  HiSUP=%d "
            " Resp_data_format=%d\n",
            !!(b[3] & 0x80), !!(b[3] & 0x40), !!(b[3] & 0x20),

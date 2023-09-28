@@ -43,7 +43,7 @@
 
 */
 
-static const char * version_str = "1.96 20230622";  /* spc6r08 + sbc5r04 */
+static const char * version_str = "1.97 20230914";  /* spc6r08 + sbc5r04 */
 
 #define MY_NAME "sg_vpd"
 
@@ -326,27 +326,6 @@ dStrRaw(const uint8_t * str, int len)
         printf("%c", str[k]);
 }
 
-/* Assume index is less than 16 */
-static const char * sg_ansi_version_arr[16] =
-{
-    "no conformance claimed",
-    "SCSI-1",           /* obsolete, ANSI X3.131-1986 */
-    "SCSI-2",           /* obsolete, ANSI X3.131-1994 */
-    "SPC",              /* withdrawn, ANSI INCITS 301-1997 */
-    "SPC-2",            /* ANSI INCITS 351-2001, ISO/IEC 14776-452 */
-    "SPC-3",            /* ANSI INCITS 408-2005, ISO/IEC 14776-453 */
-    "SPC-4",            /* ANSI INCITS 513-2015 */
-    "SPC-5",            /* ANSI INCITS 502-2020 */
-    "ecma=1, [8h]",
-    "ecma=1, [9h]",
-    "ecma=1, [Ah]",
-    "ecma=1, [Bh]",
-    "reserved [Ch]",
-    "reserved [Dh]",
-    "reserved [Eh]",
-    "reserved [Fh]",
-};
-
 static void
 std_inq_decode(uint8_t * b, int len, struct opts_t * op, sgj_opaque_p jop)
 {
@@ -355,7 +334,9 @@ std_inq_decode(uint8_t * b, int len, struct opts_t * op, sgj_opaque_p jop)
     sgj_state * jsp = &op->json_st;
     const char * cp;
     char c[256];
+    char d[32];
     static const int clen = sizeof(c);
+    static const int dlen = sizeof(d);
     static const char * np = "Standard INQUIRY data format:";
 
     if (len < 4) {
@@ -379,7 +360,8 @@ std_inq_decode(uint8_t * b, int len, struct opts_t * op, sgj_opaque_p jop)
     }
     sgj_pr_hr(jsp, "  PQual=%d  PDT=%d  RMB=%d  LU_CONG=%d  hot_pluggable="
               "%d  version=0x%02x  [%s]\n", pqual, pdt, !!(b[1] & 0x80),
-              !!(b[1] & 0x40), hp, ver, sg_ansi_version_arr[ver & 0xf]);
+              !!(b[1] & 0x40), hp, ver,
+              sg_get_scsi_ansi_version_str(ver & 0xf, dlen, d));
     sgj_pr_hr(jsp, "  [AERC=%d]  [TrmTsk=%d]  NormACA=%d  HiSUP=%d "
            " Resp_data_format=%d\n",
            !!(b[3] & 0x80), !!(b[3] & 0x40), !!(b[3] & 0x20),
