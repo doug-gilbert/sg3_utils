@@ -13,11 +13,23 @@ LABEL="scsi_identify"
 ENV{ID_SCSI_INQUIRY}=""
 
 # Set enabled unreliable sources for setting the ID_SERIAL property.
+# Set this variable to any combination of the capital letters "LTVS".
 # See 55-scsi-sg3_id.rules for detailed documentation.
 ENV{.SCSI_ID_SERIAL_SRC}="T"
+IMPORT{cmdline}="udev.scsi_id_serial_src"
+# Allow the user to override ID_SERIAL settings using "udev.scsi_id_serial_src=..."
+ENV{udev.scsi_id_serial_src}=="?*", \
+    ENV{.SCSI_ID_SERIAL_SRC}="$env{udev.scsi_id_serial_src}", \
+    ENV{udev.scsi_id_serial_src}=""
 
 # Set enabled unreliable sources for creating additional /dev/disk/by-id/scsi* symlinks.
+# Set this variable to any combination of the capital letters "LTVS".
 # See 58-scsi-sg3_symlink.rules for detailed documentation.
 ENV{.SCSI_SYMLINK_SRC}=""
+# Allow the user to override symlinks settings using "udev.scsi_symlink_src=..."
+IMPORT{cmdline}="udev.scsi_symlink_src"
+ENV{udev.scsi_symlink_src}=="?*", \
+    ENV{.SCSI_SYMLINK_SRC}="$env{udev.scsi_symlink_src}", \
+    ENV{udev.scsi_symlink_src}=""
 
 LABEL="scsi_identify_end"
