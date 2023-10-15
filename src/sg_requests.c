@@ -34,7 +34,7 @@
  * This program issues the SCSI command REQUEST SENSE to the given SCSI device.
  */
 
-static const char * version_str = "1.45 20230622";
+static const char * version_str = "1.46 20231014";
 
 static const char * my_name = "sg_requests: ";  /* REQUEST Sense command */
 
@@ -144,7 +144,7 @@ main(int argc, char * argv[])
     const char * device_name = NULL;
     int ret = 0;
     struct sg_pt_base * ptvp = NULL;
-    char b[256];
+    char b[512];
     uint8_t rs_cdb[REQUEST_SENSE_CMDLEN] =
         {REQUEST_SENSE_CMD, 0, 0, 0, 0, 0};
     uint8_t sense_b[SENSE_BUFF_LEN] SG_C_CPP_ZERO_INIT;
@@ -326,7 +326,7 @@ main(int argc, char * argv[])
                 n = 0;
             } else {
                 if (verbose && (0 == k)) {
-                    char bb[128];
+                    char bb[512];
 
                     pr2serr("    cdb: %s\n",
                             sg_get_command_str(rs_cdb, REQUEST_SENSE_CMDLEN,
@@ -475,12 +475,13 @@ main(int argc, char * argv[])
             struct sg_scsi_sense_hdr ssh;
 
             if (sg_scsi_normalize_sense(rsBuff, act_din_len, &ssh)) {
-                if (ssh.sense_key > 0) {
+                if ((ssh.sense_key > 0) &&
+                    (SG_LIB_CAT_NOT_READY != ssh.sense_key)) {
                     ++num_din_errs;
                     most_recent_skey = ssh.sense_key;
                 }
                 if (not_raw_hex && ((1 == num_rs) || verbose)) {
-                    char bb[144];
+                    char bb[512];       /* was 144, may need to be larger */
 
                     sg_get_sense_str(NULL, rsBuff, act_din_len,
                                      false, sizeof(bb), bb);

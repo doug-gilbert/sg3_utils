@@ -37,6 +37,11 @@ Arguments to long options are mandatory for short options as well.
 .TP
 \fB\-b\fR, \fB\-\-brief\fR
 when used once, the output of each physical element status descriptor is
+abbreviated compared to when this option is not given. Also the
+term "associated capacity: not specified;" is dropped as it doesn't convey
+much information.
+.br
+When used twice, the output of each physical element status descriptor is
 reduced to: <element_id>: <element_type>,<element_health> . All three are
 output as decimal integers. When used twice the "Element descriptors:"
 line introducing the status descriptors is not output. When used three

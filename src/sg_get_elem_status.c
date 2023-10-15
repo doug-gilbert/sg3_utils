@@ -38,7 +38,7 @@
  * given SCSI device.
  */
 
-static const char * version_str = "1.23 20230619";      /* sbc5r04 */
+static const char * version_str = "1.24 20231015";      /* sbc5r04 */
 
 #define MY_NAME "sg_get_elem_status"
 
@@ -120,7 +120,8 @@ usage()
             "[--verbose]\n"
             "                           [--version] DEVICE\n"
             "  where:\n"
-            "    --brief|-b        one descriptor per line\n"
+            "    --brief|-b        reduce amount of output, can be used "
+            "several times\n"
             "    --filter=FLT|-f FLT    FLT is 0 (def) for all physical "
             "elements;\n"
             "                           1 for out of spec and depopulated "
@@ -259,7 +260,7 @@ decode_elem_status_desc(const uint8_t * bp, struct gpes_desc_t * pedp)
 }
 
 static bool
-fetch_health_str(uint8_t health, char * bp, int max_blen)
+fetch_health_str(uint8_t health, bool short_str, char * bp, int max_blen)
 {
     bool add_val = false;
     const char * cp = NULL;
@@ -267,23 +268,39 @@ fetch_health_str(uint8_t health, char * bp, int max_blen)
     if  (0 == health)
         cp = "not reported";
     else if (health < 0x64) {
-        cp = "within manufacturer's specification limits";
+        if (short_str)
+            cp = "within mfr's specs";
+        else
+            cp = "within manufacturer's specification limits";
+
         add_val = true;
     } else if (0x64 == health) {
-        cp = "at manufacturer's specification limits";
+        if (short_str)
+            cp = "at mfr's spec limits";
+        else
+            cp = "at manufacturer's specification limits";
         add_val = true;
     } else if (health < 0xd0) {
-        cp = "outside manufacturer's specification limits";
+        if (short_str)
+            cp = "outside mfr's spec limits";
+        else
+            cp = "outside manufacturer's specification limits";
         add_val = true;
     } else if (health < 0xfb) {
         cp = "reserved";
         add_val = true;
     } else if (0xfb == health)
-        cp = "depopulation revocation completed, errors detected";
+        if (short_str)
+            cp = "depop revoc completed, errors detected";
+        else
+            cp = "depopulation revocation completed, errors detected";
     else if (0xfc == health)
         cp = "depopulation revocation in progress";
     else if (0xfd == health)
-        cp = "depopulation completed, errors detected";
+        if (short_str)
+            cp = "depop completed, errors detected";
+        else
+            cp = "depopulation completed, errors detected";
     else if (0xfe == health)
         cp = "depopulation operations in progress";
     else if (0xff == health)
@@ -651,9 +668,9 @@ start_response:
     }
 
     sgj_haj_vi(jsp, jop, 0, "Number of descriptors",
-               SGJ_SEP_COLON_1_SPACE, num_desc, true);
+               SGJ_SEP_COLON_1_SPACE, num_desc, false);
     sgj_haj_vi(jsp, jop, 0, "Number of descriptors returned",
-               SGJ_SEP_COLON_1_SPACE, num_desc_ret, true);
+               SGJ_SEP_COLON_1_SPACE, num_desc_ret, false);
     sgj_haj_vi(jsp, jop, 0, "Identifier of element being depopulated",
                SGJ_SEP_COLON_1_SPACE, id_elem_depop, true);
     if (cur_max_num_depop > 0)
@@ -690,34 +707,45 @@ start_response:
             sgj_js_nv_istr(jsp, jo2p, "physical_element_type",
                            a_ped.phys_elem_type, "meaning", cp);
             j = a_ped.phys_elem_health;
-            fetch_health_str(j, b, blen);
+            fetch_health_str(j, false, b, blen);
             sgj_js_nv_istr(jsp, jo2p, "physical_element_health", j, NULL, b);
             sgj_js_nv_ihex(jsp, jo2p, "associated_capacity",
                            (int64_t)a_ped.assoc_cap);
             sgj_js_nv_o(jsp, jap, NULL /* name */, jo2p);
-        } else if (op->do_brief) {
+        } else if (op->do_brief > 1) {
             sgj_pr_hr(jsp, "%u: %u,%u\n", a_ped.elem_id, a_ped.phys_elem_type,
                       a_ped.phys_elem_health);
         } else {
             char b2[144];
             static const int b2len = sizeof(b2);
 
-            m = sg_scnpr(b2, b2len, "[%d] identifier: 0x%06x", k + 1,
-                         a_ped.elem_id);
-            if (sg_all_ffs((const uint8_t *)&a_ped.assoc_cap, 8))
-                m += sg_scn3pr(b2, b2len, m,
-                               "  associated LBs: not specified;  ");
+            if (op->do_brief > 0)       /* can only be 0 or 1 here */
+                m = sg_scnpr(b2, b2len, "[%d] id: 0x%x", k + 1,
+                             a_ped.elem_id);
             else
-                m += sg_scn3pr(b2, b2len, m, "  associated LBs: 0x%" PRIx64
-                               ";  ", a_ped.assoc_cap);
+                m = sg_scnpr(b2, b2len, "[%d] identifier: 0x%06x", k + 1,
+                             a_ped.elem_id);
+            if (sg_all_ffs((const uint8_t *)&a_ped.assoc_cap, 8)) {
+                if (op->do_brief > 0)
+                    m += sg_scn3pr(b2, b2len, m, "  ");
+                else
+                    m += sg_scn3pr(b2, b2len, m,
+                                   "  associated capacity: not specified;  ");
+            } else
+                m += sg_scn3pr(b2, b2len, m, "  associated capacity: 0x%"
+                               PRIx64 ";  ", a_ped.assoc_cap);
             m += sg_scn3pr(b2, b2len, m, "health: ");
             j = a_ped.phys_elem_health;
-            if (fetch_health_str(j, b, blen))
+            if (fetch_health_str(j, (op->do_brief > 0), b, blen))
                 m += sg_scn3pr(b2, b2len, m, "%s <%d>", b, j);
             else
                 m += sg_scn3pr(b2, b2len, m, "%s", b);
-            if (a_ped.restoration_allowed)
-                sg_scn3pr(b2, b2len, m, " [restoration allowed [RALWD]]");
+            if (a_ped.restoration_allowed) {
+                if (op->do_brief > 0)
+                    sg_scn3pr(b2, b2len, m, " [RALWD]");
+                else
+                    sg_scn3pr(b2, b2len, m, " [restoration allowed [RALWD]]");
+            }
             sgj_pr_hr(jsp, "%s\n", b2);
         }
     }

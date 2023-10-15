@@ -2,13 +2,18 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20230928] [svn: r1051]
+Changelog for pre-release sg3_utils-1.49 [20231015] [svn: r1053]
   - apply https://github.com/doug-gilbert/sg3_utils/pull/39
     and its revision [20230807] mainly for Android
   - sg_inq: update version descriptors to T10 table 20230814
   - sg_wr_mode: fix --contents and --cfile= handling
   - sg_vpd: inform about SPC-6 (sg_inq knew already)
     https://github.com/doug-gilbert/sg3_utils/issues/40
+  - sg_inq+sg_vpd: show depopulation time in hours and
+    minutes as well as its raw form: seconds
+  - sg_turs: fix missing CDB on several codepaths
+  - sg_requests: improve buffer truncation
+  - sg_get_elem_status: various improvements
   - lib/sg_pt_solaris.c : fix compilation issue per
     https://github.com/doug-gilbert/sg3_utils/pull/41
     - add --mfile=MF option for decoding mask in the MF file
