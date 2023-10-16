@@ -1088,6 +1088,7 @@ findresized()
   local mpathsize=
   declare -a mpathsizes
 
+  [ -e "$TMPLUNINFOFILE" ] || getallmultipathinfo
   if [ -z "$lunsearch" ] ; then
     devs=$(ls /sys/class/scsi_device/)
   else
