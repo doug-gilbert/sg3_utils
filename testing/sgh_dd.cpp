@@ -36,7 +36,7 @@
  * renamed [20181221]
  */
 
-static const char * version_str = "2.24 20230417";
+static const char * version_str = "2.25 20231016";
 
 #define _XOPEN_SOURCE 600
 #ifndef _GNU_SOURCE
@@ -3521,6 +3521,7 @@ sg_finish_io(bool wr, Rq_elem * rep, int pack_id, struct sg_io_extra *xtrp)
         ++num_miscompare;
         // fall through
     case SG_LIB_CAT_NOT_READY:
+    case SG_LIB_PROGRESS_NOT_READY:
     default:
         {
             char ebuff[EBUFF_SZ];
@@ -3596,6 +3597,7 @@ do_v4:
         ++num_miscompare;
         // fall through
     case SG_LIB_CAT_NOT_READY:
+    case SG_LIB_PROGRESS_NOT_READY:
     default:
         {
             char ebuff[EBUFF_SZ];
@@ -4790,7 +4792,8 @@ main(int argc, char * argv[])
             if (0 != res) {
                 if (res == SG_LIB_CAT_INVALID_OP)
                     pr2serr("read capacity not supported on %s\n", inf);
-                else if (res == SG_LIB_CAT_NOT_READY)
+                else if ((res == SG_LIB_CAT_NOT_READY) ||
+                         (res == SG_LIB_PROGRESS_NOT_READY))
                     pr2serr("read capacity failed, %s not ready\n", inf);
                 else
                     pr2serr("Unable to read capacity on %s\n", inf);
@@ -4834,7 +4837,8 @@ main(int argc, char * argv[])
             if (0 != res) {
                 if (res == SG_LIB_CAT_INVALID_OP)
                     pr2serr("read capacity not supported on %s\n", outf);
-                else if (res == SG_LIB_CAT_NOT_READY)
+                else if ((res == SG_LIB_CAT_NOT_READY) ||
+                         (res == SG_LIB_PROGRESS_NOT_READY))
                     pr2serr("read capacity failed, %s not ready\n", outf);
                 else
                     pr2serr("Unable to read capacity on %s\n", outf);

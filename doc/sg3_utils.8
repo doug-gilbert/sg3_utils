@@ -326,7 +326,8 @@ the \fIDEVICE\fR reports that it is not ready for the operation requested.
 The \fIDEVICE\fR may be in the process of becoming ready (e.g.  spinning up
 but not at speed) so the utility may work after a wait. In Linux the
 \fIDEVICE\fR may be temporarily blocked while error recovery is taking place.
-See exit status values 12 and 13 below which refine this exit value.
+.br
+See exit status values 12, 13 and 16 below which refine this exit value.
 .TP
 .B 3
 the \fIDEVICE\fR reports a medium or hardware error (or a blank check). For
@@ -381,6 +382,17 @@ WRITE commands may report this.
 the utility is unable to open, close or use the given \fIDEVICE\fR or some
 other file. The given file name could be incorrect or there may be
 permission problems. Adding the '\-v' option may give more information.
+.TP
+.B 16
+the \fIDEVICE\fR reports a NOT READY sense code with an additional sense
+code of 0x4 with a qualifier value whose text contains "in progress". These
+include: Format in progress, Rebuild in progress, Sanitize in progress and
+Depopulation in progress. An exception is [0x2, 0x4, 0x1a] which is:
+LU not ready, Start stop unit command in progress. This is based on the
+assumption that SSU should complete in 30 seconds or less. Most of the
+other "in progress" messages could flag a wait of tens of hours. In most
+cases 'sg_requests --progress \fIDEVICE\fR' should quantify just how long
+the wait will be.
 .TP
 .B 17
 a SCSI "Illegal request" sense code received with a flag indicating the

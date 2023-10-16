@@ -45,7 +45,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "3.56 20230623";
+static const char * version_str = "3.57 20231015";
 
 static const char * my_name = "sg_turs: ";
 
@@ -536,6 +536,7 @@ loop_turs(struct sg_pt_base * ptvp, struct loop_res_t * resp,
                 case SG_LIB_CAT_NO_SENSE:
                     break;
                 case SG_LIB_CAT_NOT_READY:
+                case SG_LIB_PROGRESS_NOT_READY:
                     ++resp->num_errs;
                     if ((1 == op->do_number) || (op->delay > 0)) {
                         if (! check_for_lu_becoming(ptvp, &ssh)) {
@@ -598,7 +599,8 @@ loop_turs(struct sg_pt_base * ptvp, struct loop_res_t * resp,
                 ++resp->num_errs;
                 resp->ret = res;
                 if ((1 == op->do_number) || (op->delay > 0)) {
-                    if (SG_LIB_CAT_NOT_READY == res) {
+                    if ((SG_LIB_CAT_NOT_READY == res) ||
+                        (SG_LIB_PROGRESS_NOT_READY == res)) {
                         struct sg_scsi_sense_hdr ssh SG_C_CPP_ZERO_INIT;
 
                         if (! check_for_lu_becoming(ptvp, &ssh)) {

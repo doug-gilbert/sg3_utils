@@ -11,9 +11,12 @@ Changelog for pre-release sg3_utils-1.49 [20231015] [svn: r1053]
     https://github.com/doug-gilbert/sg3_utils/issues/40
   - sg_inq+sg_vpd: show depopulation time in hours and
     minutes as well as its raw form: seconds
+    - add RSCS field to Block limits ext. vpage [sbc5r5]
   - sg_turs: fix missing CDB on several codepaths
   - sg_requests: improve buffer truncation
   - sg_get_elem_status: various improvements
+  - new error code: SG_LIB_PROGRESS_NOT_READY for long
+    duration 'in progress' additional sense codes
   - lib/sg_pt_solaris.c : fix compilation issue per
     https://github.com/doug-gilbert/sg3_utils/pull/41
     - add --mfile=MF option for decoding mask in the MF file

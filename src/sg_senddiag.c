@@ -34,7 +34,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "0.65 20220128";
+static const char * version_str = "0.66 20231015";
 
 #define ME "sg_senddiag: "
 
@@ -944,7 +944,8 @@ err_out:
         pr2serr("SEND DIAGNOSTIC, unit attention\n");
     else if (SG_LIB_CAT_ABORTED_COMMAND == res)
         pr2serr("SEND DIAGNOSTIC, aborted command\n");
-    else if (SG_LIB_CAT_NOT_READY == res)
+    else if ((SG_LIB_CAT_NOT_READY == res) ||
+             (SG_LIB_PROGRESS_NOT_READY == res))
         pr2serr("SEND DIAGNOSTIC, device not ready\n");
     else
         pr2serr("SEND DIAGNOSTIC command, failed\n");

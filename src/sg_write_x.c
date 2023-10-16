@@ -38,7 +38,7 @@
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "1.34 20230623";
+static const char * version_str = "1.35 20231015";
 
 static const char * my_name = "sg_write_x: ";
 
@@ -877,8 +877,6 @@ build_t10_scat(const char * scat_fname, bool do_16, bool parse_one,
                 if (parse_one)
                     goto fini;
             } else {
-                if (SG_LIB_CAT_NOT_READY == res)
-                    goto bad_mem_exit;
                 pr2serr("line %d in %s\n", j + 1, scat_fname);
                 goto bad_exit;
             }
@@ -939,10 +937,6 @@ bad_exit:
     if (del_fp)
         fclose(fp);
     return SG_LIB_SYNTAX_ERROR;
-bad_mem_exit:
-    if (del_fp)
-        fclose(fp);
-    return SG_LIB_CAT_NOT_READY;        /* flag output buffer too small */
 }
 
 static bool

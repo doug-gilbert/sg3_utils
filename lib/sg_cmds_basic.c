@@ -128,6 +128,7 @@ sg_cmds_process_helper(const char * leadin, int req_din_x, int act_din_x,
     case SG_LIB_CAT_MISCOMPARE:
     case SG_LIB_CAT_STANDBY:
     case SG_LIB_CAT_UNAVAILABLE:
+    case SG_LIB_PROGRESS_NOT_READY:
         n = false;
         break;
     case SG_LIB_CAT_RECOVERED:

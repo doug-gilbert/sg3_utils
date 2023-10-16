@@ -74,7 +74,7 @@
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "0.76 20230716";
+static const char * version_str = "0.77 20231015";
 
 #define ME "sg_xcopy: "
 
@@ -1695,7 +1695,8 @@ main(int argc, char * argv[])
         if (res == SG_LIB_CAT_INVALID_OP)
             pr2serr("%s command not supported on %s\n", read_cap_str,
                     ixcf.fname);
-        else if (res == SG_LIB_CAT_NOT_READY)
+        else if ((res == SG_LIB_CAT_NOT_READY) ||
+                 (res == SG_LIB_PROGRESS_NOT_READY))
             pr2serr("%s failed on %s - not ready\n", read_cap_str,
                     ixcf.fname);
         else
@@ -1781,7 +1782,8 @@ main(int argc, char * argv[])
                     rec_copy_op_params_str, ixcf.fname);
             ret = sg_convert_errno(EINVAL);
             goto fini;
-        } else if (-res == SG_LIB_CAT_NOT_READY)
+        } else if ((-res == SG_LIB_CAT_NOT_READY) ||
+                   (-res == SG_LIB_PROGRESS_NOT_READY))
             pr2serr("%s failed on %s - not ready\n",
                     rec_copy_op_params_str, ixcf.fname);
         else {
@@ -1823,7 +1825,8 @@ main(int argc, char * argv[])
                     rec_copy_op_params_str, oxcf.fname);
             ret = sg_convert_errno(EINVAL);
             goto fini;
-        } else if (-res == SG_LIB_CAT_NOT_READY)
+        } else if ((-res == SG_LIB_CAT_NOT_READY) ||
+                   (res == SG_LIB_PROGRESS_NOT_READY))
             pr2serr("%s failed on %s - not ready\n",
                     rec_copy_op_params_str, oxcf.fname);
         else {

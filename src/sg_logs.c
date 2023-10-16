@@ -40,7 +40,7 @@
 
 #include "sg_logs.h"
 
-static const char * version_str = "2.35 20230622";    /* spc6r08 + sbc5r04 */
+static const char * version_str = "2.36 20231015";    /* spc6r10 + sbc5r05 */
 
 #define MY_NAME "sg_logs"
 
@@ -714,7 +714,7 @@ enumerate_pages(struct opts_t * op)
             ;
         ++k;
         lep_arr = (const struct log_elem **)
-			calloc(k, sizeof(struct log_elem *));
+                        calloc(k, sizeof(struct log_elem *));
         if (NULL == lep_arr) {
             pr2serr("%s: out of memory\n", __func__);
             return;
@@ -3219,7 +3219,7 @@ show_last_n_inq_data_ch_page(const uint8_t * resp, int len,
             int m;
             const int nn = sg_lib_names_mode_len;
             const struct sg_lib_simple_value_name_t * nvp =
-						 sg_lib_names_vpd_arr;
+                                                 sg_lib_names_vpd_arr;
 
             snprintf(b, blen, "  %s 0x%x, ", param_c, pc);
             vpd = !! (1 & *(bp + 4));
@@ -3350,7 +3350,7 @@ show_last_n_mode_pg_data_ch_page(const uint8_t * resp, int len,
             int val;
             const int nn = sg_lib_names_mode_len;
             const struct sg_lib_simple_value_name_t * nmp =
-						sg_lib_names_mode_arr;
+                                                sg_lib_names_mode_arr;
 
             snprintf(b, blen, "  %s 0x%x, ", param_c, pc);
             spf = !! (0x40 & *(bp + 4));
@@ -9513,7 +9513,8 @@ fetchTemperature(int sg_fd, uint8_t * resp, int max_len, struct opts_t * op,
             hex2stdout(resp, len, op->dstrhex_no_ascii);
         else
             show_temperature_page(resp, len, op, jop);
-    } else if (SG_LIB_CAT_NOT_READY == res)
+    } else if ((SG_LIB_CAT_NOT_READY == res) ||
+               (SG_LIB_PROGRESS_NOT_READY == res))
         pr2serr("%s: Device not ready\n", __func__);
     else {
         op->pg_code = IE_LPAGE;
@@ -10074,7 +10075,8 @@ main(int argc, char * argv[])
                              op->page_control, op->pg_code, op->subpg_code,
                              rsp_buff, ((in_len > 0) ? in_len : 0), true, vb);
         if (k) {
-            if (SG_LIB_CAT_NOT_READY == k)
+            if ((SG_LIB_CAT_NOT_READY == k) ||
+                (SG_LIB_PROGRESS_NOT_READY == k))
                 pr2serr("%s device not ready\n", log_sel);
             else if (SG_LIB_CAT_ILLEGAL_REQ == k)
                 pr2serr("%s field in cdb illegal\n", log_sel);
@@ -10126,7 +10128,8 @@ one_more_time:
 bad:
     if (SG_LIB_CAT_INVALID_OP == res)
         pr2serr("%snot supported\n", ls_s);
-    else if (SG_LIB_CAT_NOT_READY == res)
+    else if ((SG_LIB_CAT_NOT_READY == res) ||
+             (SG_LIB_PROGRESS_NOT_READY == res))
         pr2serr("%sdevice not ready\n", ls_s);
     else if (SG_LIB_CAT_ILLEGAL_REQ == res) {
         if ((op->do_list > 2) && (SUPP_SPGS_SUBPG == op->subpg_code)) {
@@ -10264,7 +10267,8 @@ good:
             } else if (SG_LIB_CAT_INVALID_OP == res)
                 pr2serr("%spage=0x%x,0x%x not supported\n", ls_s,
                         op->pg_code, op->subpg_code);
-            else if (SG_LIB_CAT_NOT_READY == res)
+            else if ((SG_LIB_CAT_NOT_READY == res) ||
+                     (SG_LIB_PROGRESS_NOT_READY == res))
                 pr2serr("%sdevice not ready\n", ls_s);
             else if (SG_LIB_CAT_ILLEGAL_REQ == res)
                 pr2serr("%sfield in cdb illegal [page=0x%x,0x%x]\n", ls_s,

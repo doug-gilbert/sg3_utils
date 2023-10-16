@@ -36,7 +36,7 @@
  * logical blocks. Note that DATA MAY BE LOST.
  */
 
-static const char * version_str = "1.23 20230623";
+static const char * version_str = "1.24 20231015";
 static const char * my_name = "sg_unmap: ";
 
 
@@ -760,6 +760,7 @@ retry:
         err_printed = true;
         switch (ret) {
         case SG_LIB_CAT_NOT_READY:
+        case SG_LIB_PROGRESS_NOT_READY:
             pr2serr("UNMAP failed, device not ready\n");
             break;
         case SG_LIB_CAT_UNIT_ATTENTION:

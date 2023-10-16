@@ -30,7 +30,7 @@
  *
  */
 
-static const char * version_str = "1.45 20230415";
+static const char * version_str = "1.46 20231016";
 
 #define _XOPEN_SOURCE 600
 #ifndef _GNU_SOURCE
@@ -3991,7 +3991,8 @@ calc_count(struct global_collection * clp, const char * inf,
         if (0 != res) {
             if (res == SG_LIB_CAT_INVALID_OP)
                 pr2serr("read capacity not supported on %s\n", inf);
-            else if (res == SG_LIB_CAT_NOT_READY)
+            else if ((res == SG_LIB_CAT_NOT_READY) ||
+                     (res == SG_LIB_PROGRESS_NOT_READY))
                 pr2serr("read capacity failed, %s not ready\n", inf);
             else
                 pr2serr("Unable to read capacity on %s\n", inf);
@@ -4013,7 +4014,8 @@ calc_count(struct global_collection * clp, const char * inf,
         if (0 != res) {
             if (res == SG_LIB_CAT_INVALID_OP)
                 pr2serr("read capacity not supported on %s\n", outf);
-            else if (res == SG_LIB_CAT_NOT_READY)
+            else if ((res == SG_LIB_CAT_NOT_READY) ||
+                     (res == SG_LIB_PROGRESS_NOT_READY))
                 pr2serr("read capacity failed, %s not ready\n", outf);
             else
                 pr2serr("Unable to read capacity on %s\n", outf);

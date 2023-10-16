@@ -34,7 +34,7 @@
  * This program issues the SCSI command REQUEST SENSE to the given SCSI device.
  */
 
-static const char * version_str = "1.46 20231014";
+static const char * version_str = "1.47 20231015";
 
 static const char * my_name = "sg_requests: ";  /* REQUEST Sense command */
 
@@ -348,6 +348,7 @@ main(int argc, char * argv[])
                 case SG_LIB_CAT_NO_SENSE:
                     break;
                 case SG_LIB_CAT_NOT_READY:
+                case SG_LIB_PROGRESS_NOT_READY:
                     ++num_errs;
                     if (1 ==  num_rs) {
                         ret = sense_cat;
@@ -444,6 +445,7 @@ main(int argc, char * argv[])
             case SG_LIB_CAT_NO_SENSE:
                 break;
             case SG_LIB_CAT_NOT_READY:
+            case SG_LIB_PROGRESS_NOT_READY:
                 ++num_errs;
                 if (1 ==  num_rs) {
                     ret = sense_cat;
@@ -476,7 +478,7 @@ main(int argc, char * argv[])
 
             if (sg_scsi_normalize_sense(rsBuff, act_din_len, &ssh)) {
                 if ((ssh.sense_key > 0) &&
-                    (SG_LIB_CAT_NOT_READY != ssh.sense_key)) {
+                    (SPC_SK_NOT_READY != ssh.sense_key)) {
                     ++num_din_errs;
                     most_recent_skey = ssh.sense_key;
                 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2022 Douglas Gilbert.
+ * Copyright (c) 2013-2023 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
 #include "sg_lib.h"
 #include "sg_pt.h"
 
-static const char * version_str = "1.06 20220425";
+static const char * version_str = "1.07 20231016";
 static const char * util_name = "sg_tst_context";
 
 /* This is a test program for checking that file handles keep their
@@ -175,6 +175,7 @@ pt_cat_no_good(int cat, struct sg_pt_base * ptp, const unsigned char * sbp)
 #define TUR_CMD_LEN 6
 #define SSU_CMD_LEN 6
 #define NOT_READY SG_LIB_CAT_NOT_READY
+#define PROG_NOT_READY SG_LIB_PROGRESS_NOT_READY
 
 /* Returns 0 for good, 1024 for a sense key of NOT_READY, or a negative
  * errno */
@@ -201,11 +202,15 @@ do_tur(struct sg_pt_base * ptp, int id)
     }
     cat = get_scsi_pt_result_category(ptp);
     if (SCSI_PT_RESULT_GOOD != cat) {
+        int se_cat;
+
         slen = get_scsi_pt_sense_len(ptp);
         if ((SCSI_PT_RESULT_SENSE == cat) &&
-            (NOT_READY == sg_err_category_sense(sense_buffer, slen))) {
-            res = 1024;
-            goto err;
+            ((se_cat = sg_err_category_sense(sense_buffer, slen)))) {
+            if ((NOT_READY == se_cat) || (PROG_NOT_READY == se_cat)) {
+                res = 1024;
+                goto err;
+            }
         }
         {
             lock_guard<mutex> lg(console_mutex);
@@ -248,11 +253,15 @@ do_ssu(struct sg_pt_base * ptp, int id, bool start)
     }
     cat = get_scsi_pt_result_category(ptp);
     if (SCSI_PT_RESULT_GOOD != cat) {
+        int se_cat;
+
         slen = get_scsi_pt_sense_len(ptp);
         if ((SCSI_PT_RESULT_SENSE == cat) &&
-            (NOT_READY == sg_err_category_sense(sense_buffer, slen))) {
-            res = 1024;
-            goto err;
+            ((se_cat = sg_err_category_sense(sense_buffer, slen)))) {
+            if ((NOT_READY == se_cat) || (PROG_NOT_READY == se_cat)) {
+                res = 1024;
+                goto err;
+            }
         }
         {
             lock_guard<mutex> lg(console_mutex);

@@ -2,7 +2,7 @@
  * LUN ownership from one Service-Processor to this one on an EMC
  * CLARiiON and potentially other devices.
  *
- * Copyright (C) 2004-2018 Lars Marowsky-Bree <lmb@suse.de>
+ * Copyright (C) 2004-2023 Lars Marowsky-Bree <lmb@suse.de>
  *
  * Based on sg_start.c; credits from there also apply.
  * Minor modifications for sg_lib, D. Gilbert 2004/10/19
@@ -34,7 +34,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "0.23 20180219";
+static const char * version_str = "0.24 20231015";
 
 static int debug = 0;
 
@@ -89,6 +89,7 @@ do_trespass(int fd, bool hr, bool short_cmd)
                         short_cmd ? "without" : "with");
                 break;
         case SG_LIB_CAT_NOT_READY:
+        case SG_LIB_PROGRESS_NOT_READY:
                 pr2serr("device not ready\n");
                 break;
         case SG_LIB_CAT_UNIT_ATTENTION:

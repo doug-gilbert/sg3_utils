@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Douglas Gilbert.
+ * Copyright (c) 2014-2023 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,7 +89,7 @@
 #include "sg_pt.h"
 #include "sg_cmds.h"
 
-static const char * version_str = "1.42 20220425";
+static const char * version_str = "1.43 20231016";
 static const char * util_name = "sg_tst_async";
 
 /* This is a test program for checking the async usage of the Linux sg

@@ -53,7 +53,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.51 20231014";  /* spc6r10, sbc5r04 */
+static const char * version_str = "2.52 20231015";  /* spc6r10, sbc5r04 */
 
 #define MY_NAME "sg_inq"
 

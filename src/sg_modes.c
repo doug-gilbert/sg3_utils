@@ -32,7 +32,7 @@
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "1.79 20230707";
+static const char * version_str = "1.80 20231015";
 
 #define MY_NAME "sg_modes"
 
@@ -1132,7 +1132,8 @@ examine_pages(int sg_fd, const struct opts_t * op)
                 pr2serr(">>>>>> try again without the '-6' switch for a 10 "
                         "byte MODE SENSE command\n");
                 goto out;
-            } else if (SG_LIB_CAT_NOT_READY == res) {
+            } else if ((SG_LIB_CAT_NOT_READY == res) ||
+                       (SG_LIB_PROGRESS_NOT_READY == res)) {
                 pr2serr("MODE SENSE (6) failed, device not ready\n");
                 goto out;
             }
@@ -1144,7 +1145,8 @@ examine_pages(int sg_fd, const struct opts_t * op)
                 pr2serr(">>>>>> try again with a '-6' switch for a 6 byte "
                         "MODE SENSE command\n");
                 goto out;
-            } else if (SG_LIB_CAT_NOT_READY == res) {
+            } else if ((SG_LIB_CAT_NOT_READY == res) ||
+                       (SG_LIB_PROGRESS_NOT_READY == res)) {
                 pr2serr("MODE SENSE (10) failed, device not ready\n");
                 goto out;
             }

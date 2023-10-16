@@ -521,6 +521,8 @@ bool sg_exit2str(int exit_status, bool longer, int b_len, char * b);
 #define SG_LIB_CAT_MISCOMPARE 14 /* sense key, probably verify
                                   *       [sk,asc,ascq: 0xe,*,*] */
 #define SG_LIB_FILE_ERROR 15    /* device or other file problem */
+#define SG_LIB_PROGRESS_NOT_READY 16 /* could be a long time ... */
+	/* [sk,asc,ascq: 0x2,0x4,<some>] (most 'in progress' variants */
 /* for 17 and 18, see below */
 #define SG_LIB_CAT_INVALID_PARAM 19 /* illegal req, invalid field in parameter
                                      * list [sk,asc,ascq: 0x5,0x26,0x0] */

@@ -76,7 +76,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.25 20230717";
+static const char * version_str = "1.26 20231015";
 
 static const char * my_name = "sgm_dd: ";
 
@@ -645,6 +645,7 @@ sg_read(int sg_fd, uint8_t * buff, int blocks, int64_t from_block,
         sg_chk_n_print3("Reading, continuing", &io_hdr, verbose > 1);
         break;
     case SG_LIB_CAT_NOT_READY:
+    case SG_LIB_PROGRESS_NOT_READY:
     case SG_LIB_CAT_MEDIUM_HARD:
         return res;
     case SG_LIB_CAT_ILLEGAL_REQ:
@@ -746,6 +747,7 @@ sg_write(int sg_fd, uint8_t * buff, int blocks, int64_t to_block,
         sg_chk_n_print3("Writing, continuing", &io_hdr, verbose > 1);
         break;
     case SG_LIB_CAT_NOT_READY:
+    case SG_LIB_PROGRESS_NOT_READY:
     case SG_LIB_CAT_MEDIUM_HARD:
         return res;
     case SG_LIB_CAT_ILLEGAL_REQ:

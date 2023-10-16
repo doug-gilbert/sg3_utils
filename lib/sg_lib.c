@@ -2304,10 +2304,24 @@ sg_err_category_sense(const uint8_t * sbp, int sb_len)
         case SPC_SK_RECOVERED_ERROR:
             return SG_LIB_CAT_RECOVERED;
         case SPC_SK_NOT_READY:
-            if ((0x04 == ssh.asc) && (0x0b == ssh.ascq))
+            if (0x04 != ssh.asc)
+                return SG_LIB_CAT_NOT_READY;
+            switch (ssh.ascq) {
+            case 0x04:  /* Format in progress */
+            case 0x05:  /* Rebuild in progress */
+            case 0x06:  /* Recalculation in progress */
+            case 0x14:  /* Space allocation in progress */
+            case 0x1b:  /* Sanitize in progress */
+            case 0x1d:  /* Configuration in progress */
+            case 0x24:  /* Depopulation in progress */
+            case 0x25:  /* Depopulation restoration in progress */
+                return SG_LIB_PROGRESS_NOT_READY;
+            case 0x0b:
                 return SG_LIB_CAT_STANDBY;
-            if ((0x04 == ssh.asc) && (0x0c == ssh.ascq))
+            case 0x0c:
                 return SG_LIB_CAT_UNAVAILABLE;
+            }
+            /* drop through, including [0x2,0x4,0x1a]: SSU cmd in progress */
             return SG_LIB_CAT_NOT_READY;
         case SPC_SK_MEDIUM_ERROR:
         case SPC_SK_HARDWARE_ERROR:

@@ -78,7 +78,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"              /* used to get to SNTL for NVMe devices */
 
-static const char * version_str = "6.46 20230717";
+static const char * version_str = "6.47 20231015";
 
 static const char * my_name = "sg_dd: ";
 
@@ -792,6 +792,7 @@ use_sntl(const uint8_t * scsiCdb, uint8_t * buff, int blocks,
 
         switch (sense_cat) {
         case SG_LIB_CAT_NOT_READY:
+        case SG_LIB_PROGRESS_NOT_READY:
         case SG_LIB_CAT_INVALID_OP:
         case SG_LIB_CAT_RES_CONFLICT:
         case SG_LIB_CAT_DATA_PROTECT:
@@ -948,6 +949,7 @@ sg_read_low(uint8_t * buff, int blocks, int64_t from_block,
         }
         break;
     case SG_LIB_CAT_NOT_READY:
+    case SG_LIB_PROGRESS_NOT_READY:
         ++unrecovered_errs;
         if (op->verbose > 0)
             sg_chk_n_print3("reading", &io_hdr, op->verbose > 1);
@@ -1035,6 +1037,7 @@ sg_read(uint8_t * buff, int blocks, int64_t from_block, bool * diop,
         case -2:        /* ENOMEM */
             return res;
         case SG_LIB_CAT_NOT_READY:
+        case SG_LIB_PROGRESS_NOT_READY:
             pr2serr("Device (r) not ready\n");
             return res;
         case SG_LIB_CAT_ABORTED_COMMAND:
@@ -1124,6 +1127,7 @@ sg_read(uint8_t * buff, int blocks, int64_t from_block, bool * diop,
                 pr2serr("ENOMEM again, unexpected (r)\n");
                 return -1;
             case SG_LIB_CAT_NOT_READY:
+            case SG_LIB_PROGRESS_NOT_READY:
                 pr2serr("device (r) not ready\n");
                 return res;
             case SG_LIB_CAT_UNIT_ATTENTION:
@@ -1210,6 +1214,7 @@ sg_read(uint8_t * buff, int blocks, int64_t from_block, bool * diop,
                 pr2serr(">> read_long(10): bad cdb field\n");
                 break;
             case SG_LIB_CAT_NOT_READY:
+            case SG_LIB_PROGRESS_NOT_READY:
                 pr2serr(">> read_long(10): device not ready\n");
                 break;
             case SG_LIB_CAT_UNIT_ATTENTION:
@@ -1364,6 +1369,7 @@ sg_write(int sg_fd, uint8_t * buff, int blocks, int64_t to_block,
             return res;
         }
     case SG_LIB_CAT_NOT_READY:
+    case SG_LIB_PROGRESS_NOT_READY:
         ++unrecovered_errs;
         pr2serr("device not ready (w)\n");
         return res;
@@ -2498,6 +2504,9 @@ main(int argc, char * argv[])
                 else if (res == SG_LIB_CAT_NOT_READY)
                     pr2serr("read capacity failed on %s - not ready\n",
                             op->in_fname);
+                else if (res == SG_LIB_PROGRESS_NOT_READY)
+                    pr2serr("read capacity failed on %s - not ready, "
+                            "something in progress\n", op->in_fname);
                 else
                     pr2serr("Unable to read capacity on %s\n", op->in_fname);
                 in_num_sect = -1;
@@ -2812,6 +2821,7 @@ main(int argc, char * argv[])
                 if ((0 == ret) || (SG_DD_BYPASS == ret))
                     break;
                 if ((SG_LIB_CAT_NOT_READY == ret) ||
+                    (SG_LIB_PROGRESS_NOT_READY == ret) ||
                     (SG_LIB_SYNTAX_ERROR == ret))
                     break;
                 else if ((-2 == ret) && first) {

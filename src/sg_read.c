@@ -63,7 +63,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.40 20230716";
+static const char * version_str = "1.41 20231015";
 
 #define DEF_BLOCK_SIZE 512
 #define DEF_BLOCKS_PER_TRANSFER 128
@@ -366,6 +366,7 @@ sg_bread(int sg_fd, uint8_t * buff, int blocks, int64_t from_block, int bs,
             sg_chk_n_print3("reading", &io_hdr, (verbose > 1));
         return 3;
     case SG_LIB_CAT_NOT_READY:
+    case SG_LIB_PROGRESS_NOT_READY:
         if (verbose)
             sg_chk_n_print3("reading", &io_hdr, (verbose > 1));
         return -2;

@@ -40,7 +40,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"
 
-static const char * version_str = "1.74 20230914";
+static const char * version_str = "1.75 20231015";
 
 
 #define MY_NAME "sg_format"
@@ -537,7 +537,8 @@ scsi_format_unit(int fd, const struct opts_t * op)
                         }
                 }
         }
-        if (op->poll_type || (SG_LIB_CAT_NOT_READY == res)) {
+        if (op->poll_type || (SG_LIB_CAT_NOT_READY == res) ||
+            (SG_LIB_PROGRESS_NOT_READY == res)) {
                 uint8_t * reqSense;
                 uint8_t * free_reqSense = NULL;
 
@@ -658,7 +659,8 @@ scsi_format_medium(int fd, const struct opts_t * op)
                         }
                 }
         }
-        if (op->poll_type || (SG_LIB_CAT_NOT_READY == res)) {
+        if (op->poll_type || (SG_LIB_CAT_NOT_READY == res) ||
+            (SG_LIB_PROGRESS_NOT_READY == res)) {
                 uint8_t * reqSense;
                 uint8_t * free_reqSense = NULL;
 
@@ -777,7 +779,8 @@ scsi_format_with_preset(int fd, const struct opts_t * op)
                         }
                 }
         }
-        if (op->poll_type || (SG_LIB_CAT_NOT_READY == res)) {
+        if (op->poll_type || (SG_LIB_CAT_NOT_READY == res) ||
+            (SG_LIB_PROGRESS_NOT_READY == res)) {
                 uint8_t * reqSense;
                 uint8_t * free_reqSense = NULL;
 

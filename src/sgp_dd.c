@@ -94,7 +94,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "5.93 20230717";
+static const char * version_str = "5.94 20231015";
 
 #define DEF_BLOCK_SIZE 512
 #define DEF_BLOCKS_PER_TRANSFER 128
@@ -1404,6 +1404,7 @@ sg_finish_io(bool wr, Rq_elem * rep, pthread_mutex_t * a_mutp)
                 sg_chk_n_print3((wr ? "writing": "reading"), hp, false);
             return res;
         case SG_LIB_CAT_NOT_READY:
+        case SG_LIB_PROGRESS_NOT_READY:
         default:
             rep->out_err = false;
             if (rep->debug) {
@@ -2022,7 +2023,8 @@ main(int argc, char * argv[])
             if (0 != res) {
                 if (res == SG_LIB_CAT_INVALID_OP)
                     pr2serr("read capacity not supported on %s\n", infn);
-                else if (res == SG_LIB_CAT_NOT_READY)
+                else if ((res == SG_LIB_CAT_NOT_READY) ||
+                         (res == SG_LIB_PROGRESS_NOT_READY))
                     pr2serr("read capacity failed, %s not ready\n", infn);
                 else
                     pr2serr("Unable to read capacity on %s\n", infn);
@@ -2054,7 +2056,8 @@ main(int argc, char * argv[])
             if (0 != res) {
                 if (res == SG_LIB_CAT_INVALID_OP)
                     pr2serr("read capacity not supported on %s\n", outfn);
-                else if (res == SG_LIB_CAT_NOT_READY)
+                else if ((res == SG_LIB_CAT_NOT_READY) ||
+                         (res == SG_LIB_PROGRESS_NOT_READY))
                     pr2serr("read capacity failed, %s not ready\n", outfn);
                 else
                     pr2serr("Unable to read capacity on %s\n", outfn);
