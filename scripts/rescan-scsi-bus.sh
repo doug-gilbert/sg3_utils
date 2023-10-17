@@ -7,7 +7,16 @@
 VERSION="20230413"
 SCAN_WILD_CARD=4294967295
 
-TMPLUNINFOFILE="/tmp/rescan-scsi-mpath-info.txt"
+CLEANUP=:
+trap 'eval "$CLEANUP"' 0
+TMPD=$(mktemp -d /tmp/rsb.XXXXXXXX)
+[ "$TMPD" ] || {
+  echo failed to create temporary directory >&2
+  exit 1
+}
+CLEANUP='rm -rf "$TMPD";'"$CLEANUP"
+
+TMPLUNINFOFILE="$TMPD/rescan-scsi-mpath-info.txt"
 
 setcolor ()
 {
