@@ -827,9 +827,9 @@ findremapped()
   mpaths=""
   local tmpfile=
 
-  tmpfile=$(mktemp /tmp/rescan-scsi-bus.XXXXXXXX 2> /dev/null)
+  tmpfile=$(mktemp "$TMPD/rescan-scsi-bus.XXXXXXXX" 2> /dev/null)
   if [ -z "$tmpfile" ] ; then
-    tmpfile="/tmp/rescan-scsi-bus.$$"
+    tmpfile="$TMPD/rescan-scsi-bus.$$"
     rm -f $tmpfile
   fi
 
@@ -883,7 +883,6 @@ findremapped()
     echo "$SCSISTR"
     incrchgd "$hctl"
   done < $tmpfile
-  rm -f $tmpfile
 
   if [ -n "$mp_enable" ] && [ -n "$mpaths" ] ; then
     echo "Updating multipath device mappings"
