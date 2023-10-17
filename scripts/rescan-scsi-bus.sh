@@ -7,7 +7,16 @@
 VERSION="20230413"
 SCAN_WILD_CARD=4294967295
 
-TMPLUNINFOFILE="/tmp/rescan-scsi-mpath-info.txt"
+CLEANUP=:
+trap 'eval "$CLEANUP"' 0
+TMPD=$(mktemp -d /tmp/rsb.XXXXXXXX)
+[ "$TMPD" ] || {
+  echo failed to create temporary directory >&2
+  exit 1
+}
+CLEANUP='rm -rf "$TMPD";'"$CLEANUP"
+
+TMPLUNINFOFILE="$TMPD/rescan-scsi-mpath-info.txt"
 
 setcolor ()
 {
@@ -818,9 +827,9 @@ findremapped()
   mpaths=""
   local tmpfile=
 
-  tmpfile=$(mktemp /tmp/rescan-scsi-bus.XXXXXXXX 2> /dev/null)
+  tmpfile=$(mktemp "$TMPD/rescan-scsi-bus.XXXXXXXX" 2> /dev/null)
   if [ -z "$tmpfile" ] ; then
-    tmpfile="/tmp/rescan-scsi-bus.$$"
+    tmpfile="$TMPD/rescan-scsi-bus.$$"
     rm -f $tmpfile
   fi
 
@@ -874,7 +883,6 @@ findremapped()
     echo "$SCSISTR"
     incrchgd "$hctl"
   done < $tmpfile
-  rm -f $tmpfile
 
   if [ -n "$mp_enable" ] && [ -n "$mpaths" ] ; then
     echo "Updating multipath device mappings"
