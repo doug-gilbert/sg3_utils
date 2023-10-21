@@ -2,7 +2,9 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20231017] [svn: r1056]
+Changelog for pre-release sg3_utils-1.49 [20231020] [svn: r1057]
+  - JSON: make output more consistent so most command
+    responses have a *_paramter_data or similar sub-object
   - apply https://github.com/doug-gilbert/sg3_utils/pull/39
     and its revision [20230807] mainly for Android
   - sg_inq: update version descriptors to T10 table 20230814
@@ -15,6 +17,8 @@ Changelog for pre-release sg3_utils-1.49 [20231017] [svn: r1056]
   - sg_turs: fix missing CDB on several codepaths
   - sg_requests: improve buffer truncation
   - sg_get_elem_status: various improvements
+  - sg_stream_ctl: add --hex, --inhex=, --json= and --raw
+    options; additions in sbc5r05
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
     and 44.diff

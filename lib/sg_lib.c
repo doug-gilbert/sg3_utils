@@ -3677,7 +3677,8 @@ sg_f2hex_arr(const char * fname, bool as_binary, bool no_space,
              uint8_t * mp_arr, int * mp_arr_len, int max_arr_len_and)
 {
     bool has_stdin, split_line, skip_first, redo_first;
-    int fn_len, in_len, k, j, m, fd, err, max_arr_len;
+    int fn_len, in_len, k, m, fd, err, max_arr_len;
+    int j = 0;
     int off = 0;
     int ret = 0;
     unsigned int h;
@@ -3785,13 +3786,9 @@ sg_f2hex_arr(const char * fname, bool as_binary, bool no_space,
                 carry_over[2] = '\0';
                 if (1 == sscanf(carry_over, "%4x", &h)) {
                     if (off > 0) {
-                        if (off > max_arr_len) {
-                            pr2ws("%s: array length [%d>%d] exceeded\n",
-                                  __func__, off, max_arr_len);
-                            ret = SG_LIB_LBA_OUT_OF_RANGE;
-                            *mp_arr_len = max_arr_len;
-                            goto fini;
-                        } else
+                        if (off > max_arr_len)
+                            goto fini_exceed;
+                        else
                             mp_arr[off - 1] = h; /* back up and overwrite */
                     }
                 } else {
@@ -3831,13 +3828,9 @@ sg_f2hex_arr(const char * fname, bool as_binary, bool no_space,
                     ret = SG_LIB_SYNTAX_ERROR;
                     goto fini;
                 }
-                if ((off + k) >= max_arr_len) {
-                    pr2ws("%s: array length [%d>=%d] exceeded\n",
-                          __func__, off + k, max_arr_len);
-                    *mp_arr_len = max_arr_len;
-                    ret = SG_LIB_LBA_OUT_OF_RANGE;
-                    goto fini;
-                } else
+                if ((off + k) >= max_arr_len)
+                    goto fini_exceed;
+                else
                     mp_arr[off + k] = h;
             }
             if (isxdigit(*lcp) && (! isxdigit(*(lcp + 1))))
@@ -3858,13 +3851,9 @@ sg_f2hex_arr(const char * fname, bool as_binary, bool no_space,
                         /* single trailing hex digit might be a split pair */
                         carry_over[0] = *lcp;
                     }
-                    if ((off + k) >= max_arr_len) {
-                        pr2ws("%s: array length [%d>=%d] exceeded\n",
-                              __func__, off + k, max_arr_len);
-                        ret = SG_LIB_LBA_OUT_OF_RANGE;
-                        *mp_arr_len = max_arr_len;
-                        goto fini;
-                    } else if ((0 == k) && skip_first && (! redo_first))
+                    if ((off + k) >= max_arr_len)
+                        goto fini_exceed;
+                    else if ((0 == k) && skip_first && (! redo_first))
                         redo_first = true;
                     else {
                         redo_first = false;
@@ -3899,6 +3888,11 @@ sg_f2hex_arr(const char * fname, bool as_binary, bool no_space,
     if (fp && (! has_stdin))
         fclose(fp);
     return 0;
+fini_exceed:
+    pr2ws("%s: array length [%d] exceeded on line %d of input\n", __func__,
+          max_arr_len, j + 1);
+    ret = SG_LIB_LBA_OUT_OF_RANGE;
+    *mp_arr_len = max_arr_len;
 fini:
     if (fp && (! has_stdin))
         fclose(fp);

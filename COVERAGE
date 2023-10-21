@@ -23,7 +23,7 @@ EXTENDED COPY(LID1)    sg_xcopy, ddpt
 GET CONFIGURATION   sg_get_config
 GET LBA STATUS      sg_get_lba_status <J>
 GET PHYSICAL ELEMENT STATUS      sg_get_elem_status <J>
-GET STREAM STATUS   sg_stream_ctl
+GET STREAM STATUS   sg_stream_ctl <J>
 INQUIRY             sg_dd, sg_format, sg_inq <J>, sginfo, sg_logs,
                     sg_luns <J>, sg_map('-i'), sg_modes, sg_opcodes <J>,
                     sg_persist, sg_scan, sg_ses, sg_vpd <J>
@@ -189,4 +189,4 @@ THIRD PARTY COPY IN (0x83).
 
 
 Douglas Gilbert
-14 May 2023
+19 October 2023

@@ -1,0 +1,21 @@
+#
+# Get stream status. Note that the sg_stream_ctl utility issues either
+# a SCSI GET STREAM STATUS or STREAM CONTROL command. This is an example
+# of the SCSI GET STREAM STATUS command.
+#
+# This can be tested with:
+#    sg_stream_ctl --inhex=<this_file>
+#
+#
+# For a STREAM CONTROL command example see the stream_ctl_open.hex file.
+
+0 0 0 30
+0 0 0 6
+
+80 0 0 1  0 0 0 0
+80 0 0 2  1 0 0 0
+80 0 0 3  2 0 0 0
+80 0 0 4  3 0 0 0
+
+0 0 0 5  3e 0 0 0
+0 0 0 6  3f 0 0 0

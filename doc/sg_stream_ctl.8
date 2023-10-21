@@ -1,19 +1,27 @@
-.TH SG_STREAM_CTL "8" "March 2018" "sg3_utils\-1.43" SG3_UTILS
+.TH SG_STREAM_CTL "8" "October 2023" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
-sg_stream_ctl \- send SCSI STREAM CONTROL or GET STREAM STATUS command
+sg_stream_ctl \- send SCSI GET STREAM STATUS or STREAM CONTROL command
 .SH SYNOPSIS
 .B sg_stream_ctl
 [\fI\-\-brief\fR] [\fI\-\-close\fR] [\fI\-\-ctl=CTL\fR] [\fI\-\-get\fR]
-[\fI\-\-help\fR] [\fI\-\-id=SID\fR] [\fI\-\-maxlen=LEN\fR] [\fI\-\-open\fR]
-[\fI\-\-readonly\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR] \fIDEVICE\fR
+[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-id=SID\fR] [\fI\-\-inhex=FN\fR]
+[\fI\-\-json[=JO\fR]] [\fI\-\-js\-file=JFN\fR] [\fI\-\-maxlen=LEN\fR]
+[\fI\-\-open\fR] [\fI\-\-raw\fR] [\fI\-\-readonly\fR] [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] \fIDEVICE\fR
 .SH DESCRIPTION
 .\" Add any additional description here
-Sends a SCSI STREAM CONTROL or GET STREAM STATUS command to the \fIDEVICE\fR.
+Sends a SCSI GET STREAM STATUS or STREAM CONTROL command to the \fIDEVICE\fR.
 These commands, together with WRITE STREAM(16 and 32) and several fields in
 the Block Limits Extension VPD page [0xb7] support the streams concept.
-The stream commands were added in SBC\-4 draft 8 (September 2015).
+There is also the IO advice hints grouping mode page [0xa,0x4] . Amongst
+other things that mode page indicates whether a stream identifier do double
+duty as a group number found in most SCSI media access commands (e.g. READ,
+WRITE and VERIFY).
 .PP
-Both STREAM CONTROL and GET STREAM STATUS commands expect data from the
+The stream commands were added in SBC\-4 draft 8 (September 2015). The stream
+commands were extended in SBC\-5 draft 5 (October 2023).
+.PP
+Both the GET STREAM STATUS and STREAM CONTROL commands expect data from the
 \fIDEVICE\fR (referred to as 'data\-in'). In the case of STREAM CONTROL
 only the 'open' (STR_CTL<\-\-0x1) actually needs the data\-in as it contains
 the "Assigned stream id" if the open was successful. The assigned stream
@@ -54,11 +62,52 @@ are given.
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
 .TP
+\fB\-H\fR, \fB\-\-hex\fR
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output response to this command in ASCII hex. Each line of 16 bytes is
+preceded by an address or index, starting at 0 and the address is also in
+hex. If given twice then an ASCII rendering of each byte is appended to the
+line output. If given three or more times then only the ASCII hex of each
+byte is output, 16 bytes per line (i.e. so no leading address nor trailing
+ASCII rendering). This latter form is suitable for placing in a file and
+being used with the \fI\-\-inhex=FN\fR option in a later invocation.
+.TP
 \fB\-i\fR, \fB\-\-id\fR=\fISID\fR
 \fISID\fR is a stream id, a value between 1 and 65535. It is used by STREAM
 CONTROL (close) to identify the stream to close. It is used by the GET
 STREAM STATUS command as the starting stream id (from and including); so
 stream ids that are less than \fISID\fR will not appear in the response.
+.TP
+\fB\-i\fR, \fB\-\-inhex\fR=\fIFN\fR
+where \fIFN\fR is a file name whose contents are assumed to be ASCII
+hexadecimal. If \fIDEVICE\fR is also given then \fIDEVICE\fR is ignored,
+a warning is issued and the utility continues, decoding the file named
+\fIFN\fR. See the "HEX, BINARY AND JSON FORMATS" section in the sg3_utils
+manpage for more information. If the \fI\-\-raw\fR option is also given then
+the contents of \fIFN\fR are treated as binary.
+.br
+\fIFN\fR may either contain data representing the response to a SCSI GET
+STREAM STATUS or a STREAM CONTROL command. This utility defaults to
+expecting the former. When \fIFN\fR contains data from a STREAM CONTROL
+command response then an additional option (other than this option) needs
+to be given: either \fI\-\-close\fR, \fI\-\-ctl=CTL\fR, or \fI\-\-open\fR.
+.TP
+\fB\-j\fR[=\fIJO\fR], \fB\-\-json\fR[=\fIJO\fR]
+output is in JSON format instead of plain text form. Note that arguments
+to the short and long form are themselves optional and if present start
+with "=" and no whitespace is permitted around that "=".
+.br
+See sg3_utils_json manpage or use '?' for \fIJO\fR to get a summary.
+.TP
+\fB\-J\fR, \fB\-\-js\-file\fR=\fIJFN\fR
+output is in JSON format and it is sent to a file named \fIJFN\fR. If that
+file exists then it is truncated. By default, the JSON output is sent to
+stdout.
+.br
+When this option is given, the \fI\-\-json[=JO]\fR option is implied and
+need not be given. The \fI\-\-json[=JO]\fR option may still be needed to
+set the \fIJO\fR parameter to non-default values.
 .TP
 \fB\-m\fR, \fB\-\-maxlen\fR=\fILEN\fR
 \fILEN\fR is the maximum length the response can be. It becomes the
@@ -82,6 +131,16 @@ not easily determine whether a pass\-through command is a logical read or
 write operation on the media (or its metadata) so they take a risk averse
 stance and require read\-write type permissions on the \fIDEVICE\fR open
 irrespective of what is performed by the pass\-through.
+.TP
+\fB\-R\fR, \fB\-\-raw\fR
+output response in binary (to stdout) unless the \fI\-\-inhex=FN\fR option
+is also given. In that case the input file name (\fIFN\fR) is decoded as
+binary (and the output is _not_ in binary).
+.br
+To relax that final restriction this option can be given multiple times. If
+this option is given once or three times, \fIFN\fR is assumed to be binary.
+If this option is given two or three times, the (undecoded) output is in
+binary. These actions only apply when the \fI\-\-inhex=FN\fR option ia given.
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the level of verbosity, (i.e. debug output).
@@ -108,7 +167,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2018 Douglas Gilbert
+Copyright \(co 2018\-2023 Douglas Gilbert
 .br
 This software is distributed under a BSD\-2\-Clause license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

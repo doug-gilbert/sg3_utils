@@ -1,5 +1,5 @@
 #
-# The is a real response to the SCSI GET PHYSICAL ELEMENT STATUS command.
+# This is a real response to the SCSI GET PHYSICAL ELEMENT STATUS command.
 # The storage elements are associated with heads on this hard disk and
 # one of them (element_id: 10) is "out of spec". The same output was
 # obtained with --report-type=1 (report only storage elements) as this

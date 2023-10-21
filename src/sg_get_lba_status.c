@@ -342,11 +342,13 @@ main(int argc, char * argv[])
     struct opts_t * op;
     sgj_opaque_p jop = NULL;
     sgj_opaque_p jo2p = NULL;
+    sgj_opaque_p jo3p = NULL;
     sgj_opaque_p jap = NULL;
     sgj_state * jsp;
     struct opts_t opts SG_C_CPP_ZERO_INIT;
     char b[196];
     static const size_t blen = sizeof(b);
+    static const char * gls_pd_sn = "get_lba_status_parameter_data";
     static const char * prov_stat_sn = "provisoning_status";
     static const char * add_stat_sn = "additional_status";
     static const char * lba_access_sn = "lba_accessibility";
@@ -643,6 +645,7 @@ start_response:
                     "than 4\n");
         goto fini;
     }
+    jo2p = sgj_named_subobject_r(jsp, jop, gls_pd_sn);
     if ((op->verbose > 1) || (op->verbose && (rlen > op->maxlen))) {
         pr2serr("response length %d bytes\n", rlen);
         if (rlen > op->maxlen)
@@ -678,9 +681,9 @@ start_response:
         sgj_pr_hr(jsp,"lba_access: %d, p_status: %d  add_status: 0x%x\n",
                   lba_access, res, (unsigned int)add_status);
         if (jsp->pr_as_json) {
-            sgj_js_nv_i(jsp, jop, lba_access_sn, lba_access);
-            sgj_js_nv_i(jsp, jop, prov_stat_sn, res);
-            sgj_js_nv_i(jsp, jop, add_stat_sn, add_status);
+            sgj_js_nv_i(jsp, jo2p, lba_access_sn, lba_access);
+            sgj_js_nv_i(jsp, jo2p, prov_stat_sn, res);
+            sgj_js_nv_i(jsp, jo2p, add_stat_sn, add_status);
         }
         goto fini;
     }
@@ -692,7 +695,7 @@ start_response:
     num_descs = (rlen - 8) / 16;
     completion_cond = (*(glbasBuffp + 7) >> 1) & 7; /* added sbc4r14 */
     if (op->do_brief)
-        sgj_haj_vi(jsp, jop, 0, compl_cond_s, SGJ_SEP_EQUAL_NO_SPACE,
+        sgj_haj_vi(jsp, jo2p, 0, compl_cond_s, SGJ_SEP_EQUAL_NO_SPACE,
                    completion_cond, true);
     else {
         switch (completion_cond) {
@@ -716,15 +719,15 @@ start_response:
             break;
         }
         sgj_pr_hr(jsp, "%s\n", b);
-        sgj_js_nv_istr(jsp, jop, compl_cond_sn, completion_cond,
+        sgj_js_nv_istr(jsp, jo2p, compl_cond_sn, completion_cond,
                        NULL /* "meaning" */, b);
     }
-    sgj_haj_vi(jsp, jop, 0, "RTP", SGJ_SEP_EQUAL_NO_SPACE,
+    sgj_haj_vi(jsp, jo2p, 0, "RTP", SGJ_SEP_EQUAL_NO_SPACE,
                *(glbasBuffp + 7) & 0x1, true);    /* added sbc4r12 */
     if (op->verbose)
         pr2serr("%d complete LBA status descriptors found\n", num_descs);
     if (jsp->pr_as_json)
-        jap = sgj_named_subarray_r(jsp, jop, "lba_status_descriptor");
+        jap = sgj_named_subarray_r(jsp, jo2p, "lba_status_descriptor");
 
     for (bp = glbasBuffp + 8, k = 0; k < num_descs; bp += 16, ++k) {
         res = decode_lba_status_desc(bp, &d_lba, &d_blocks, &lba_access,
@@ -733,7 +736,7 @@ start_response:
             pr2serr("descriptor %d: bad LBA status descriptor returned "
                     "%d\n", k + 1, res);
         if (jsp->pr_as_json)
-            jo2p = sgj_new_unattached_object_r(jsp);
+            jo3p = sgj_new_unattached_object_r(jsp);
         if (op->do_brief) { /* no LBA accessibility field */
             n = sg_scnpr(b, blen, "0x%" PRIx64, d_lba);
             if ((0 == op->blockhex) || (1 == (op->blockhex % 2)))
@@ -743,19 +746,19 @@ start_response:
                 sg_scn3pr(b, blen, n, "  %u  %d  %d",
                           (unsigned int)d_blocks, res, add_status);
             sgj_pr_hr(jsp, "%s\n", b);
-            sgj_js_nv_ihex(jsp, jo2p, "lba", d_lba);
-            sgj_js_nv_ihex(jsp, jo2p, "blocks", d_blocks);
-            sgj_js_nv_i(jsp, jo2p, prov_stat_sn, res);
-            sgj_js_nv_i(jsp, jo2p, add_stat_sn, add_status);
+            sgj_js_nv_ihex(jsp, jo3p, "lba", d_lba);
+            sgj_js_nv_ihex(jsp, jo3p, "blocks", d_blocks);
+            sgj_js_nv_i(jsp, jo3p, prov_stat_sn, res);
+            sgj_js_nv_i(jsp, jo3p, add_stat_sn, add_status);
         } else {
             if (jsp->pr_as_json) {
-                sgj_js_nv_ihex(jsp, jo2p, "lba", d_lba);
-                sgj_js_nv_ihex(jsp, jo2p, "blocks", d_blocks);
-                sgj_js_nv_istr(jsp, jo2p, lba_access_sn, lba_access, NULL,
+                sgj_js_nv_ihex(jsp, jo3p, "lba", d_lba);
+                sgj_js_nv_ihex(jsp, jo3p, "blocks", d_blocks);
+                sgj_js_nv_istr(jsp, jo3p, lba_access_sn, lba_access, NULL,
                        get_lba_access_str(lba_access, b, blen, false));
-                sgj_js_nv_istr(jsp, jo2p, prov_stat_sn, res, NULL,
+                sgj_js_nv_istr(jsp, jo3p, prov_stat_sn, res, NULL,
                                get_prov_status_str(res, b, blen));
-                sgj_js_nv_istr(jsp, jo2p, add_stat_sn, add_status, NULL,
+                sgj_js_nv_istr(jsp, jo3p, add_stat_sn, add_status, NULL,
                                get_pr_status_str(add_status, b, blen));
             } else {
                 char d[64];
@@ -780,7 +783,7 @@ start_response:
             }
         }
         if (jsp->pr_as_json)
-            sgj_js_nv_o(jsp, jap, NULL /* name */, jo2p);
+            sgj_js_nv_o(jsp, jap, NULL /* name */, jo3p);
     }
     if ((num_descs * 16) + 8 < rlen)
         pr2serr("incomplete trailing LBA status descriptors found\n");

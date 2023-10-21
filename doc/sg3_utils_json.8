@@ -23,9 +23,10 @@ data types: string, integer, boolean and null. Its other data types are JSON
 object and JSON array.
 .PP
 This project uses the 'snake_case' convention for JSON object names: all in
-lower case letters or numerals with individual words joined with a single
-underscore (e.g. "starting_lba"). There should be no leading or trailing
-underscore characters. The json-builder library uses the
+lower case (ASCII) letters or numerals with individual words joined with a
+single underscore (e.g. "starting_lba"). There should be no leading or
+trailing underscore characters. Repeated underscores are abridged to a
+single underscore. The json-builder library uses the
 SPDX\-License\-Identifier: BSD\-2\-Clause which is the same license as the
 bulk of the utilities in the sg3_utils package.
 .PP
@@ -278,6 +279,46 @@ JSON if the \fI\-\-json[=JO]\fR option is also used.
 There is typically only one form of JSON output so options like
 \fI\-\-brief\fR and \fI\-\-quiet\fR are ignored in the JSON output. In some
 cases (i.e 'sg_inq \-\-descriptors') the JSON output is expanded.
+.SH NAMING: SCSI, JSON, LINUX PSEUDO FILE SYSTEM
+There is no perfect match for the way commands, fields, objects and files
+across these systems are named. SCSI dates from a period when there were
+still 6 bit character sets with no lower case letters in use! So SCSI
+commands and field names are all upper case with space used as a separator.
+JSON prefers "CamelCase" with the first letter of each word capitalized to
+avoid the need for space as a separator. Many JSON representations (like
+this one) ignore JSON's preference and opt for "snake_case". Why do that?
+Because most Unix based pseudo file systems use lower case. Further, spaces
+within file names creates extra complexity when using basic Unix commands
+and scripting so they are best avoided.
+.PP
+In Linux, sysfs is a very important pseudo file system for communicating
+real time information between hardware drivers and the user space. Utilities
+such as lsblk and lsscsi do data\-mining within sysfs. The vast majority of
+filenames in sysfs use "snake_case" but there are a few exceptions where ':'
+and even embedded spaces appear. Also of note is that Unix user commands,
+system commands and libraries have no emdedded spaces in their names
+and upper cases letters are extremely rare.
+.PP
+Another issue is case sensitivity: "CamelCase" and "camelcase" are confusing
+filenames that refer to different files in most Unix file systems but refer
+to the
+.B same
+file in Windows file systems such as FAT and NTFS. Add in the possibility of
+non\-ASCII Unicocde characters and searching in a JSON object for a name
+match could become a nightmare.
+.PP
+So choosing JSON object names as being made up of a string of characters
+restricted to lower case ASCII alphabetical characters, the digits and
+underscore (only 26+10+1 different characters allowed) is a compromise.
+It is a compromise that favours simpilicity of searching while restricting
+the freedom of object naming. It follows Unix (Linux) file naming
+conventions.
+.PP
+Also worth mentioning is that all these utilities in this package use
+UTF-8 . If data from another system is in UTF-16 or UTF-32 format then
+it can be converted to UTF-8 with the
+.B iconv
+utility.
 .SH ERRORS
 No attempts have been made to translate errors into JSON form, apart from the
 final "exit_status" JSON object where a value of 0 means 'no errors'. Exit
@@ -313,4 +354,5 @@ This software is distributed under the GPL version 2 or the BSD\-2\-Clause
 license. There is NO warranty; not even for MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B sg3_utils(sg3_utils), smartctl(smartmontools)
+.B iconv(1), lsblk(8), lsscsi(lsscsi), sg3_utils(sg3_utils),
+.B smartctl(smartmontools)

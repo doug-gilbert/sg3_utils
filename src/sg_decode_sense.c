@@ -31,7 +31,7 @@
 #include "sg_unaligned.h"
 
 
-static const char * version_str = "1.44 20230618";
+static const char * version_str = "1.45 20231019";
 
 #define MY_NAME "sg_decode_sense"
 
@@ -161,10 +161,11 @@ usage()
           "writing\n\n"
           "Decodes SCSI sense data given on the command line as a sequence "
           "of\nhexadecimal bytes (H1 H2 H3 ...) . Alternatively the sense "
-          "data can\nbe in a binary file or in a file containing ASCII "
-          "hexadecimal. If\n'--cdb' is given then interpret hex as SCSI CDB "
-          "rather than sense data.\nMay translate arbitrary hex data to "
-          "binary and vice versa when\n--nodecode is given.\n"
+          "data can be in a\nbinary file or in a file containing ASCII "
+          "hexadecimal. If '--cdb' is given\nthen interpret hex as SCSI CDB "
+          "rather than sense data. May translate\narbitrary hex data to "
+          "binary and vice versa when --nodecode is given.\nExample: "
+          "sg_decode_sense -N -i vpd_fs.hex -w vpd_fs.bin\n"
           );
 }
 

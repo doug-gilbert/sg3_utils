@@ -1,0 +1,17 @@
+#
+# The SCSI STREAM CONTROL command yields parameter data which in the
+# case of STR_CTL=1 (open) contains the newly opened Stream Identifier
+# ASSIGNED_STR_ID. That field is 16 bits long and should not be 0.
+# In the case of STR_CTL=2 (close) it seems 8 bytes of parameter data
+# is also returned with the value of ASSIGNED_STR_ID is "reserved".
+# In practice that should be zero.
+#
+# This can be tested with:
+#    sg_stream_ctl --open --inhex=<this_file>
+# and the ASSIGNED_STR_ID field should be 3 .
+# Note the the '--open' option is needed to flag that the response data
+# is from a SCSI STREAM CONTROL command.
+#
+# For a GET STREAM STATUS command example see the stream_ctl_get.hex file .
+
+7 0 0 0  0 3 0 0

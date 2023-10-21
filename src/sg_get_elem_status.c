@@ -38,7 +38,7 @@
  * given SCSI device.
  */
 
-static const char * version_str = "1.24 20231015";      /* sbc5r04 */
+static const char * version_str = "1.25 20231019";      /* sbc5r05 */
 
 #define MY_NAME "sg_get_elem_status"
 
@@ -370,13 +370,16 @@ main(int argc, char * argv[])
     uint8_t * free_gpesBuffp = NULL;
     struct opts_t * op;
     sgj_opaque_p jop = NULL;
-    sgj_opaque_p jo2p;
+    sgj_opaque_p jo2p = NULL;
+    sgj_opaque_p jo3p = NULL;
     sgj_opaque_p jap = NULL;
     sgj_state * jsp;
     struct gpes_desc_t a_ped;
     char b[80];
     struct opts_t opts SG_C_CPP_ZERO_INIT;
     static const int blen = sizeof(b);
+    static const char * gpes_pd_sn =
+                "get_physical_element_status_parameter_data";
     static const char * cmnode_s =
                 "Current maximum number of depopulated elements";
 
@@ -631,6 +634,7 @@ start_response:
         goto fini;
     } else
         op->maxlen -= resid;
+    jo2p = sgj_named_subobject_r(jsp, jop, gpes_pd_sn);
     num_desc = sg_get_unaligned_be32(gpesBuffp + 0);
     if (op->maxlen > 7) {
         num_desc_ret = sg_get_unaligned_be32(gpesBuffp + 4);
@@ -667,19 +671,19 @@ start_response:
         goto fini;
     }
 
-    sgj_haj_vi(jsp, jop, 0, "Number of descriptors",
+    sgj_haj_vi(jsp, jo2p, 0, "Number of descriptors",
                SGJ_SEP_COLON_1_SPACE, num_desc, false);
-    sgj_haj_vi(jsp, jop, 0, "Number of descriptors returned",
+    sgj_haj_vi(jsp, jo2p, 0, "Number of descriptors returned",
                SGJ_SEP_COLON_1_SPACE, num_desc_ret, false);
-    sgj_haj_vi(jsp, jop, 0, "Identifier of element being depopulated",
+    sgj_haj_vi(jsp, jo2p, 0, "Identifier of element being depopulated",
                SGJ_SEP_COLON_1_SPACE, id_elem_depop, true);
     if (cur_max_num_depop > 0)
-        sgj_haj_vi(jsp, jop, 0, cmnode_s, SGJ_SEP_COLON_1_SPACE,
+        sgj_haj_vi(jsp, jo2p, 0, cmnode_s, SGJ_SEP_COLON_1_SPACE,
                    cur_max_num_depop, false);
     else
-        sgj_haj_vs(jsp, jop, 0, cmnode_s, SGJ_SEP_COLON_1_SPACE,
+        sgj_haj_vs(jsp, jo2p, 0, cmnode_s, SGJ_SEP_COLON_1_SPACE,
                    "not reported");
-    sgj_haj_vi(jsp, jop, 0, "Current number of depopulated elements",
+    sgj_haj_vi(jsp, jo2p, 0, "Current number of depopulated elements",
                SGJ_SEP_COLON_1_SPACE, cur_num_depop, false);
     if (rlen < 64) {
         sgj_pr_hr(jsp, "No complete physical element status descriptors "
@@ -692,7 +696,7 @@ start_response:
     }
 
     if (jsp->pr_as_json)
-        jap = sgj_named_subarray_r(jsp, jop,
+        jap = sgj_named_subarray_r(jsp, jo2p,
                                    "physical_element_status_descriptor_list");
     for (bp = gpesBuffp + GPES_DESC_OFFSET, k = 0; k < (int)num_desc_ret;
          bp += GPES_DESC_LEN, ++k) {
@@ -700,18 +704,18 @@ start_response:
             sgj_pr_hr(jsp, "Element descriptors:\n");
         decode_elem_status_desc(bp, &a_ped);
         if (jsp->pr_as_json) {
-            jo2p = sgj_new_unattached_object_r(jsp);
-            sgj_js_nv_ihex(jsp, jo2p, "element_identifier",
+            jo3p = sgj_new_unattached_object_r(jsp);
+            sgj_js_nv_ihex(jsp, jo3p, "element_identifier",
                            (int64_t)a_ped.elem_id);
             cp = (1 == a_ped.phys_elem_type) ? "storage" : "reserved";
-            sgj_js_nv_istr(jsp, jo2p, "physical_element_type",
+            sgj_js_nv_istr(jsp, jo3p, "physical_element_type",
                            a_ped.phys_elem_type, "meaning", cp);
             j = a_ped.phys_elem_health;
             fetch_health_str(j, false, b, blen);
-            sgj_js_nv_istr(jsp, jo2p, "physical_element_health", j, NULL, b);
-            sgj_js_nv_ihex(jsp, jo2p, "associated_capacity",
+            sgj_js_nv_istr(jsp, jo3p, "physical_element_health", j, NULL, b);
+            sgj_js_nv_ihex(jsp, jo3p, "associated_capacity",
                            (int64_t)a_ped.assoc_cap);
-            sgj_js_nv_o(jsp, jap, NULL /* name */, jo2p);
+            sgj_js_nv_o(jsp, jap, NULL /* name */, jo3p);
         } else if (op->do_brief > 1) {
             sgj_pr_hr(jsp, "%u: %u,%u\n", a_ped.elem_id, a_ped.phys_elem_type,
                       a_ped.phys_elem_health);

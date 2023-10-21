@@ -1,4 +1,4 @@
-.TH SG_OPCODES "8" "June 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SG_OPCODES "8" "October 2023" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_opcodes \- report supported SCSI commands or task management functions
 .SH SYNOPSIS
@@ -7,9 +7,9 @@ sg_opcodes \- report supported SCSI commands or task management functions
 [\fI\-\-hex\fR] [\fI\-\-inhex=FN\fR] [\fI\-\-json[=JO]\fR]
 [\fI\-\-js\-file=JFN\fR] [\fI\-\-mask\fR] [\fI\-\-mlu\fR]
 [\fI\-\-no-inquiry\fR] [\fI\-\-opcode=OP[,SA]\fR] [\fI\-\-pdt=DT\fR]
-[\fI\-\-raw\fR] [\fI\-\-rctd\fR] [\fI\-\-repd\fR] [\fI\-\-sa=SA\fR]
-[\fI\-\-tmf\fR] [\fI\-\-unsorted\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
-\fIDEVICE\fR
+[\fI\-\-raw\fR] [\fI\-\-rctd\fR] [\fI\-\-repd\fR] [\fI\-\-rep\-opts=RO\fR]
+[\fI\-\-sa=SA\fR] [\fI\-\-tmf\fR] [\fI\-\-unsorted\fR] [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] \fIDEVICE\fR
 .PP
 .B sg_opcodes
 [\fI\-a\fR] [\fI\-c\fR] [\fI\-e\fR] [\fI\-H\fR] [\fI\-i=FN\fR] [\fI\-j\fR]
@@ -18,24 +18,24 @@ sg_opcodes \- report supported SCSI commands or task management functions
 [\fI\-?\fR] \fIDEVICE\fR
 .SH DESCRIPTION
 .\" Add any additional description here
-This utility sends a SCSI REPORT SUPPORTED OPERATION CODES or a REPORT
-SUPPORTED TASK MANAGEMENT FUNCTIONS command to the \fIDEVICE\fR and then
-outputs the response. The default action is to report supported operation
-codes. In this mode it will either list all supported commands or give
-detailed information on a specific command identified by the
+This utility sends a SCSI REPORT SUPPORTED OPERATION CODES (RSOC) or a REPORT
+SUPPORTED TASK MANAGEMENT FUNCTIONS (RSTMF) command to the \fIDEVICE\fR and
+then outputs the response. The default action is to report supported
+operation codes. In this mode it will either list all supported commands or
+give detailed information on a specific command identified by the
 \fI\-\-opcode=OP\fR option (perhaps with additional information from the
 \fI\-\-sa=SA\fR option).
 .PP
 The name of a SCSI command depends on its peripheral device type (e.g. a
-disk). The REPORT SUPPORTED OPERATION CODES and REPORT SUPPORTED TASK
-MANAGEMENT FUNCTIONS commands are not supported in the MMC command set for
-CD and DVD devices. This utility does an INQUIRY to obtain the peripheral
-device type and prints out the vendor, product and revision strings.
+disk). The RSOC and RSTMF commands are not supported in the MMC command set
+for CD and DVD devices. This utility does an INQUIRY to obtain the
+peripheral device type and prints out the vendor, product and revision
+strings.
 .PP
 A similar facility to query supported operation codes previously was available
 via the CmdDt bit in the SCSI INQUIRY command (see sg_inq(8)). However that
-facility was made obsolete and replaced by the REPORT SUPPORTED OPERATION
-CODES command in SPC\-3 (revision 4) during February 2002.
+facility was made obsolete and replaced by the RSOC command in
+SPC\-3 (revision 4) during February 2002.
 .PP
 This utility supports two command line syntaxes, the preferred one is
 shown first in the synopsis and explained in this section. A later section
@@ -121,14 +121,12 @@ sense key of "illegal request".
 \fB\-M\fR, \fB\-\-mlu\fR
 additionally prints out an indication (0 or 1) whether the command
 effects all logical units in the containing target. MLU (Multiple Logical
-Units) is a bit in the REPORT SUPPORTED OPERATION CODES response
-introduced by proposal 18\-045r1 (and possibly in spc5r20). Without
-the option, the default output format which lists all opcodes, does
-not include a MLU indication.
+Units) is a bit in the RSOC response introduced by proposal 18\-045r1 (and
+possibly in spc5r20). Without the option, the default output format which
+lists all opcodes, does not include a MLU indication.
 .TP
 \fB\-n\fR, \fB\-\-no-inquiry\fR
-Prior to calling a SCSI REPORT SUPPORTED OPERATION CODES or a REPORT
-SUPPORTED TASK MANAGEMENT FUNCTIONS command, a SCSI INQUIRY command
+Prior to calling a SCSI RSOC or a RSTMF command, a SCSI INQUIRY command
 is performed. The reason is to determine the peripheral device type (pdt)
 of the \fIDEVICE\fR as this is helpful in translating operation codes
 to the command names. By default this utility prints a summary of INQUIRY
@@ -148,7 +146,10 @@ and \fISA\fR are decimal unless prefixed by "0x" or they have a
 trailing "h". \fIOP\fR should be in the range 0 to 255 (0xff) inclusive.
 \fISA\fR should be in the range 0 to 65535 (0xffff) inclusive. When this
 option is not given then all available SCSI commands supported by the
-\fIDEVICE\fR are listed.
+.br
+The \fI\-\-rep\-opts=RO\fR option, if given, overrides any decisions implied
+in the previous paragraph about the setting of REPORTING OPTIONS field in
+the RSOC command.
 .TP
 \fB\-p\fR, \fB\-\-pdt\fR=\fIDT\fR
 where \fIDT\fR is the peripheral device type. This is used together with
@@ -179,6 +180,12 @@ the corresponding decoded output as "\-".
 set read extended parameter data (REPD) bit in the report task management
 functions cdb. 16 bytes rather than the default 4 bytes expected in the
 response. This was added in SPC\-4 (revision 26).
+.TP
+\fB\-Q\fR, \fB\-\-rep\-opts\fR=\fIRO\fR
+\fIRO\fR is the reporting options field value that is placed in RSOC
+command (cdb). If this option is not given and the \fI\-\-opcode=OP[,SA]\fR
+option is also not given then \fIRO\fR default to 0. All supported commands
+are listed when \fIRO\fR is 0 .
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISA\fR
 the \fIDEVICE\fR will be queried for a command with the given service
