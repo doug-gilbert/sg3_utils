@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20231020] [svn: r1057]
+Changelog for pre-release sg3_utils-1.49 [20231026] [svn: r1058]
   - JSON: make output more consistent so most command
     responses have a *_paramter_data or similar sub-object
   - apply https://github.com/doug-gilbert/sg3_utils/pull/39
@@ -16,6 +16,9 @@ Changelog for pre-release sg3_utils-1.49 [20231020] [svn: r1057]
     - add RSCS field to Block limits ext. vpage [sbc5r5]
   - sg_turs: fix missing CDB on several codepaths
   - sg_requests: improve buffer truncation
+  - sg_logs: correct tape Device statisitics lpage [0x14]
+    serial number parameters [0x40 and 0x41] per
+    https://github.com/doug-gilbert/sg3_utils/issues/45
   - sg_get_elem_status: various improvements
   - sg_stream_ctl: add --hex, --inhex=, --json= and --raw
     options; additions in sbc5r05

@@ -40,7 +40,7 @@
 
 #include "sg_logs.h"
 
-static const char * version_str = "2.36 20231015";    /* spc6r10 + sbc5r05 */
+static const char * version_str = "2.37 20231026";    /* spc6r10 + sbc5r05 */
 
 #define MY_NAME "sg_logs"
 
@@ -7888,7 +7888,7 @@ skip:
     return true;
 }
 
-/* Device statistics 0x14 <ds> for tape and ADC */
+/* DEVICE_STATS_LPAGE [0x14] Device statistics lpage for tape and ADC */
 static bool
 show_device_stats_page(const uint8_t * resp, int len,
                        struct opts_t * op, sgj_opaque_p jop)
@@ -7908,6 +7908,7 @@ show_device_stats_page(const uint8_t * resp, int len,
     char b[196];
     static const int blen = sizeof(b);
     static const char * const ds_lp = "Device statistics log page";
+    static const char * const sn_sn = "serial_number";
 
     if (op->verbose || ((0 == op->do_raw) &&
         ((0 == op->do_hex) || (op->do_hex > 3)))) {
@@ -8036,10 +8037,22 @@ show_device_stats_page(const uint8_t * resp, int len,
                        "sample time";
                 break;
             case 0x40:
+                vl_num = false;
                 ccp = "Drive manufacturer's serial number";
+                sgj_pr_hr(jsp, "  %s: %.*s\n", ccp, pl - 4, bp + 4);
+                if (jsp->pr_as_json) {
+                    sgj_js_nv_ihexstr(jsp, jo3p, param_c_sn, pc, NULL, ccp);
+                    sgj_js_nv_s_len_chk(jsp, jo3p, sn_sn, bp + 4, pl - 4);
+                }
                 break;
             case 0x41:
+                vl_num = false;
                 ccp = "Drive serial number";
+                sgj_pr_hr(jsp, "  %s: %.*s\n", ccp, pl - 4, bp + 4);
+                if (jsp->pr_as_json) {
+                    sgj_js_nv_ihexstr(jsp, jo3p, param_c_sn, pc, NULL, ccp);
+                    sgj_js_nv_s_len_chk(jsp, jo3p, sn_sn, bp + 4, pl - 4);
+                }
                 break;
             case 0x42:          /* added ssc5r02b */
                 vl_num = false;
