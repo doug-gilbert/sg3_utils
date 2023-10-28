@@ -1194,7 +1194,7 @@ sgj_haj_xx(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
                 case json_string:
                     break;
                 case json_integer:
-                    if (hex_haj) {
+                    if (json_hex) {
                         sgj_js_nv_ihexstr(jsp, jop, jname, jvp->u.integer,
                                           sc_mn_s, val_s);
                         done = true;
