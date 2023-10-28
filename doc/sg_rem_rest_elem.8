@@ -107,14 +107,14 @@ Depopulation may be useful if one of those ICs becomes faulty.
 At time of writing, OS and HBA support for depopulating hard disks is
 incomplete. For example Linux as of lk 6.5.7 does not properly handle the
 situation when a hard disk is in "depopulation" mode. Also at least one
-SAS-4 HBA has trouble booting when one of its attached hard disks is
+SAS\-4 HBA has trouble booting when one of its attached hard disks is
 in "depopulation" mode. Suggestion: depopulating a head on a hard
-disk (or restoring it) should be done on a non-production system that
+disk (or restoring it) should be done on a non\-production system that
 is not used for any other purpose during the depopulation.
 .PP
 When a hard disk is in "depopulation" mode a REQUEST SENSE command
 can be sent to obtain "progress" information. This can be done with
-the 'sg_requests' or 'sg_requests --progress' utility.
+the 'sg_requests' or 'sg_requests \-\-progress' utility.
 .PP
 In summary, "head" depopulation on a hard disk can be viewed as a type
 of format operation that takes a failed or failing disk with media

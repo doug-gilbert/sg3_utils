@@ -4,7 +4,7 @@ sg_sat_set_features \- use ATA SET FEATURES command via a SCSI to ATA
 Translation (SAT) layer
 .SH SYNOPSIS
 .B sg_sat_set_features
-[\fI\-\-count=CO\fR] [\fI\-\-ck_cond\fR] [\fI--extended\fR]
+[\fI\-\-count=CO\fR] [\fI\-\-ck_cond\fR] [\fI\-\-extended\fR]
 [\fI\-\-feature=FEA\fR] [\fI\-\-help\fR] [\fI\-\-lba=LBA\fR]
 [\fI\-\-len=\fR{16|12}] [\fI\-\-readonly\fR] [\fI\-\-verbose\fR]
 [\fI\-\-version\fR] \fIDEVICE\fR
@@ -22,7 +22,7 @@ The SAT standard (SAT ANSI INCITS 431\-2007, prior draft: sat\-r09.pdf at
 www.t10.org) defines two SCSI "ATA PASS\-THROUGH" commands: one using a 16
 byte "cdb" and the other with a 12 byte cdb. This utility defaults to using
 the 16 byte cdb variant. SAT\-2 is also a standard: SAT\-2 ANSI INCITS
-465\-2010 and the draft prior to that is sat2r09.pdf . The SAT-3 project has
+465\-2010 and the draft prior to that is sat2r09.pdf . The SAT\-3 project has
 started and the most recent draft is sat3r05b.pdf .
 .PP
 The features can be read using the sg_sat_identify utility which uses either

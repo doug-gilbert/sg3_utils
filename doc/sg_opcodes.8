@@ -6,7 +6,7 @@ sg_opcodes \- report supported SCSI commands or task management functions
 [\fI\-\-alpha\fR] [\fI\-\-compact\fR] [\fI\-\-enumerate\fR] [\fI\-\-help\fR]
 [\fI\-\-hex\fR] [\fI\-\-inhex=FN\fR] [\fI\-\-json[=JO]\fR]
 [\fI\-\-js\-file=JFN\fR] [\fI\-\-mask\fR] [\fI\-\-mlu\fR]
-[\fI\-\-no-inquiry\fR] [\fI\-\-opcode=OP[,SA]\fR] [\fI\-\-pdt=DT\fR]
+[\fI\-\-no\-inquiry\fR] [\fI\-\-opcode=OP[,SA]\fR] [\fI\-\-pdt=DT\fR]
 [\fI\-\-raw\fR] [\fI\-\-rctd\fR] [\fI\-\-repd\fR] [\fI\-\-rep\-opts=RO\fR]
 [\fI\-\-sa=SA\fR] [\fI\-\-tmf\fR] [\fI\-\-unsorted\fR] [\fI\-\-verbose\fR]
 [\fI\-\-version\fR] \fIDEVICE\fR
@@ -107,7 +107,7 @@ stdout.
 .br
 When this option is given, the \fI\-\-json[=JO]\fR option is implied and
 need not be given. The \fI\-\-json[=JO]\fR option may still be needed to
-set the \fIJO\fR parameter to non-default values.
+set the \fIJO\fR parameter to non\-default values.
 .TP
 \fB\-m\fR, \fB\-\-mask\fR
 additionally prints out the cdb mask in hex. So a 12 byte cdb will have
@@ -125,7 +125,7 @@ Units) is a bit in the RSOC response introduced by proposal 18\-045r1 (and
 possibly in spc5r20). Without the option, the default output format which
 lists all opcodes, does not include a MLU indication.
 .TP
-\fB\-n\fR, \fB\-\-no-inquiry\fR
+\fB\-n\fR, \fB\-\-no\-inquiry\fR
 Prior to calling a SCSI RSOC or a RSTMF command, a SCSI INQUIRY command
 is performed. The reason is to determine the peripheral device type (pdt)
 of the \fIDEVICE\fR as this is helpful in translating operation codes
@@ -156,10 +156,10 @@ where \fIDT\fR is the peripheral device type. This is used together with
 the \fI\-\-enumerate\fR to differentiate when a command opcode (and perhaps
 service action) is shared by multiple device types.
 .br
-Numerical values between -1 and 31 (inclusive) may be used where -1 implies
+Numerical values between \-1 and 31 (inclusive) may be used where \-1 implies
 what is in SPC. Names like 'tape', 'disk' and 'processor' may also be given.
 .br
-This option may also be used with the \fI\-\-no-inquiry\fR option to
+This option may also be used with the \fI\-\-no\-inquiry\fR option to
 suppress this utility doing an INQUIRY command since the main reason
 for doing that is to find the peripheral device type of the \fIDEVICE\fR.
 .TP
@@ -253,7 +253,7 @@ see the \fI\-\-mask\fR option above.
 \fB\-n\fR
 don't print a summary of the SCSI INQUIRY response on stdout.
 .TP
-\fB-N\fR, \fB\-\-new\fR
+\fB\-N\fR, \fB\-\-new\fR
 Switch to the newer style options.
 .TP
 \fB\-o\fR=\fIOP\fR

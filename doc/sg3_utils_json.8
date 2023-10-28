@@ -17,27 +17,27 @@ plain text output.
 JavaScript Object Notation (JSON) is an open standard file format that can be
 used for data exchange between programs including across a network. See
 https://en.wikipedia.org/wiki/JSON . JSON comes in many flavours and this one
-uses the json-builder C implementation found at
-https://github.com/json-parser/json-builder which implements four simple JSON
-data types: string, integer, boolean and null. Its other data types are JSON
-object and JSON array.
+uses the json\-builder C implementation found at
+https://github.com/json\-parser/json\-builder which implements four simple
+JSON data types: string, integer, boolean and null. Its other data types are
+JSON object and JSON array.
 .PP
 This project uses the 'snake_case' convention for JSON object names: all in
 lower case (ASCII) letters or numerals with individual words joined with a
 single underscore (e.g. "starting_lba"). There should be no leading or
 trailing underscore characters. Repeated underscores are abridged to a
-single underscore. The json-builder library uses the
+single underscore. The json\-builder library uses the
 SPDX\-License\-Identifier: BSD\-2\-Clause which is the same license as the
 bulk of the utilities in the sg3_utils package.
 .PP
-The json-builder library is relatively lightweight (700 lines of C code) and
+The json\-builder library is relatively lightweight (700 lines of C code) and
 is 'hidden' fully within the sg3_utils library so that its function interface
 and data types are not available (directly) to the utilities in the sg3_utils
-package. That is why the json-builder interface (a file named
+package. That is why the json\-builder interface (a file named
 sg_json_builder.h) is in the lib directory and not in the include directory.
-As presented on github, json-builder shares some header files with its
-companion json-parser. The author has modified the json-builder header to
-include what is needed from the json-parser header so that only the builder
+As presented on github, json\-builder shares some header files with its
+companion json\-parser. The author has modified the json\-builder header to
+include what is needed from the json\-parser header so that only the builder
 and not the parser are built. The parser could be added later, but currently
 there seems to be no need for it.
 .PP
@@ -75,8 +75,8 @@ has already been used (\fI\-J\fR is preferred next). For example the sg_ses
 utility uses \fI\-j\fR for its 'join' operation. Also since the argument to
 the short form option is itself optional, there can be no spaces between the
 short form option, the "=", and \fIJO\fR, if it is given. Some short form
-examples: '-jl' requests JSON output (with no argument option) and whatever
-the '-l' short option means in the invoked utility; '-j=h' requests JSON
+examples: '\-jl' requests JSON output (with no argument option) and whatever
+the '\-l' short option means in the invoked utility; '\-j=h' requests JSON
 output with some integers additional rendered as JSON strings of hex.
 .TP
 \fB\-J\fR, \fB\-\-js\-file\fR=\fIJFN\fR
@@ -86,7 +86,7 @@ stdout.
 .br
 When this option is given, the \fI\-\-json[=JO]\fR option is implied and
 need not be given. The \fI\-\-json[=JO]\fR option may still be needed to
-set the \fIJO\fR parameter to non-default values.
+set the \fIJO\fR parameter to non\-default values.
 .br
 The short option may be other than \fI\-J\fR if that short option was already
 in use.
@@ -228,7 +228,7 @@ When the \fI\-\-json\fR option is given and no errors are detected, then
 only JSON is normally sent to stdout. As the SCSI response is parsed, a JSON
 representation is built as a tree in memory. After all other actions (perhaps
 apart from the final exit status report) that JSON tree is 'dumped' to
-stdout. This means if there is any non-JSON output sent to stdout that
+stdout. This means if there is any non\-JSON output sent to stdout that
 it will appear _before_ the JSON output.
 .PP
 If the 'o' control character is in the \fIJO\fR argument to the
@@ -244,8 +244,8 @@ the Device Identification VPD page there is a 'Designation descriptor
 list' that becomes a JSON array named "designation_descriptor_list").
 .PP
 At the completion of the utility that JSON tree is 'measured' taking into
-account the form of output (i.e. pretty-printed, single line or packed single
-line). For the pretty-printed JSON output, the size of each indentation in
+account the form of output (i.e. pretty\-printed, single line or packed single
+line). For the pretty\-printed JSON output, the size of each indentation in
 spaces is also given (i.e. the tab width). The JSON is then output to a
 single C string, then sent to stdout. If a NULL character (ASCII zero and C
 string terminator) somehow finds its way into a field that should (according
@@ -315,8 +315,8 @@ the freedom of object naming. It follows Unix (Linux) file naming
 conventions.
 .PP
 Also worth mentioning is that all these utilities in this package use
-UTF-8 . If data from another system is in UTF-16 or UTF-32 format then
-it can be converted to UTF-8 with the
+UTF\-8 . If data from another system is in UTF\-16 or UTF\-32 format then
+it can be converted to UTF\-8 with the
 .B iconv
 utility.
 .SH ERRORS

@@ -120,7 +120,7 @@ stdout.
 .br
 When this option is given, the \fI\-\-json[=JO]\fR option is implied and
 need not be given. The \fI\-\-json[=JO]\fR option may still be needed to
-set the \fIJO\fR parameter to non-default values.
+set the \fIJO\fR parameter to non\-default values.
 .TP
 \fB\-N\fR, \fB\-\-nodecode\fR
 Do not decode the given data as sense or a cdb. Useful when arbitrary data
@@ -210,7 +210,7 @@ also be used to convert from arbitrary hex to binary with:
 .PP
 Note that tools like hexdump and od place a counter (i.e. an index starting
 at 0) at the beginning of each line which is a pain when parsing hex.
-The '/-HHH' option(s) does not output that leading counter on each line.
+The '\-HHH' option(s) does not output that leading counter on each line.
 .SH EXIT STATUS
 The exit status of sg_decode_sense is 0 when it is successful. Otherwise
 see the sg3_utils(8) man page.

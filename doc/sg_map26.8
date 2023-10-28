@@ -111,7 +111,7 @@ form: /dev/nvme<c>n<n>[p<pn>] where <c> is the controller number (starting
 at 0), <n> is the namespace identifier (starting at 1), and <pn> is the
 partition number (starting at 1). There are two forms of NVMe character
 device nodes: one of the form /dev/nvme<c> and the other of the
-form /dev/ng<c>n<n> where "ng" is newer and termed as 'nvme-generic' in
+form /dev/ng<c>n<n> where "ng" is newer and termed as 'nvme\-generic' in
 the /proc/devices output. This utility identifies but does not map NVMe
 devices. Their naming is more consistent so a utility like this is less
 needed. Udev might be used to remap the kernel's naming scheme for NVMe,

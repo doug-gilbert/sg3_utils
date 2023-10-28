@@ -13,7 +13,7 @@ Sends a SET DATE & TIME EXT or READ LOG [DMA] EXT command to the ATA
 \fIDEVICE\fR to set the date and time or read it from the Device Statistics
 log address(04h), General Statistics page (01h). These commands are found in
 the ATA Command Set (ACS\-5) standard.  ATA commands are sent using ATA
-PASS-THROUGH SCSI commands.
+PASS\-THROUGH SCSI commands.
 .PP
 If either the \fI\-\-milliseconds=MS\fR or \fI\-\-seconds=SECS\fR option is
 given (and both can't be given) then the SET DATE & TIME command is sent.
@@ -26,8 +26,8 @@ in a 48 bit unsigned integer. That same epoch is used by Unix machines, but they
 usually hold the number of seconds since that epoch. The Unix date command
 and especially its "+%s" format is useful in converting to and from
 timestamps and more humanly readable forms. See the EXAMPLES section below. If
-the date and time is not set after power-on reset, the value is the same as the
-device power-on hours in milliseconds.
+the date and time is not set after power\-on reset, the value is the same as the
+device power\-on hours in milliseconds.
 .SH OPTIONS
 Arguments to long options are mandatory for short options as well.
 .TP
@@ -44,8 +44,8 @@ is milliseconds (000 to 999 inclusive). If the number of days is 0
 then '0 days' is not output unless this option is given two or more times.
 .br
 This option is especially useful if the date and time has not been set. Per
-ACS-5, when not set, the date and time is initialized to the power-on hours of
-the device in milliseconds.
+ACS\-5, when not set, the date and time is initialized to the power\-on hours
+of the device in milliseconds.
 .TP
 \fB\-f\fR, \fB\-\-format\fR
 output the date and time formatted using the default locale.
@@ -86,10 +86,11 @@ The \fIDEVICE\fR should immediately start accumulating time after the date
 and time is set.  ie. If you set and then retrieve the date and time, the
 returned values will likely have increased.
 
-The ACS-5 standard makes no provision for a power-safe date and time storage.
-Unless the device has vendor-specific power-safe capability, after a power-on
-reset, per ACS-5, the date and time should be the power-on hours of the device
-returned in milliseconds (or seconds if \-\-srep option is used).
+The ACS\-5 standard makes no provision for a power\-safe date and time
+storage. Unless the device has vendor\-specific power\-safe capability, after
+a power\-on reset, per ACS\-5, the date and time should be the power\-on
+hours of the device returned in milliseconds (or seconds if \-\-srep option
+is used).
 .SH EXAMPLES
 On Unix machines (e.g. Linux, FreeBSD, and Solaris) the date command is useful
 when working with timestamps.
@@ -107,7 +108,7 @@ Mon Apr 10 02:55:06 PM CDT 2023
 .PP
    # date \-R \-\-date="@1681156506"
 .br
-Mon, 10 Apr 2023 14:55:06 -0500
+Mon, 10 Apr 2023 14:55:06 \-0500
 .PP
 The latter two date commands show different forms of the same date (i.e.
 1681156506 seconds since 1970\-01\-01 00:00:00 UTC). The
@@ -115,7 +116,7 @@ sg_sat_datetime and date commands can be combined using backquotes:
 .PP
    # date \-R \-\-date=@`sg_sat_datetime \-S /dev/sg2`
 .br
-Mon, 10 Apr 2023 14:55:06 -0500
+Mon, 10 Apr 2023 14:55:06 \-0500
 .PP
 Alternatively, the \-\-format option can be used to format the date and time
 using the default locale.

@@ -5,7 +5,7 @@ state
 .SH SYNOPSIS
 .B sg_reset
 [\fI\-\-bus\fR] [\fI\-\-device\fR] [\fI\-\-help\fR] [\fI\-\-host\fR]
-[\fI\-\-no-esc\fR] [\fI\-\-target\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+[\fI\-\-no\-esc\fR] [\fI\-\-target\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
 \fIDEVICE\fR
 .SH DESCRIPTION
 .\" Add any additional description here
@@ -54,7 +54,7 @@ will escalate to a target reset. And if a target reset (\fI\-\-target\fR)
 fails then it will escalate to a bus reset. And if a bus
 reset (\fI\-\-bus\fR) fails then it will escalate to a host reset. With this
 option only the requested reset is attempted. An alternate option name of
-\fI\-\-no-escalate\fR is also accepted.
+\fI\-\-no\-escalate\fR is also accepted.
 .TP
 \fB\-\-no\-escalate\fR
 The same as \fB\-N\fR, \fB\-\-no\-esc\fR.
@@ -76,11 +76,11 @@ with a SCSI command timing out and no response from the device (LU) does the
 following. First it tries a device reset and if that is not successful tries
 a target reset. If that is not successful it tries a bus reset. If that is
 not successful it tries a host reset. The "device,target,bus,host" order is
-the reset escalation that the \fI\-\-no-esc\fR option attempts to stop. In
+the reset escalation that the \fI\-\-no\-esc\fR option attempts to stop. In
 large storage configurations the escalation may be (very) undesirable.
 .PP
 This utility calls the SG_SCSI_RESET ioctl and as of lk 3.10.7 the
-\fI\-\-no-esc\fR option is not supported. Patches to implement this
+\fI\-\-no\-esc\fR option is not supported. Patches to implement this
 functionality may be accepted in lk 3.18 or 3.19 .
 .PP
 SAM\-4 and 5 define a hard reset, a LOGICAL UNIT RESET and a I_T NEXUS

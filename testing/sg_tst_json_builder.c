@@ -29,7 +29,7 @@
 
 #define MY_NAME "sg_tst_json_builder"
 
-static const char * version_str = "1.04 20230514";
+static const char * version_str = "1.05 20231027";
 
 
 static struct option long_options[] = {
@@ -37,6 +37,7 @@ static struct option long_options[] = {
         {"json", optional_argument, 0, 'j'},
         {"js-file", required_argument, 0, 'J'},
         {"js_file", required_argument, 0, 'J'},
+        {"plain", no_argument, 0, 'p'},
         {"verbose", no_argument, 0, 'v'},
         {"version", no_argument, 0, 'V'},
         {0, 0, 0, 0},
@@ -75,13 +76,14 @@ int
 main(int argc, char * argv[])
 {
     bool do_json = false;
+    bool do_plain = false;
     bool verbose_given = false;
     bool version_given = false;
     int c;
     int verbose = 0;
     int ret = 0;
     size_t len;
-    sgj_state jstate;
+    sgj_state jstate SG_C_CPP_ZERO_INIT;
     sgj_state * jstp = &jstate;
     json_value * jv1p;
     json_value * jv2p;
@@ -91,7 +93,7 @@ main(int argc, char * argv[])
     json_value * jv5p;
     json_value * ja1p = json_array_new(0);
     json_value * ja2p;
-    json_value * jsp = json_string_new("hello world 1");
+    json_value * js1p = json_string_new("hello world 1");
     json_value * js2p = json_string_new("hello world 2");
     json_value * js3p = json_string_new("hello world 3");
     json_value * js10 = json_string_new("good-bye world");
@@ -109,7 +111,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hj::J:vV", long_options, &option_index);
+        c = getopt_long(argc, argv, "hj::J:pvV", long_options, &option_index);
         if (c == -1)
             break;
 
@@ -129,6 +131,9 @@ main(int argc, char * argv[])
                 case 'v':
             verbose_given = true;
             ++verbose;
+            break;
+        case 'p':
+            do_plain = true;
             break;
         case 'V':
             version_given = true;
@@ -159,7 +164,7 @@ main(int argc, char * argv[])
         return 0;
     }
     jvp = sgj_start_r(MY_NAME, version_str, argc, argv, jstp);
-    jv1p = json_object_push(jvp, "contents", jsp);
+    jv1p = json_object_push(jvp, "contents", js1p);
 
     if (jvp == jv1p)
         printf("jvp == jv1p\n");
@@ -195,6 +200,8 @@ main(int argc, char * argv[])
 #endif
     jv5p = jvp;
 
+    
+
     len = json_measure_ex(jv5p, out_settings);
     printf("jvp length: %zu bytes\n", len);
     if (len < sizeof(b)) {
@@ -208,7 +215,7 @@ main(int argc, char * argv[])
     json_builder_free(jvp);
     printf("\nNow test using sgj_* interface in sg_pr2serr.h\n");
     {
-        sgj_state a_js;
+        sgj_state a_js SG_C_CPP_ZERO_INIT;
         sgj_state * jsp = &a_js;
         sgj_opaque_p jop = NULL;
         sgj_opaque_p jo2p = NULL;
@@ -216,23 +223,24 @@ main(int argc, char * argv[])
         FILE * fp = stdout;
 
         if (verbose_given)
-            pr2serr("do_json=%d\n", do_json);
-        if (! sgj_init_state(jsp, json_arg)) {
-            int bad_char = jsp->first_bad_char;
-            char e[1500];
+            pr2serr("do_json=%d, do_plain=%d\n", do_json, do_plain);
+	if (do_json) {
+            if (! sgj_init_state(jsp, json_arg)) {
+                int bad_char = jsp->first_bad_char;
+                char e[1500];
 
-            pr2serr("sgj_init_state() returned false\n");
+                pr2serr("sgj_init_state() returned false\n");
 
-            if (bad_char) {
-                pr2serr("bad argument to --json= option, unrecognized "
-                        "character '%c'\n\n", bad_char);
+                if (bad_char) {
+                    pr2serr("bad argument to --json= option, unrecognized "
+                            "character '%c'\n\n", bad_char);
+                }
+                sg_json_usage(0, e, sizeof(e));
+                pr2serr("%s", e);
+                return 1;
             }
-            sg_json_usage(0, e, sizeof(e));
-            pr2serr("%s", e);
-            return 1;
-        }
-        jop = sgj_start_r(MY_NAME, version_str, argc, argv, jsp);
-
+            jop = sgj_start_r(MY_NAME, version_str, argc, argv, jsp);
+	}
         jap = sgj_named_subarray_r(jsp, jop, "mixed_array");
         sgj_js_nv_o(jsp, jap, NULL /* no name so adding to array */,
                     sgj_new_unattached_string_r(jsp, "a string"));
@@ -254,7 +262,24 @@ main(int argc, char * argv[])
                        2468);
         sgj_js_nv_s_nex(jsp, jo2p, "kernel_node_name", "/dev/sda",
                         "kernel name before udev or user changed it");
+
         /* add more tests here <<<<<<<<<             xxxxxxxxxxxxxxxxx */
+        sgj_pr_hr(jsp, "Test '_haj_' calls (human readable and json)\n");
+	sgj_haj_vs(jsp, jo2p, 2, "sgj_haj_vs", SGJ_SEP_COLON_1_SPACE,
+	           "should have leaing spaces");
+	sgj_haj_vi(jsp, jo2p, 2, "sgj_haj_vi", SGJ_SEP_COLON_1_SPACE,
+	           42, false);
+	sgj_haj_vi(jsp, jo2p, 4, "sgj_haj_vi_hex_haj", SGJ_SEP_COLON_1_SPACE,
+	           42, true);
+	sgj_haj_vi_nex(jsp, jo2p, 2, "sgj_haj_vi_nex", SGJ_SEP_COLON_1_SPACE,
+	           42, false, "Name extra");
+	sgj_haj_vistr(jsp, jo2p, 2, "sgj_haj_vistr", SGJ_SEP_COLON_1_SPACE,
+	              42, false, "integer and this string");
+	sgj_haj_vistr(jsp, jo2p, 4, "sgj_haj_vistr_t", SGJ_SEP_COLON_1_SPACE,
+	              42, true, "hex_haj is true");
+	sgj_haj_vistr_nex(jsp, jo2p, 2, "sgj_haj_vistr_nex",
+			  SGJ_SEP_COLON_1_SPACE, 42, false,
+			  "hex_haj is false", "Name extra");
 
         if (js_file) {
             if ((1 != strlen(js_file)) || ('-' != js_file[0])) {
@@ -269,7 +294,7 @@ main(int argc, char * argv[])
             }
             /* '--js-file=-' will send JSON output to stdout */
         }
-        if (fp)
+        if (fp && do_json)
             sgj_js2file(jsp, NULL, ret, fp);
         if (js_file && fp && (stdout != fp))
             fclose(fp);

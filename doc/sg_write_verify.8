@@ -161,7 +161,7 @@ Since '\-\-num=' is not given then it defaults to 1. Further the \fIILEN\fR
 value is obtained from the file size of t.bin . To additionally do a
 data\-out comparison to the read back data:
 .PP
-  # sg_write_verify \-l 0x1234 \-i t.bin --bytchk=1 /dev/sg4
+  # sg_write_verify \-l 0x1234 \-i t.bin \-\-bytchk=1 /dev/sg4
 .PP
 The ddpt command can do copies between SCSI devices using READ and WRITE
 commands. However, currently it has no facility to promote those WRITES

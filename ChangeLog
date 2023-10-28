@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20231026] [svn: r1058]
+Changelog for pre-release sg3_utils-1.49 [20231027] [svn: r1059]
   - JSON: make output more consistent so most command
     responses have a *_paramter_data or similar sub-object
   - apply https://github.com/doug-gilbert/sg3_utils/pull/39
@@ -30,6 +30,7 @@ Changelog for pre-release sg3_utils-1.49 [20231026] [svn: r1058]
   - lib/sg_pt_solaris.c : fix compilation issue per
     https://github.com/doug-gilbert/sg3_utils/pull/41
     - add --mfile=MF option for decoding mask in the MF file
+  - lib/sgj_haj_*() functions: tweak hex_haj argument meaning
   - scripts/00-scsi-sg3_config.rules : apply
     https://github.com/doug-gilbert/sg3_utils/pull/42
   - testing/sg_chk_inq_vd.c: test internal table against T10

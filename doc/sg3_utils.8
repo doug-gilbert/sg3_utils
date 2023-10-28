@@ -35,7 +35,7 @@ Architecture Model (SAM) with SAM\-5 being the most recent standard (ANSI
 INCITS 515\-2016) with the most recent draft being SAM\-6 revision 4 . SCSI
 commands in common with all device types can be found in SCSI Primary
 Commands (SPC) of which SPC\-5 is the most recent standard (ANSI INCITS
-502-2020). The most recent SPC draft is SPC\-6 revision 6. Block device
+502\-2020). The most recent SPC draft is SPC\-6 revision 6. Block device
 specific commands (e.g. as used by disks) are in SBC, those for tape drives
 in SSC, those for SCSI enclosures in SES and those for CD/DVD/BD drives in
 MMC.
@@ -391,7 +391,7 @@ Depopulation in progress. An exception is [0x2, 0x4, 0x1a] which is:
 LU not ready, Start stop unit command in progress. This is based on the
 assumption that SSU should complete in 30 seconds or less. Most of the
 other "in progress" messages could flag a wait of tens of hours. In most
-cases 'sg_requests --progress \fIDEVICE\fR' should quantify just how long
+cases 'sg_requests \-\-progress \fIDEVICE\fR' should quantify just how long
 the wait will be.
 .TP
 .B 17
@@ -680,7 +680,7 @@ stdout.
 .br
 When this option is given, the \fI\-\-json[=JO]\fR option is implied and
 need not be given. The \fI\-\-json[=JO]\fR option may still be needed to
-set the \fIJO\fR parameter to non-default values.
+set the \fIJO\fR parameter to non\-default values.
 .TP
 \fB\-m\fR, \fB\-\-maxlen\fR=\fILEN\fR
 several important SCSI commands (e.g. INQUIRY and MODE SENSE) have response

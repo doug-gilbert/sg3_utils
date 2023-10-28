@@ -34,13 +34,13 @@ Synopsis per supported command:
 .PP
 .B sg_write_x
 \fI\-\-atomic=AB\fR \fI\-\-in=IF\fR [\fI\-\-16\fR] [\fI\-\-32\fR]
-[\fI\-\-app-tag=AT\fR] [\fI\-\-bs=BS\fR] [\fI\-\-dpo\fR] [\fI\-\-fua\fR]
+[\fI\-\-app\-tag=AT\fR] [\fI\-\-bs=BS\fR] [\fI\-\-dpo\fR] [\fI\-\-fua\fR]
 [\fI\-\-grpnum=GN\fR] [\fI\-\-lba=LBA\fR] [\fI\-\-num=NUM\fR]
 [\fI\-\-offset=OFF[,DLEN]\fR] [\fI\-\-ref\-tag=RT\fR] [\fI\-\-strict\fR]
 [\fI\-\-timeout=TO\fR] [\fI\-\-wrprotect=WPR\fR] \fIDEVICE\fR
 .PP
 .B sg_write_x
-\fI\-\-same=NDOB\fR [\fI\-\-16\fR] [\fI\-\-32\fR] [\fI\-\-app-tag=AT\fR]
+\fI\-\-same=NDOB\fR [\fI\-\-16\fR] [\fI\-\-32\fR] [\fI\-\-app\-tag=AT\fR]
 [\fI\-\-bs=BS\fR] [\fI\-\-dpo\fR] [\fI\-\-fua\fR] [\fI\-\-grpnum=GN\fR]
 [\fI\-\-in=IF\fR] [\fI\-\-lba=LBA\fR] [\fI\-\-num=NUM\fR]
 [\fI\-\-offset=OFF[,DLEN]\fR] [\fI\-\-ref\-tag=RT\fR] [\fI\-\-strict\fR]
@@ -49,7 +49,7 @@ Synopsis per supported command:
 .PP
 .B sg_write_x
 \fI\-\-scattered=RD\fR \fI\-\-in=IF\fR [\fI\-\-16\fR] [\fI\-\-32\fR]
-[\fI\-\-app-tag=AT\fR] [\fI\-\-bs=BS\fR] [\fI\-\-dld=DLD\fR] [\fI\-\-dpo\fR]
+[\fI\-\-app\-tag=AT\fR] [\fI\-\-bs=BS\fR] [\fI\-\-dld=DLD\fR] [\fI\-\-dpo\fR]
 [\fI\-\-fua\fR] [\fI\-\-grpnum=GN\fR] [\fI\-\-lba=LBA[,LBA...]\fR]
 [\fI\-\-num=NUM[,NUM...]\fR] [\fI\-\-offset=OFF[,DLEN]\fR]
 [\fI\-\-ref\-tag=RT\fR] [\fI\-\-scat\-file=SF\fR] [\fI\-\-scat\-raw\fR]
@@ -58,7 +58,7 @@ Synopsis per supported command:
 .PP
 .B sg_write_x
 \fI\-\-stream=ID\fR \fI\-\-in=IF\fR [\fI\-\-16\fR] [\fI\-\-32\fR]
-[\fI\-\-app-tag=AT\fR] [\fI\-\-bs=BS\fR] [\fI\-\-dpo\fR] [\fI\-\-fua\fR]
+[\fI\-\-app\-tag=AT\fR] [\fI\-\-bs=BS\fR] [\fI\-\-dpo\fR] [\fI\-\-fua\fR]
 [\fI\-\-grpnum=GN\fR] [\fI\-\-lba=LBA\fR] [\fI\-\-num=NUM\fR]
 [\fI\-\-offset=OFF[,DLEN]\fR] [\fI\-\-ref\-tag=RT\fR] [\fI\-\-strict\fR]
 [\fI\-\-tag\-mask=TM\fR] [\fI\-\-timeout=TO\fR] [\fI\-\-wrprotect=WPR\fR]
@@ -550,12 +550,12 @@ To send a WRITE STREAM(32) with a STR_ID of 1 use the following:
 Next is a WRITE SCATTERED(16) command with the scatter list, split between
 the \-\-lba= and \-\-num= options, on the command line:
 .PP
-  sg_write_x  \-\-scattered=2 \-\-lba=2,0x33 \-\-num=4,1 -i /dev/zero /dev/sg1
+  sg_write_x  \-\-scattered=2 \-\-lba=2,0x33 \-\-num=4,1 \-i /dev/zero /dev/sg1
 .PP
 Example of a WRITE SCATTERED(16) command with a degenerate LBA range
 descriptor (first element to \-\-lba= and \-\-num=):
 .PP
-  sg_write_x  \-\-scattered=2 \-\-lba=0,0x33 \-\-num=0,1 -i /dev/zero /dev/sg1
+  sg_write_x  \-\-scattered=2 \-\-lba=0,0x33 \-\-num=0,1 \-i /dev/zero /dev/sg1
 .PP
 Example of a WRITE SCATTERED(16) command with the scatter list in
 scat_file.txt

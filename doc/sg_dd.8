@@ -1,4 +1,4 @@
-.TH SG_DD "8" "April 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SG_DD "8" "October 2023" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_dd \- copy data to and from files and devices, especially SCSI
 devices
@@ -517,7 +517,7 @@ Some support for copying from and to NVMe devices in Linux have been added.
 There are two varieties of NVME "char" devices, examples: /dev/nvme<cid>
 and /dev/ng<cid>n<nsid> where <cid> is the controller identifier (starting
 at 0) and <nsid> is the NVMe namespace identifier (starting at 1). The
-latter form is called "nvme-generic" in /proc/devices .
+latter form is called "nvme\-generic" in /proc/devices .
 The NVMe block devices have the form: /dev/nvme<cid>n<nsid>[p<part_id>]
 where the optional <part_id> is the partition identifier (starting at 1).
 In the case of NVMe block devices the default action of sg_dd is to access
@@ -526,7 +526,7 @@ using SCSI/NVMe commands, the flag "sgio" or "pt" needs to be
 given (e.g. iflag=pt if=/dev/nvme0n1 ).
 .PP
 Just as with partitions on SCSI disks, it is dangerous to access NVMe
-partitions (e.g. iflag=pt if=/dev/nvme0n1p2) using a pass-through interface.
+partitions (e.g. iflag=pt if=/dev/nvme0n1p2) using a pass\-through interface.
 The reason is that both SCSI and NVMe commands are oblivious to any
 partitioning arrangement which Linux (or any other OS) has set up on those
 disks. In other words, in the above example the "p2" at the end of
@@ -540,7 +540,7 @@ device /dev/nvme0 is not useful for the utility, only administrative
 commands can be sent to it. That leaves the /dev/ng<cid>n<nsid> as
 the only NVMe "char" device that can be used with this utility. Since
 it is not a block device, the standard Unix read(2) and write(2) will
-not work with it; so the pass-through interface, issuing SCSI/NVME
+not work with it; so the pass\-through interface, issuing SCSI/NVME
 commands, is assumed by this utility.
 .PP
 The term "SCSI/NVME command" refers to the fact that this utility

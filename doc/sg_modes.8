@@ -286,7 +286,7 @@ see \fB\-\-list\fR in the main description.
 \fB\-L\fR
 see \fB\-\-llbaa\fR in the main description.
 .TP
-\fB-N\fR, \fB\-\-new\fR
+\fB\-N\fR, \fB\-\-new\fR
 Switch to the newer style options.
 .TP
 \fB\-m\fR=\fILEN\fR
@@ -355,7 +355,7 @@ See the sdparm(8) manpage for further information.
 .br
 To dump both mode pages and subpages, use this invocation:
 .PP
-   # sg_modes -aa -HHHH /dev/sdb > modes_sdeb.hex
+   # sg_modes \-aa \-HHHH /dev/sdb > modes_sdeb.hex
 .PP
 No change is needed in the associated sdparm call. There is some example
 output in the inhex directory in the sg3_utils package, in a file called:

@@ -316,8 +316,8 @@ void sgj_haj_vs(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
 /* Similar to sgj_haj_vs()'s description with 'JSON string object'
  * replaced by 'JSON integer object'. hex_haj when set will cause the value
  * to be output in <0x%x> form (default is a signed decimal 64 bit integer)
- * in the plain text rendering. For JSON output hex_haj has the same
- * effect as hex_as_well.  */
+ * in the plain text rendering. For JSON output hex_haj is or-ed with
+ * jsp->pr_hex and the result is used for hex_as_well . */
 void sgj_haj_vi(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
                 const char * name, enum sgj_separator_t sep,
                 int64_t value, bool hex_haj);
