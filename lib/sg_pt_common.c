@@ -31,7 +31,7 @@
 #include "sg_pt_nvme.h"
 #endif
 
-static const char * scsi_pt_version_str = "3.20 20230311";
+static const char * scsi_pt_version_str = "3.21 20231119";
 
 /* List of external functions that need to be defined for each OS are
  * listed at the top of sg_pt_dummy.c   */
@@ -47,7 +47,6 @@ sg_pt_version()
 {
     return scsi_pt_version_str;
 }
-
 
 #if (HAVE_NVME && (! IGNORE_NVME))
 /* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */

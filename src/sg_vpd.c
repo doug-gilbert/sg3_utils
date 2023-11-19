@@ -43,7 +43,7 @@
 
 */
 
-static const char * version_str = "1.99 20231015";  /* spc6r08 + sbc5r04 */
+static const char * version_str = "2.00 20231119";  /* spc6r08 + sbc5r04 */
 
 #define MY_NAME "sg_vpd"
 

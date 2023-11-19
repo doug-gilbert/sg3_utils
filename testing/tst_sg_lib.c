@@ -45,7 +45,7 @@
  * related to snprintf().
  */
 
-static const char * version_str = "1.20 20230514";
+static const char * version_str = "1.21 20231119";
 
 
 #define MY_NAME "tst_sg_lib"
@@ -55,6 +55,7 @@ static const char * version_str = "1.20 20230514";
 
 static struct option long_options[] = {
         {"byteswap",  required_argument, 0, 'b'},
+        {"blank",  required_argument, 0, 'B'},
         {"exit", no_argument, 0, 'e'},
         {"help", no_argument, 0, 'h'},
         {"hex2",  no_argument, 0, 'H'},
@@ -157,17 +158,23 @@ static const uint8_t desc_sense_data6[] = {
 
 static const char * leadin = NULL;
 
+static const char * test_str = "doe a deer, a female deer, ray, a drop of";
+
 
 static void
 usage()
 {
     fprintf(stderr,
-            "Usage: tst_sg_lib [--exit] [--help] [--hex2] [--leadin=STR] "
-            "[--printf]\n"
-            "                  [--sense] [--unaligned] [--verbose] "
-            "[--version]\n"
+            "Usage: tst_sg_lib [--blank=N] [--byteswap=B] [--exit] [--help] "
+            "[--hex2]\n"
+            "                  [--leadin=STR] [--printf] [--sense] "
+            "[--unaligned]\n"
+            "                  [--verbose] [--version]\n"
             "  where:\n"
 #if defined(__GNUC__) && ! defined(SG_LIB_FREEBSD)
+            "    --blank=N|-B N    where N non-blank characters taken "
+            "from\n"
+            "                      end of test string 'doe a deer ...'\n"
             "    --byteswap=B|-b B    B is 16, 32 or 64; tests NUM "
             "byteswaps\n"
             "                         compared to sg_unaligned "
@@ -222,6 +229,7 @@ int
 main(int argc, char * argv[])
 {
     bool as_json = false;
+    bool last_n_last_blank = false;
     bool do_exit_status = false;
     bool ok;
     int k, c, n, len;
@@ -245,7 +253,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "b:ehHj::l:n:psuvV", long_options,
+        c = getopt_long(argc, argv, "b:B:ehHj::l:n:psuvV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -258,6 +266,10 @@ main(int argc, char * argv[])
                 fprintf(stderr, "--byteswap= requires 16, 32 or 64\n");
                 return 1;
             }
+            break;
+        case 'B':
+            do_num = sg_get_num(optarg);
+            last_n_last_blank = true;
             break;
         case 'e':
             do_exit_status = true;
@@ -316,6 +328,26 @@ main(int argc, char * argv[])
             usage();
             return 1;
         }
+    }
+
+    if (last_n_last_blank) {
+        const char * mp = sg_last_n_non_blank(test_str, do_num, b,
+                                              sizeof(b));
+
+        ++did_something;
+        printf("Test sg_last_n_non_blank(\"%s\", num=%d)\n", test_str,
+               do_num);
+        if (mp)
+            printf("    >> %s\n", mp);
+        else
+            printf("<<< result of sg_last_n_non_blank() is NULL >>>\n");
+        b[0] = '\0';
+        printf("Now test sg_last_n_non_blank() with blen=10\n");
+        sg_last_n_non_blank(test_str, do_num, b, 10);
+        if (mp)
+            printf("    >> %s\n", mp);
+        else
+            printf("<<< result of sg_last_n_non_blank() is NULL >>>\n");
     }
 
     as_json = json_st.pr_as_json;

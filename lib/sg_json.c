@@ -1130,7 +1130,7 @@ sgj_haj_xx(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
 {
     bool eaten = false;
     bool as_json = (jsp && jsp->pr_as_json);
-    bool json_hex = hex_haj || jsp->pr_hex;
+    bool json_hex = hex_haj || (jsp && jsp->pr_hex);
     bool done;
     int n;
     json_type jtype = jvp ? jvp->type : json_none;

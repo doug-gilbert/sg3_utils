@@ -4154,6 +4154,37 @@ sg_has_control_char(const uint8_t * up, int len)
     return false;
 }
 
+char *
+sg_last_n_non_blank(const char * in_s, int num, char * b, int blen)
+{
+    bool has_trailing_null = false;
+    char c;
+    int k, j;
+    int in_len;
+
+    if ((NULL == b) || (NULL == in_s) || (blen < 1))
+        return b;
+    in_len = strlen(in_s);
+    for (k = 0, j = 0; k < in_len; ++k) {
+        c = in_s[k];
+        if (' ' == c)
+            continue;
+        b[j++] = c;
+        if (j >= blen) {
+            if (j > 0) {
+                b[j - 1] = '\0';
+                has_trailing_null = true;
+            }
+            break;
+        }
+    }
+    if (! has_trailing_null)
+        b[j++] = '\0';
+    if (j > num + 1)
+        memmove(b, b + j - (num + 1), num + 1);
+    return b;
+}
+
 const char *
 sg_lib_version()
 {

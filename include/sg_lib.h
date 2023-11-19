@@ -719,6 +719,17 @@ bool sg_has_control_char(const uint8_t * up, int len);
  * If all printable returns b_len . */
 int sg_first_non_printable(const uint8_t * bp, int b_len);
 
+/* Returns last 'num' non-blank characters from the input string 'in_s'.
+ * Returns 'b' which is no longer than 'blen', including the trailing null
+ * character. For example if blen is 1 then b[0] is set to null plus 'num'
+ * and 'in_s' are ignored; this is a degenerate case to help explain some
+ * corner cases. The purpose of this function is to help generate a useful
+ * SCSI device revision field (4 bytes long) when translating from ATA or
+ * NVMe device revision fields which are longer than 4 bytes. In that case
+ * 'num' would be 4 and blen should be greater than 4 . Function does
+ * nothing if in_s or b is null . */
+char * sg_last_n_non_blank(const char * in_s, int num, char * b, int blen);
+
 /* Extract character sequence from ATA words as in the model string
  * in a IDENTIFY DEVICE response. Returns number of characters
  * written to 'ochars' before 0 character is found or 'num' words

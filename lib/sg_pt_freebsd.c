@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_freebsd version 1.48 20220811 */
+/* sg_pt_freebsd version 1.49 20231119 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1860,16 +1860,25 @@ sntl_inq(struct sg_pt_freebsd_scsi * ptp, const uint8_t * cdbp, int time_secs,
             }
         }
     } else {            /* Standard INQUIRY response */
+        char b[32];
+        char bb[32];
+        static const int blen = sizeof(b);
+        static const int bblen = sizeof(bb);
+
         /* pdt=0 --> disk; pdt=0xd --> SES; pdt=3 --> processor (safte) */
         inq_dout[0] = (PDT_MASK & fdc_p->dev_stat.pdt);  /* (PQ=0)<<5 */
         /* inq_dout[1] = (RMD=0)<<7 | (LU_CONG=0)<<6; rest reserved */
-        inq_dout[2] = 6;   /* version: SPC-4 */
+        inq_dout[2] = 7;   /* version: SPC-5 */
         inq_dout[3] = 2;   /* NORMACA=0, HISUP=0, response data format: 2 */
         inq_dout[4] = 31;  /* so response length is (or could be) 36 bytes */
         inq_dout[6] = fdc_p->dev_stat.enc_serv ? 0x40 : 0;
         inq_dout[7] = 0x2;    /* CMDQUE=1 */
         memcpy(inq_dout + 8, nvme_scsi_vendor_str, 8);  /* NVMe not Intel */
         memcpy(inq_dout + 16, fdc_p->nvme_id_ctlp + 24, 16);/* Prod <-- MN */
+        /* snprintf() puts trailing null character on output('b') */
+        snprintf(b, blen, "%.8s", (const char *)(fdc_p->nvme_id_ctlp + 64));
+        memcpy(inq_dout + 32,
+               sg_last_n_non_blank(b, 4, bb, bblen), 4);  /* Rev <-- FR */
         memcpy(inq_dout + 32, fdc_p->nvme_id_ctlp + 64, 4); /* Rev <-- FR */
         if (alloc_len > 0) {
             n = (alloc_len < inq_resp_len) ? alloc_len : inq_resp_len;
