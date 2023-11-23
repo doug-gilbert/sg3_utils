@@ -425,7 +425,7 @@ construct_scsi_pt_obj_with_fd(int dev_fd, int verbose)
         int err;
 
 #if (HAVE_NVME && (! IGNORE_NVME))
-        sntl_init_dev_stat(&ptp->dev_stat);
+        sg_snt_init_dev_stat(&ptp->dev_stat);
         if (! checked_ev_dsense) {
             ev_dsense = sg_get_initial_dsense();
             checked_ev_dsense = true;
@@ -483,7 +483,7 @@ clear_scsi_pt_obj(struct sg_pt_base * vp)
         bool is_sg, is_bsg, is_nvme;
         int fd;
         uint32_t nvme_nsid;
-        struct sg_sntl_dev_state_t dev_stat;
+        struct sg_snt_dev_state_t dev_stat;
 
         fd = ptp->dev_fd;
         is_sg = ptp->is_sg;
@@ -505,7 +505,7 @@ clear_scsi_pt_obj(struct sg_pt_base * vp)
         ptp->is_sg = is_sg;
         ptp->is_bsg = is_bsg;
         ptp->is_nvme = is_nvme;
-        ptp->nvme_our_sntl = false;
+        ptp->nvme_our_snt = false;
         ptp->nvme_nsid = nvme_nsid;
         ptp->dev_stat = dev_stat;
     }
@@ -639,7 +639,7 @@ set_pt_file_handle(struct sg_pt_base * vp, int dev_fd, int verbose)
         ptp->is_sg = false;
         ptp->is_bsg = false;
         ptp->is_nvme = false;
-        ptp->nvme_our_sntl = false;
+        ptp->nvme_our_snt = false;
         ptp->nvme_nsid = 0;
         ptp->os_err = 0;
     }
@@ -826,7 +826,7 @@ get_scsi_pt_resid(const struct sg_pt_base * vp)
 {
     const struct sg_pt_linux_scsi * ptp = &vp->impl;
 
-    if ((NULL == ptp) || (ptp->is_nvme && ! ptp->nvme_our_sntl))
+    if ((NULL == ptp) || (ptp->is_nvme && ! ptp->nvme_our_snt))
         return 0;
     else if ((ptp->io_hdr.din_xfer_len > 0) &&
              (ptp->io_hdr.dout_xfer_len > 0))
@@ -885,7 +885,7 @@ get_scsi_pt_status_response(const struct sg_pt_base * vp)
 
     if (NULL == ptp)
         return 0;
-    return (int)((ptp->is_nvme && ! ptp->nvme_our_sntl) ?
+    return (int)((ptp->is_nvme && ! ptp->nvme_our_snt) ?
                          ptp->nvme_status : ptp->io_hdr.device_status);
 }
 
@@ -896,7 +896,7 @@ get_pt_result(const struct sg_pt_base * vp)
 
     if (NULL == ptp)
         return 0;
-    return (ptp->is_nvme && ! ptp->nvme_our_sntl) ?
+    return (ptp->is_nvme && ! ptp->nvme_our_snt) ?
                         ptp->nvme_result : ptp->io_hdr.device_status;
 }
 

@@ -35,11 +35,11 @@
 #endif
 #include "sg_lib.h"
 #include "sg_pt.h"
-#include "sg_pt_nvme.h"
+#include "sg_snt.h"
 #include "sg_pr2serr.h"
 #include "sg_unaligned.h"
 
-#define SG_RAW_VERSION "0.4.42 (2023-06-22)"
+#define SG_RAW_VERSION "0.4.43 (2023-11-23)"
 
 static const char * my_name = "sg_raw: ";
 
@@ -643,13 +643,13 @@ and_again:
         set_scsi_pt_data_out(ptvp, doutp, dout_len);
         if (op->cmdfile_given) {
             if (NVME_ADDR_DATA_OUT ==
-                sg_get_unaligned_le64(op->cdb + SG_NVME_PT_ADDR))
+                sg_get_unaligned_le64(op->cdb + SG_NVME_ADDR))
                 sg_put_unaligned_le64((uint64_t)(sg_uintptr_t)doutp,
-                                      op->cdb + SG_NVME_PT_ADDR);
+                                      op->cdb + SG_NVME_ADDR);
             if (NVME_DATA_LEN_DATA_OUT ==
-                sg_get_unaligned_le32(op->cdb + SG_NVME_PT_DATA_LEN))
+                sg_get_unaligned_le32(op->cdb + SG_NVME_DATA_LEN))
                 sg_put_unaligned_le32(dout_len,
-                                      op->cdb + SG_NVME_PT_DATA_LEN);
+                                      op->cdb + SG_NVME_DATA_LEN);
         }
     }
     if (op->do_datain) {
@@ -667,13 +667,13 @@ and_again:
         set_scsi_pt_data_in(ptvp, dinp, din_len);
         if (op->cmdfile_given) {
             if (NVME_ADDR_DATA_IN ==
-                sg_get_unaligned_le64(op->cdb + SG_NVME_PT_ADDR))
+                sg_get_unaligned_le64(op->cdb + SG_NVME_ADDR))
                 sg_put_unaligned_le64((uint64_t)(sg_uintptr_t)dinp,
-                                      op->cdb + SG_NVME_PT_ADDR);
+                                      op->cdb + SG_NVME_ADDR);
             if (NVME_DATA_LEN_DATA_IN ==
-                sg_get_unaligned_le32(op->cdb + SG_NVME_PT_DATA_LEN))
+                sg_get_unaligned_le32(op->cdb + SG_NVME_DATA_LEN))
                 sg_put_unaligned_le32(din_len,
-                                      op->cdb + SG_NVME_PT_DATA_LEN);
+                                      op->cdb + SG_NVME_DATA_LEN);
         }
     }
     if (op->verbose) {

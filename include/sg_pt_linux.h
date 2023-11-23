@@ -19,7 +19,8 @@
 #include "sg_pt_linux_missing.h"
 #endif
 
-#include "sg_pt_nvme.h"
+#include "sg_nvme.h"
+#include "sg_snt.h"
 
 /* This header is for internal use by the sg3_utils library (libsgutils)
  * and is Linux specific. Best not to include it directly in code that
@@ -121,8 +122,8 @@ struct sg_pt_linux_scsi {
     /* Leave io_hdr in first place of this structure */
     bool is_sg;
     bool is_bsg;
-    bool is_nvme;       /* OS device type, if false ignore nvme_our_sntl */
-    bool nvme_our_sntl; /* true: our SNTL; false: received NVMe command */
+    bool is_nvme;       /* OS device type, if false ignore nvme_our_snt */
+    bool nvme_our_snt; /* true: our SNTL; false: received NVMe command */
     bool nvme_stat_dnr; /* Do No Retry, part of completion status field */
     bool nvme_stat_more; /* More, part of completion status field */
     bool mdxfer_out;    /* direction of metadata xfer, true->data-out */
@@ -140,7 +141,7 @@ struct sg_pt_linux_scsi {
                                  * The whole 16 byte completion q entry is
                                  * sent back as sense data */
     uint32_t mdxfer_len;
-    struct sg_sntl_dev_state_t dev_stat;
+    struct sg_snt_dev_state_t dev_stat;
     void * mdxferp;
     uint8_t * nvme_id_ctlp;     /* cached response to controller IDENTIFY */
     uint8_t * free_nvme_id_ctlp;

@@ -34,12 +34,12 @@
 
 #include "sg_lib.h"
 #include "sg_pt.h"
-#include "sg_pt_nvme.h"
+#include "sg_nvme.h"
 #include "sg_cmds_basic.h"
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "1.08 20230919";
+static const char * version_str = "1.09 20231123";
 
 
 #define ME "sg_tst_nvme: "
@@ -843,8 +843,8 @@ main(int argc, char * argv[])
                         this_ctl = false;
                     }
                     sg_put_unaligned_le64((uint64_t)(sg_uintptr_t)al_buff,
-                                          bp + SG_NVME_PT_ADDR);
-                    sg_put_unaligned_le32(pg_sz, bp + SG_NVME_PT_DATA_LEN);
+                                          bp + SG_NVME_ADDR);
+                    sg_put_unaligned_le32(pg_sz, bp + SG_NVME_DATA_LEN);
                 }
                 ret = nvme_din_admin_cmd(ptvp, (const uint8_t *)&n_cmd,
                                          sizeof(n_cmd), cmd_name, al_buff,

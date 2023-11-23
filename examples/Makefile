@@ -39,7 +39,9 @@ CFLAGS = -g -O2 -W -Wall
 LDFLAGS =
 
 LIBFILESOLD = ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_pr2serr.o ../lib/sg_io_linux.o
-LIBFILESNEW = ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_pr2serr.o ../lib/sg_pt_common.o ../lib/sg_pt_linux.o ../lib/sg_pt_linux_nvme.o
+LIBFILESNEW = ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_pr2serr.o \
+	      ../lib/sg_pt_common.o ../lib/sg_snt.o ../lib/sg_pt_linux.o \
+	      ../lib/sg_pt_linux_nvme.o
 
 all: $(EXECS)
 

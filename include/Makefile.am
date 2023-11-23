@@ -13,8 +13,9 @@ scsiinclude_HEADERS = \
 	sg_json_sg_lib.h \
 	sg_pr2serr.h \
 	sg_unaligned.h \
-	sg_pt.h \
-	sg_pt_nvme.h
+	sg_nvme.h \
+	sg_snt.h \
+	sg_pt.h
 
 if OS_LINUX
 scsiinclude_HEADERS += \

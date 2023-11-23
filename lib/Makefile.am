@@ -10,6 +10,7 @@ libsgutils2_la_SOURCES = \
 	sg_cmds_extra.c \
 	sg_cmds_mmc.c \
 	sg_pt_common.c \
+	sg_snt.c \
 	sg_json_builder.c
 
 if OS_LINUX
@@ -91,7 +92,7 @@ endif
 # -std=<s> can be c99, c11, gnu11, etc. Default is gnu11 for C code
 # -Wall is no longer all warnings. Add -W (since renamed to -Wextra) for more
 AM_CPPFLAGS = -iquote ${top_srcdir}/include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $(DBG_CPPFLAGS)
-AM_CFLAGS = -Wall -W $(DBG_CFLAGS)
+AM_CFLAGS = -Wall -W -std=c99 $(DBG_CFLAGS)
 # AM_CFLAGS = -Wall -W -flto=auto $(DBG_CFLAGS)
 # AM_CFLAGS = -Wall -W $(DBG_CFLAGS) -fanalyzer
 # AM_CFLAGS = -Wall -W -pedantic -std=c99
