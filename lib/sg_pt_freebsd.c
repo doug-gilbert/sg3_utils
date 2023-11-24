@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_freebsd version 1.50 20231123 */
+/* sg_pt_freebsd version 1.51 20231124 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -2076,7 +2076,7 @@ sg_snt_mode_ss(struct sg_pt_freebsd_scsi * ptp, const uint8_t * cdbp,
     int n, len;
     uint8_t * bp;
     struct freebsd_dev_channel * fdc_p;
-    struct sg_snt_result_t snt_result;
+    struct sg_snt_result_t sg_snt_result;
 
     if (vb > 5)
         pr2ws("%s: mse%s\n", __func__, (is_msense ? "nse" : "lect"));
