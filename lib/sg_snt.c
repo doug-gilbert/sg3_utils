@@ -369,15 +369,24 @@ sg_snt_init_dev_stat(struct sg_snt_dev_state_t * dsp)
 static uint16_t std_inq_vers_desc[] = {
     0x00C2,             /* SAM-6 INCITS 546-2021 */
     0x05C2,             /* SPC-5 INCITS 502-2019 */
-    0x0602,             /* SBC-4 INCITS 506-2021 */
     0x1f60,             /* SNT (no version claimed) */
     UINT16_MAX,         /* end sentinel */
 };
 
+static uint16_t disk_vers_desc = 0x0602;         /* SBC-4 INCITS 506-2021 */
+static uint16_t ses_vers_desc = 0x0682;          /* SES-4 INCITS 555-2020 */
+
+#ifdef __cplusplus
+void
+sg_snt_std_inq(const uint8_t nvme_id_ctlp[], uint8_t pdt, bool enc_serv,
+               uint8_t * inq_dout)
+#else
 void
 sg_snt_std_inq(const uint8_t nvme_id_ctlp[static 4096], uint8_t pdt,
                bool enc_serv, uint8_t inq_dout[static 74])
+#endif
 {
+    bool skip_rest = false;
     uint16_t vd;
     int k;
     char b[32];
@@ -403,9 +412,18 @@ sg_snt_std_inq(const uint8_t nvme_id_ctlp[static 4096], uint8_t pdt,
            sg_last_n_non_blank(b, 4, bb, bblen), 4);  /* Rev <-- FR */
     for (k = 0; k < 8; ++k) {
         vd = std_inq_vers_desc[k];
-        if (UINT16_MAX == vd)
-            break;
+        if (UINT16_MAX == vd) {
+            if (PDT_SES == pdt)
+                vd = ses_vers_desc;
+            else if (PDT_UNKNOWN == pdt)
+                break;
+            else
+                vd = disk_vers_desc;
+            skip_rest = true;
+        }
         sg_put_unaligned_be16(vd, inq_dout + 58 + (k << 1));
+        if (skip_rest)
+            break;
     }
 }
 

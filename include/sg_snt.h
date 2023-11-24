@@ -26,8 +26,8 @@ struct sg_snt_dev_state_t {
     uint8_t pdt;        /* 6 bit value in INQUIRY response */
     uint8_t enc_serv;   /* single bit in INQUIRY response */
     uint8_t id_ctl253;  /* NVMSR field of Identify controller (byte 253) */
-    bool wce;		/* Write Cache Enable (WCE) setting */
-    bool wce_changed;	/* WCE setting has been changed */
+    bool wce;           /* Write Cache Enable (WCE) setting */
+    bool wce_changed;   /* WCE setting has been changed */
 };
 
 struct sg_snt_result_t {
@@ -66,7 +66,7 @@ void sg_snt_init_dev_stat(struct sg_snt_dev_state_t * dsp);
  * has only one field currently: ENC_OV (enclosure override) */
 int sg_snt_resp_mode_sense10(const struct sg_snt_dev_state_t * dsp,
                              const uint8_t * cdbp, uint8_t * dip,
-			     int mx_di_len, struct sg_snt_result_t * resp);
+                             int mx_di_len, struct sg_snt_result_t * resp);
 
 /* Internal function (common to all OSes) to support the SNTL SCSI MODE
  * SELECT(10) command. */
@@ -78,9 +78,16 @@ int sg_snt_resp_mode_select10(struct sg_snt_dev_state_t * dsp,
  * translated to NVMe. */
 const struct sg_opcode_info_t * sg_get_opcode_translation(void);
 
+#ifdef __cplusplus
+void
+sg_snt_std_inq(const uint8_t nvme_id_ctlp[], uint8_t pdt, bool enc_serv,
+               uint8_t * inq_dout);
+// why doesn't C++ support a[static 4096] like C does ??
+#else
 void
 sg_snt_std_inq(const uint8_t nvme_id_ctlp[static 4096], uint8_t pdt,
                bool enc_serv, uint8_t inq_dout[static 74]);
+#endif
 
 #ifdef __cplusplus
 }

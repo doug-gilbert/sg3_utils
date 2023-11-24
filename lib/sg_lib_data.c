@@ -728,7 +728,7 @@ const char * const sg_lib_tapealert_strs[] = {
 
 /* A conveniently formatted list of SCSI ASC/ASCQ codes and their
  * corresponding text can be found at: www.t10.org/lists/asc-num.txt
- * The following should match asc-num.txt dated 20230325*/
+ * The following should match asc-num.txt dated 20231114*/
 
 #ifdef SG_SCSI_STRINGS
 const struct sg_lib_asc_ascq_range_t sg_lib_asc_ascq_range[] =

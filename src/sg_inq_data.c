@@ -629,6 +629,8 @@ struct sg_lib_simple_value_name_t sg_version_descriptor_arr[] = {
     {0x2240, "PQI-2 (no version claimed)"},
     {0x2242, "PQI-2 T10/BSR INCITS 507 revision 01"},
     {0x2244, "PQI-2 INCITS 507-2016"},
+    {0x2460, "ADT-4 (no version claimed)"},
+    {0x246b, "ADT-4 INCITS 541-2023"},
     {0xffc0, "IEEE 1667 (no version claimed)"},
     {0xffc1, "IEEE 1667-2006"},
     {0xffc2, "IEEE 1667-2009"},

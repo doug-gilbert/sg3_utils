@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2022 Douglas Gilbert.
+ * Copyright (c) 2006-2023 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_win32 version 1.35 20211233 */
+/* sg_pt_win32 version 1.36 20231124 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -2302,8 +2302,6 @@ sg_snt_cache_identity(struct sg_pt_win32_scsi * psp,
     return ret;
 }
 
-
-static const char * nvme_scsi_vendor_str = "NVMe    ";
 static const uint16_t inq_resp_len = 74;
 
 static int
