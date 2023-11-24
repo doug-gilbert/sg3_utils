@@ -26,6 +26,8 @@ jobs:
           env
           freebsd-version
           pkg install -y autoconf
+          pkg install -y automake
+          pkg install -y autotools
           ./autogen.sh
           ./configure
           make CFLAGS="-Werror"
