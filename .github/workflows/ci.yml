@@ -23,9 +23,9 @@ jobs:
         prepare: |
           pkg install -y curl
         run: |
-          pkg install autoconf
-          pwd
-          ls -lah
-          whoami
           env
           freebsd-version
+          pkg install autoconf
+          ./autogen.sh
+          ./configure
+          make CFLAGS="-Werror"
