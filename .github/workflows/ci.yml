@@ -23,6 +23,7 @@ jobs:
         prepare: |
           pkg install -y curl
         run: |
+          pkg install autoconf
           pwd
           ls -lah
           whoami
