@@ -72,3 +72,25 @@ jobs:
               CC=${{ matrix.host && format('{0}-{1}', matrix.host, matrix.cc) || matrix.cc }} \
               CFLAGS="-Wall -Wextra -Werror -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter ${{matrix.cflags}}"
           make -j$(nproc)
+  fbsd:
+    runs-on: ubuntu-22.04
+    name: A job to build sg3_utils on FreeBSD
+    env:
+      MYTOKEN : ${{ secrets.MYTOKEN }}
+      MYTOKEN2: "value2"
+    steps:
+    - uses: actions/checkout@v4
+    - name: Test in FreeBSD
+      id: test
+      uses: vmactions/freebsd-vm@v1
+      with:
+        envs: 'MYTOKEN MYTOKEN2'
+        usesh: true
+        prepare: |
+          pkg install -y curl
+
+        run: |
+          freebsd-version
+          ./autogen.sh
+          ./configure
+          make CFLAGS="-Werror"
