@@ -19,7 +19,7 @@
 #include "sg_lib_data.h"
 
 
-const char * const sg_lib_version_str = "3.13 20231119";
+const char * const sg_lib_version_str = "3.14 20231125";
 /* spc6r11, sbc5r05, zbc3r03 */
 
 
@@ -1744,7 +1744,9 @@ const struct sg_lib_simple_value_name_t sg_lib_nvme_nvm_cmd_arr[] =
  * Field" (SF). Bit 31 is "Do not retry" (DNR) and bit 30 is "More" (M).
  * Bits 29:28 are reserved, bit 27:25 are the "Status Code Type" (SCT)
  * and bits 24:17 are the Status Code (SC). This table is in ascending
- * order of its .value field so a binary search could be done on it.  */
+ * order of its .value field so a binary search could be done on it.
+ * Note that HARDWARE ERROR, Internal target failure (5) tends to be the
+ * fall-through translation.  */
 const struct sg_lib_value_name_t sg_lib_nvme_cmd_status_arr[] =
 {
     /* Generic command status values, Status Code Type (SCT): 0h
@@ -1781,32 +1783,32 @@ const struct sg_lib_value_name_t sg_lib_nvme_cmd_status_arr[] =
     {0x19,  5, "Keep alive timeout expired"},
     {0x1a,  5, "Keep alive timeout invalid"},
     {0x1b,  6, "Command aborted due to Preempt and Abort"},
-    {0x1c, 10, "Sanitize failed"},
-    {0x1d, 11, "Sanitize in progress"},
+    {0x1c, 0xa, "Sanitize failed"},
+    {0x1d, 0xb, "Sanitize in progress"},
     {0x1e,  5, "SGL data block granularity invalid"},
     {0x1f,  5, "Command not supported for queue in CMB"},
-    {0x20,  18, "Namespace is write protected"},        /* NVMe 1.4 */
+    {0x20,  0x12, "Namespace is write protected"},      /* NVMe 1.4 */
     {0x21,  6, "Command interrupted"},                  /* NVMe 1.4 */
     {0x22,  5, "Transient transport error"},            /* NVMe 1.4 */
     {0x23,  5, "Prohibited by lockdown"},               /* NVMe 2.0 */
-    {0x24,  5, "Admin command: media not ready"},       /* NVMe 2.0 */
+    {0x24,  0xd, "Admin command: media not ready"},     /* NVMe 2.0 */
 
     /* 0x80 - 0xbf: I/O command set specific */
     /* Command specific status values, NVM (I/O) Command Set */
-    {0x80, 12, "LBA out of range"},
-    {0x81,  3, "Capacity exceeded"},
-    {0x82, 13, "Namespace not ready"},
-    {0x83, 14, "Reservation conflict"},
-    {0x84, 15, "Format in progress"},
+    {0x80, 0xc, "LBA out of range"},
+    {0x81, 0xc, "Capacity exceeded"},
+    {0x82, 0xd, "Namespace not ready"},
+    {0x83, 0xe, "Reservation conflict"},
+    {0x84, 0xf, "Format in progress"},
     {0x85, 2, "Invalid value size"},
     {0x86, 2, "Invalid key size"},
     {0x87, 2, "KV key does not exist"},
-    {0x88, 15, "Unrecovered error"},
+    {0x88, 0x15, "Unrecovered error"},
     {0x89, 2, "Key exists"},
 
     /* Command specific status values, ZNS (NVM) Command Set */
     {0xb8, 0x1f, "Zone boundary error"},
-    {0xb9, 0x2, "Zone is full"},
+    {0xb9, 0x1e, "Zone is full"},
     {0xba, 0x1b, "Zone is read only"},
     {0xbb, 0x1c, "Zone is offline"},
     {0xbc, 2, "Zone invalid write"},
@@ -1826,12 +1828,12 @@ const struct sg_lib_value_name_t sg_lib_nvme_cmd_status_arr[] =
     {0x107, 5, "Invalid firmware image"},
     {0x108, 5, "Invalid interrupt vector"},
     {0x109, 5, "Invalid log page"},
-    {0x10a,16, "Invalid format"},
+    {0x10a, 0x10, "Invalid format"},
     {0x10b, 5, "Firmware activation requires conventional reset"},
     {0x10c, 5, "Invalid queue deletion"},
-    {0x10d, 5, "Feature identifier not saveable"},
-    {0x10e, 5, "Feature not changeable"},
-    {0x10f, 5, "Feature not namespace specific"},
+    {0x10d, 0x22, "Feature identifier not saveable"},
+    {0x10e, 0x22, "Feature not changeable"},
+    {0x10f, 0x21, "Feature not namespace specific"},
     {0x110, 5, "Firmware activation requires NVM subsystem reset"},
     {0x111, 5, "Firmware activation requires reset"},
     {0x112, 5, "Firmware activation requires maximum time violation"},
@@ -1845,8 +1847,8 @@ const struct sg_lib_value_name_t sg_lib_nvme_cmd_status_arr[] =
     {0x11a, 5, "Namespace not attached"},
     {0x11b, 3, "Thin provisioning not supported"},
     {0x11c, 3, "Controller list invalid"},
-    {0x11d,17, "Device self-test in progress"},
-    {0x11e,18, "Boot partition write prohibited"},
+    {0x11d, 0x11, "Device self-test in progress"},
+    {0x11e, 0x12, "Boot partition write prohibited"},
     {0x11f, 5, "Invalid controller identifier"},
     {0x120, 5, "Invalid secondary controller state"},
     {0x121, 5, "Invalid number of controller resources"},
@@ -1858,19 +1860,19 @@ const struct sg_lib_value_name_t sg_lib_nvme_cmd_status_arr[] =
     /* Command specific status values, Status Code Type (SCT): 1h
      * for NVM (I/O) Command Set */
     {0x180, 2, "Conflicting attributes"},
-    {0x181,19, "Invalid protection information"},
-    {0x182,18, "Attempted write to read only range"},
+    {0x181, 0x13, "Invalid protection information"},
+    {0x182, 0x12, "Attempted write to read only range"},
     /* 0x1c0 - 0x1ff: vendor specific */
 
     /* Media and Data Integrity error values, Status Code Type (SCT): 2h */
-    {0x280,20, "Write fault"},
-    {0x281,21, "Unrecovered read error"},
-    {0x282,22, "End-to-end guard check error"},
-    {0x283,23, "End-to-end application tag check error"},
-    {0x284,24, "End-to-end reference tag check error"},
-    {0x285,25, "Compare failure"},
+    {0x280, 0x14, "Write fault"},
+    {0x281, 0x15, "Unrecovered read error"},
+    {0x282, 0x16, "End-to-end guard check error"},
+    {0x283, 0x17, "End-to-end application tag check error"},
+    {0x284, 0x18, "End-to-end reference tag check error"},
+    {0x285, 0x19, "Compare failure"},
     {0x286, 8, "Access denied"},
-    {0x287,26, "Deallocated or unwritten logical block"},
+    {0x287, 0x1a, "Deallocated or unwritten logical block"},
     /* 0x2c0 - 0x2ff: vendor specific */
 
     /* Leave this Sentinel value at end of this array */
@@ -1901,14 +1903,14 @@ const struct sg_lib_4tuple_u8 sg_lib_scsi_status_sense_arr[] =
     {0x2, SPC_SK_MEDIUM_ERROR, 0x31, 0x3},   /* sanitize failed */ /* 10 */
     {0x2, SPC_SK_NOT_READY, 0x4, 0x1b}, /* sanitize in progress */
     {0x2, SPC_SK_ILLEGAL_REQUEST, 0x21, 0x0},   /* LBA out of range */
-    {0x2, SPC_SK_NOT_READY, 0x4, 0x0},  /* not reportable; 0x1: becoming */
+    {0x2, SPC_SK_NOT_READY, 0x4, 0x0},          /* LU not ready */
     {SAM_STAT_RESERVATION_CONFLICT, 0x0, 0x0, 0x0},
     {0x2, SPC_SK_NOT_READY, 0x4, 0x4},  /* format in progress */
 
 /* index: 0x10 */
     {0x2, SPC_SK_ILLEGAL_REQUEST, 0x31, 0x1},  /* format failed */
     {0x2, SPC_SK_NOT_READY, 0x4, 0x9},  /* self-test in progress */
-    {0x2, SPC_SK_DATA_PROTECT, 0x27, 0x0},      /* write prohibited */
+    {0x2, SPC_SK_DATA_PROTECT, 0x27, 0x0},     /* write prohibited */
     {0x2, SPC_SK_ILLEGAL_REQUEST, 0x10, 0x5},  /* protection info */
     {0x2, SPC_SK_MEDIUM_ERROR, 0x3, 0x0}, /* periph dev w fault */
     {0x2, SPC_SK_MEDIUM_ERROR, 0x11, 0x0},      /* unrecoc rd */
@@ -1927,6 +1929,9 @@ const struct sg_lib_4tuple_u8 sg_lib_scsi_status_sense_arr[] =
 
 /* index: 0x20 */
     {0x2, SPC_SK_DATA_PROTECT, 0x55, 0xe},   /* Insufficient zone resources */
+    {0x2, SPC_SK_ILLEGAL_REQUEST, 0x20, 0xd},   /* Not an administrative LU */
+    {0x2, SPC_SK_ILLEGAL_REQUEST, 0x39, 0x0},   /* Saving params not supp. */
+    {0x2, SPC_SK_NOT_READY, 0x4, 0x1},          /* LU not ready, becoming */
 
     /* Leave this Sentinel value at end of this array */
     {0xff, 0xff, 0xff, 0xff},
