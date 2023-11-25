@@ -19,7 +19,7 @@
 #include "sg_lib_data.h"
 
 
-const char * const sg_lib_version_str = "3.13 20231119";
+const char * const sg_lib_version_str = "3.14 20231125";
 /* spc6r11, sbc5r05, zbc3r03 */
 
 
@@ -1744,7 +1744,9 @@ const struct sg_lib_simple_value_name_t sg_lib_nvme_nvm_cmd_arr[] =
  * Field" (SF). Bit 31 is "Do not retry" (DNR) and bit 30 is "More" (M).
  * Bits 29:28 are reserved, bit 27:25 are the "Status Code Type" (SCT)
  * and bits 24:17 are the Status Code (SC). This table is in ascending
- * order of its .value field so a binary search could be done on it.  */
+ * order of its .value field so a binary search could be done on it.
+ * Note that HARDWARE ERROR, Internal target failure (5) tends to be the
+ * fall-through translation.  */
 const struct sg_lib_value_name_t sg_lib_nvme_cmd_status_arr[] =
 {
     /* Generic command status values, Status Code Type (SCT): 0h
@@ -1829,9 +1831,9 @@ const struct sg_lib_value_name_t sg_lib_nvme_cmd_status_arr[] =
     {0x10a,16, "Invalid format"},
     {0x10b, 5, "Firmware activation requires conventional reset"},
     {0x10c, 5, "Invalid queue deletion"},
-    {0x10d, 5, "Feature identifier not saveable"},
-    {0x10e, 5, "Feature not changeable"},
-    {0x10f, 5, "Feature not namespace specific"},
+    {0x10d, 22, "Feature identifier not saveable"},
+    {0x10e, 22, "Feature not changeable"},
+    {0x10f, 21, "Feature not namespace specific"},
     {0x110, 5, "Firmware activation requires NVM subsystem reset"},
     {0x111, 5, "Firmware activation requires reset"},
     {0x112, 5, "Firmware activation requires maximum time violation"},
@@ -1927,6 +1929,8 @@ const struct sg_lib_4tuple_u8 sg_lib_scsi_status_sense_arr[] =
 
 /* index: 0x20 */
     {0x2, SPC_SK_DATA_PROTECT, 0x55, 0xe},   /* Insufficient zone resources */
+    {0x2, SPC_SK_ILLEGAL_REQUEST, 0x20, 0xd},   /* Not an administrative LU */
+    {0x2, SPC_SK_ILLEGAL_REQUEST, 0x39, 0x0},   /* Saving params not supp. */
 
     /* Leave this Sentinel value at end of this array */
     {0xff, 0xff, 0xff, 0xff},
