@@ -522,6 +522,46 @@ sg_snt_get_features(struct sg_pt_linux_scsi * ptp, int feature_id,
     return 0;
 }
 
+static int
+sg_snt_set_features(struct sg_pt_linux_scsi * ptp, int feature_id,
+                    bool save, uint32_t nsid, uint64_t dout_addr,
+                    uint32_t cdw11, uint32_t cdw12, uint32_t cdw13,
+                    uint32_t cdw15, int time_secs, int vb)
+{
+    int res;
+    struct sg_nvme_passthru_cmd cmd;
+    struct sg_nvme_passthru_cmd * cmdp = &cmd;
+
+    if (vb > 4)
+        pr2ws("%s: feature_id=0x%x, save=%d\n", __func__, feature_id,
+              (int)save);
+    memset(cmdp, 0, sizeof(*cmdp));
+    cmdp->opcode = SG_NVME_AD_SET_FEATURE;
+    cmdp->nsid = nsid ? nsid : SG_NVME_BROADCAST_NSID;
+    cmdp->cdw10 = (feature_id & 0xff);
+    if (save)
+        cmdp->cdw10 |= (1 << 31);       /* set bit 31 */
+    cmdp->cdw11 = cdw11;
+    cmdp->cdw12 = cdw12;
+    cmdp->cdw13 = cdw13;
+    cmdp->cdw14 = 0;            /* no UUID support yet */
+    cmdp->cdw15 = cdw15;
+    if (dout_addr)
+        cmdp->addr = dout_addr;
+    cmdp->timeout_ms = (time_secs < 0) ? 0 : (1000 * time_secs);
+    res = sg_nvme_admin_cmd_f(ptp, cmdp, NULL, false, time_secs, vb);
+    if (res) {
+        if (SG_LIB_NVME_STATUS == res) {
+            mk_sense_from_nvme_status(ptp, vb);
+            return 0;
+        }
+        return res;
+    }
+    ptp->os_err = 0;
+    ptp->nvme_status = 0;
+    return 0;
+}
+
 static const uint16_t inq_resp_len = 74;    /* want version descriptors */
 
 static int
@@ -885,29 +925,12 @@ sg_snt_mode_ss(struct sg_pt_linux_scsi * ptp, const uint8_t * cdbp,
         n = sg_snt_resp_mode_select10(&ptp->dev_stat, cdbp, bp, len,
                                       &sg_snt_result);
         if (ptp->dev_stat.wce_changed) {
-            uint32_t nsid = ptp->nvme_nsid;
-            struct sg_nvme_passthru_cmd cmd;
-            struct sg_nvme_passthru_cmd * cmdp = &cmd;
-
-            ptp->dev_stat.wce_changed = false;
-            memset(cmdp, 0, sizeof(*cmdp));
-            cmdp->opcode = SG_NVME_AD_SET_FEATURE;
-            cmdp->nsid = nsid ? nsid : SG_NVME_BROADCAST_NSID;
-            cmdp->cdw10 = 0x6; /* "Volatile write cache" feature id */
-            if (sp)
-                cmdp->cdw10 |= (1U << 31);
-            cmdp->cdw11 = (uint32_t)ptp->dev_stat.wce;
-            cmdp->timeout_ms = (time_secs < 0) ? 0 : (1000 * time_secs);
-            res = sg_nvme_admin_cmd_f(ptp, cmdp, NULL, false, time_secs, vb);
-            if (0 != res) {
-                if (SG_LIB_NVME_STATUS == res) {
-                    mk_sense_from_nvme_status(ptp, vb);
-                    return 0;
-                } else
-                    return res;
-            }
-            ptp->os_err = 0;
-            ptp->nvme_status = 0;
+            /* feature_id=0x6  for "volatile write cache" */
+            res = sg_snt_set_features(ptp, 0x6, sp, ptp->nvme_nsid, 0,
+                                      ptp->dev_stat.wce, 0, 0, 0, time_secs,
+                                      vb);
+            if (res)
+                return res;
         }
         if (pre_enc_ov != ptp->dev_stat.enclosure_override)
             sg_snt_check_enclosure_override(ptp, vb);/* ENC_OV has changed */

@@ -376,15 +376,16 @@ static uint16_t std_inq_vers_desc[] = {
 static uint16_t disk_vers_desc = 0x0602;         /* SBC-4 INCITS 506-2021 */
 static uint16_t ses_vers_desc = 0x0682;          /* SES-4 INCITS 555-2020 */
 
-#ifdef __cplusplus
+/* Assumes 'inq_dout' points to an array that is at least 74 bytes long
+ * which will be written to. Also assume that nvme_id_ctlp points to a
+ * 4096 bytes array, some of which will be read. 
+ * Note: Tried to use C's "arr[static 4096]" syntax but:
+ *   1) it is not supported by C++
+ *   2) not recommended since violation causes UB but not necessarily
+ *      a compile error so it gives a false sense of security */
 void
 sg_snt_std_inq(const uint8_t nvme_id_ctlp[], uint8_t pdt, bool enc_serv,
                uint8_t * inq_dout)
-#else
-void
-sg_snt_std_inq(const uint8_t nvme_id_ctlp[static 4096], uint8_t pdt,
-               bool enc_serv, uint8_t inq_dout[static 74])
-#endif
 {
     bool skip_rest = false;
     uint16_t vd;

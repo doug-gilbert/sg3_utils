@@ -78,16 +78,9 @@ int sg_snt_resp_mode_select10(struct sg_snt_dev_state_t * dsp,
  * translated to NVMe. */
 const struct sg_opcode_info_t * sg_get_opcode_translation(void);
 
-#ifdef __cplusplus
 void
 sg_snt_std_inq(const uint8_t nvme_id_ctlp[], uint8_t pdt, bool enc_serv,
                uint8_t * inq_dout);
-// why doesn't C++ support a[static 4096] like C does ??
-#else
-void
-sg_snt_std_inq(const uint8_t nvme_id_ctlp[static 4096], uint8_t pdt,
-               bool enc_serv, uint8_t inq_dout[static 74]);
-#endif
 
 #ifdef __cplusplus
 }
