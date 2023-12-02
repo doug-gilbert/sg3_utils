@@ -76,7 +76,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.26 20231015";
+static const char * version_str = "1.27 20231201";
 
 static const char * my_name = "sgm_dd: ";
 
@@ -374,7 +374,8 @@ usage()
     pr2serr("               [bpt=BPT] [cdbsz=6|10|12|16] [dio=0|1] "
             "[fua=0|1|2|3]\n"
             "               [sync=0|1] [time=0|1] [verbose=VERB] "
-            "[--dry-run] [--progress] [--verbose]\n\n"
+            "[--dry-run]\n"
+            "               [--progress] [--verbose]\n\n"
             "  where:\n"
             "    bpt         is blocks_per_transfer (default is 128)\n"
             "    bs          must be device logical block size (default "

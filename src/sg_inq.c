@@ -54,7 +54,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.54 20231123";  /* spc6r11, sbc5r05 */
+static const char * version_str = "2.55 20231201";  /* spc6r11, sbc5r05 */
 
 #define MY_NAME "sg_inq"
 
@@ -180,6 +180,8 @@ static const struct svpd_values_name_t t10_vpd_pg[] = {
      "Manufacturer assigned serial number (ADC)"},
     {VPD_MAN_NET_ADDR, 0, -1, "mna", "Management network addresses"},
     {VPD_MODE_PG_POLICY, 0, -1, "mpp", "Mode page policy"},
+    {SG_NVME_VPD_NICR, 0, -1, "nicr",
+     "NVMe Identify Controller Response (sg3_utils for SNT)"},
     {VPD_POWER_CONDITION, 0, -1, "po", "Power condition"},/* "pc" in sg_vpd */
     {VPD_POWER_CONSUMPTION, 0, -1, "psm", "Power consumption"},
     {VPD_PROTO_LU, 0, -1, "pslu", "Protocol-specific logical unit "
@@ -211,8 +213,6 @@ static const struct svpd_values_name_t alt_t10_vpd_pg[] = {
 
 static const struct svpd_values_name_t vs_vpd_pg[] = {
     /* Following are vendor specific */
-    {SG_NVME_VPD_NICR, 0, -1, "nicr",
-     "NVMe Identify Controller Response (sg3_utils)"},
     {VPD_RDAC_VAC, 0, -1, "rdac_vac", "RDAC volume access control (RDAC)"},
     {VPD_RDAC_VERS, 0, -1, "rdac_vers", "RDAC software version (RDAC)"},
     {VPD_UPR_EMC, 0, -1, "upr", "Unit path report (EMC)"},
@@ -3746,7 +3746,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
             decode_rdac_vpd_c9(rp, len, op, jo2p);
         }
         break;
-    case SG_NVME_VPD_NICR:          /* 0xde */
+    case SG_NVME_VPD_NICR:    /* 0xde, model on ATA Info VPD page [0x89] */
         np = "NVMe Identify Controller Response VPD page";
         /* NVMe: Identify Controller data structure (CNS 01h) */
         ep = "(sg3_utils)";
@@ -3758,32 +3758,10 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
         if (op->do_raw) {
             dStrRaw((const char *)rp, len);
             break;
-        }
-        pdt = rp[0] & PDT_MASK;
-        if (dhex < 3) {
-            if (NULL == np)
-                sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
-            else
-                sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
-        }
-        if (len < 16) {
-            pr2serr("%s expected to be > 15 bytes long (got: %d)\n", ep, len);
-            break;
         } else {
-            int n = len - 16;
-
-            if (n > 4096) {
-                pr2serr("NVMe Identify response expected to be <= 4096 "
-                        "bytes (got: %d)\n", n);
-                break;
-            }
-            if (dhex)
-                hex2stdout(rp, len, no_ascii_4hex(op));
-            else if (as_json) {
+            if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
-                sgj_js_nv_hex_bytes(jsp, jo2p, "response_bytes", rp + 16, n);
-            } else
-                hex2stdout(rp + 16, n, 1);
+            decode_snt_nvme_info_vpd(rp, len, op, jo2p);
         }
         break;
     default:
@@ -4038,7 +4016,7 @@ static void
 show_nvme_id_ctrl(const uint8_t *dinp, struct opts_t * op, sgj_opaque_p jop)
 {
     bool got_fguid, as_json;
-    uint8_t ver_min, ver_ter, mtds;
+    uint8_t ver_min, ver_ter, mtds, cmic;
     uint16_t ver_maj, oacs, oncs;
     uint32_t k, ver, max_nsid, npss, j, n, m;
     int h;
@@ -4053,6 +4031,8 @@ show_nvme_id_ctrl(const uint8_t *dinp, struct opts_t * op, sgj_opaque_p jop)
     char bb[32];
     static const int blen = sizeof(b);
     static const int bblen = sizeof(bb);
+    static const char * cmic_s = "Controller Multi-Path I/O and Namespace "
+                                 "Sharing Capabilities";
 
     as_json = jsp->pr_as_json;
     if (as_json)
@@ -4111,12 +4091,20 @@ show_nvme_id_ctrl(const uint8_t *dinp, struct opts_t * op, sgj_opaque_p jop)
         }
     } else
         sgj_pr_hr(jsp, "  No optional NVM command support\n");
-// yyyyyyyyyyyyy
     sgj_pr_hr(jsp, "  PCI vendor ID VID/SSVID: 0x%x/0x%x\n",
               sg_get_unaligned_le16(dinp + 0),
               sg_get_unaligned_le16(dinp + 2));
     sgj_pr_hr(jsp, "  IEEE OUI Identifier: 0x%x\n", /* has been renamed AOI */
               sg_get_unaligned_le24(dinp + 73));
+    cmic = dinp[76];
+    if (as_json)
+        sgj_js_nv_ihex_nex(jsp, jo2p, "cmic", cmic, true, cmic_s);
+    else {
+        if (cmic)
+            sgj_pr_hr(jsp, "  %s: 0x%x\n", cmic_s, cmic);
+        else
+            sgj_pr_hr(jsp, "  No %s\n", cmic_s);
+    }
     got_fguid = ! sg_all_zeros(dinp + 112, 16);
     if (got_fguid) {
         n = sg_scnpr(b, blen, "  FGUID: 0x%02x", dinp[112]);

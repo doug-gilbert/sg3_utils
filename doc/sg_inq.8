@@ -1,4 +1,4 @@
-.TH SG_INQ "8" "April 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SG_INQ "8" "November 2023" "sg3_utils\-1.48" SG3_UTILS
 .SH NAME
 sg_inq \- issue SCSI INQUIRY command and/or decode its response
 .SH SYNOPSIS
@@ -145,7 +145,7 @@ bytes (not 16 bit words). When used three times with the ATA Information VPD
 page [0x89] or the \fI\-\-ata\fR option, this utility outputs the ATA
 IDENTIFY (PACKET) DEVICE response in hexadecimal words suitable for input
 to 'hdparm \-\-Istdin'.  See note below.
-.br
+.IP
 To generate output suitable for placing in a file that can be used by a
 later invocation with the \fI\-\-inhex=FN\fR option, use the '\-HHHH'
 option (e.g. 'sg_inq \-p di \-HHHH /dev/sg3 > dev_id.hex').
@@ -215,7 +215,7 @@ Number VPD page is not mandatory (while the Device Identification page is
 mandatory but a billion USB keys ignore that) and may cause nuisance error
 reports. In most cases if the \fI\-\-maxlen=LEN\fR option is given and
 \fILEN\fR is greater than 0 then this option is not needed.
-.br
+.IP
 For NVMe devices only the Identify controller is performed, even if the
 \fIDEVICE\fR includes a namespace identifier. For example in FreeBSD
 given a \fIDEVICE\fR named /dev/nvme0ns1 then an Identify controller is
@@ -227,7 +227,7 @@ page. To enumerate the available abbreviations for VPD pages use '\-hh' or
 a bad abbreviation (e.g, '\-\-page=xxx'). When the \fI\-\-cmddt\fR option is
 given (once) then \fIPG\fR is interpreted as an opcode number (so VPD page
 abbreviations make little sense).
-.br
+.IP
 If \fIPG\fR is a negative number, then a standard INQUIRY is performed. This
 can be used to override some guessing logic associated with the
 \fI\-\-inhex=FN\fR option.

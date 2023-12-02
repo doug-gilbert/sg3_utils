@@ -43,7 +43,7 @@
 
 */
 
-static const char * version_str = "2.00 20231119";  /* spc6r08 + sbc5r04 */
+static const char * version_str = "2.01 20231127";  /* spc6r08 + sbc5r04 */
 
 #define MY_NAME "sg_vpd"
 
@@ -150,6 +150,8 @@ static const struct svpd_values_name_t standard_vpd_pg[] = {
      "Manufacturer assigned serial number (ADC)"},
     {VPD_MAN_NET_ADDR, 0, -1, "mna", "Management network addresses"},
     {VPD_MODE_PG_POLICY, 0, -1, "mpp", "Mode page policy"},
+    {SG_NVME_VPD_NICR, 0, -1, "nicr",
+     "NVMe Identify Controller Response (sg3_utils for SNT)"},
     {VPD_OSD_INFO, 0, 0x11, "oi", "OSD information"},
     {VPD_POWER_CONDITION, 0, -1, "pc", "Power condition"},/* "po" in sg_inq */
     {VPD_POWER_CONSUMPTION, 0, -1, "psm", "Power consumption"},
@@ -2211,6 +2213,26 @@ svpd_decode_t10(struct sg_pt_base * ptvp, struct opts_t * op,
         } else if ((! op->do_raw) && (! op->do_quiet) && (dhex < 3) &&
                    exam_not_given)
             sgj_pr_hr(jsp, "%sVPD page=0xba\n", pre);
+        break;
+    case SG_NVME_VPD_NICR:    /* 0xde, model on ATA Info VPD page [0x89] */
+        np = "NVME Identity Controller response VPD page";
+        if (allow_name)
+            sgj_pr_hr(jsp, "%s%s\n", pre, np);
+        res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
+        if (0 == res) {
+            if (! allow_name && allow_if_found)
+                sgj_pr_hr(jsp, "%s%s:\n", pre, np);
+            if (op->do_raw)
+                dStrRaw(rp, len);
+            else {
+                if (vb || long_notquiet)
+                    sgj_pr_hr(jsp, "   [PQual=%d  Peripheral device type: "
+                              "%s]\n", pqual, pdt_str);
+                if (as_json)
+                    jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
+                decode_snt_nvme_info_vpd(rp, len, op, jo2p);
+            }
+        }
         break;
     default:
         return SG_LIB_CAT_OTHER;

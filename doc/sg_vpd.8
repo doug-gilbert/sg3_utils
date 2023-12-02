@@ -1,4 +1,4 @@
-.TH SG_VPD "8" "April 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SG_VPD "8" "December 2023" "sg3_utils\-1.48" SG3_UTILS
 .SH NAME
 sg_vpd \- fetch SCSI VPD page and/or decode its response
 .SH SYNOPSIS
@@ -41,7 +41,7 @@ decode all VPD pages. When used with \fIDEVICE\fR the pages to be decoded
 are found in the "Supported VPD pages" VPD page. Pages that cannot be
 decoded are displayed in hex; add the \fI\-\-long\fR option to have ASCII
 displayed to the right of each line of hex.
-.br
+.IP
 If this option is used with the \fI\-\-inhex=FN\fR option then the file
 \fIFN\fR is assumed to contain 1 or more VPD pages (in ASCII hex or binary).
 Decoding continues until the file is exhausted (or an error occurs). Sanity
@@ -75,8 +75,10 @@ If the \fI\-\-page=PG\fR option is not given then the scan finishes at page
 page \fIPG\fR. A check is made before the scan to make sure the start page
 is less than or equal to the finish page; if not the start and finish page
 numbers are swapped.
-.br
-The sdparm utility which lists mode and VPD pages also has a \fB\-\-examine\fR
+.IP
+The
+.B sdparm
+utility which lists mode and VPD pages also has a \fB\-\-examine\fR
 option will similar functionility. Note that T10 has changed most of the
 pages that list supported pages (e.g. VPD, mode and log pages; supported
 commands) to add the weasel words "may or may not list all ...".
@@ -169,7 +171,8 @@ standard INQUIRY response is output. This option may also be used with the
 \fI\-\-enumerate\fR (see its description).
 .br
 If \fIPG\fR is not found in the 'Supported VPD pages' VPD page (0x0) then
-EDOM is returned. To bypass this check use the \fI\-\-force\fR option.
+a "numerical argument out of domain" errir [EDOM] is returned. To bypass
+this check use the \fI\-\-force\fR option.
 .TP
 \fB\-q\fR, \fB\-\-quiet\fR
 suppress the amount of decoding and error output.

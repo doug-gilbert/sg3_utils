@@ -251,6 +251,15 @@ decode_lb_protection_vpd(const uint8_t * buff, int len, struct opts_t * op,
 void
 decode_tapealert_supported_vpd(const uint8_t * buff, int len,
                                struct opts_t * op, sgj_opaque_p jop);
+/* T10's SNT project has started [version descriptor: 1F60h] and this is
+ * this package's suggestion for a SNT specific VPD page. It is modelled
+ * on the ATA Info VPD page [0x89h] which has been stable in the SAT
+ * series of standards. It is currently given a identifier in the vendor
+ * VPD space: 0xde . If T10 accepts this idea then maybe it could be
+ * given a VPD identifier of 0x99 (0x10 more than the ATA Info VPD page). */
+void decode_snt_nvme_info_vpd(uint8_t * buff, int len, struct opts_t * op,
+                              sgj_opaque_p jop);
+
 /* Share some vendor specific VPD pages as well */
 void
 decode_upr_vpd_c0_emc(uint8_t * buff, int len, struct opts_t * op,

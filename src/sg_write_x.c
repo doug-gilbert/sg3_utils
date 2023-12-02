@@ -38,7 +38,7 @@
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "1.35 20231015";
+static const char * version_str = "1.36 20231201";
 
 static const char * my_name = "sg_write_x: ";
 
@@ -282,7 +282,7 @@ usage(int do_help)
             );
         pr2serr(
             "    --grpnum=GN|-g GN    GN is group number field (def: 0, "
-            "range: 0 to 31)\n"
+            "range: 0 to 63)\n"
             "    --help|-h          use multiple times for different "
             "usage messages\n"
             "    --in=IF|-i IF      IF is file to fetch NUM blocks of "
