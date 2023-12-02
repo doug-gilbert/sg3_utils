@@ -1,4 +1,4 @@
-.TH SG3_UTILS "8" "November 2023" "sg3_utils\-1.49" SG3_UTILS
+.TH SG3_UTILS "8" "December 2023" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg3_utils \- a package of utilities for sending SCSI commands
 .SH SYNOPSIS
@@ -701,16 +701,17 @@ used instead. Some utilities use 4 (bytes), rather than 16, as the cutoff
 value.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-for SCSI commands that yield a non\-trivial response, output that response
-in binary to stdout. If any error messages or warning are produced they are
-usually sent to stderr so as to not interfere with the output from this
-option.
-.br
-Some utilities that consume data to send to the \fIDEVICE\fR along with the
-SCSI command, use this option. Alternatively the \fI\-\-in=FN\fR option causes
-\fIDEVICE\fR to be ignored and the response data (to be decoded) fetched
-from a file named \fIFN\fR. In these cases this option may indicate that
-binary data can be read from stdin or from a nominated file (e.g. \fIFN\fR).
+many SCSI commands yield 'data\-in' (i.e. data moving from the LU (Logical
+Unit) toward the initiator (e.g. HBA)). Examples are the SCSI INQUIRY and
+READ commands. This option causes any decoding of the data\-in to be skipped
+and instead the data is sent, in binary, to stdout. If any error messages or
+warning are produced they are usually sent to stderr so as to not interfere
+with the output from this option.
+.IP
+Alternatively the \fI\-\-in=FN\fR option causes \fIDEVICE\fR to be ignored
+and the response data (to be decoded) fetched from a file named \fIFN\fR. In
+these cases this option may indicate that binary data can be read from stdin
+or from a nominated file (e.g. \fIFN\fR).
 .TP
 \fB\-t\fR, \fB\-\-timeout\fR=\fISECS\fR
 utilities that issue potentially long\-running SCSI commands often have a

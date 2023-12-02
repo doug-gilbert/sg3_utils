@@ -563,6 +563,9 @@ sg_snt_set_features(struct sg_pt_linux_scsi * ptp, int feature_id,
 }
 
 static const uint16_t inq_resp_len = 74;    /* want version descriptors */
+static const char * sg_snt_vend_s = "SG3_UTIL";         /* 8 bytes long */
+static const char * sg_snt_prod_s = "SNT in sg3_utils"; /* 16 bytes long */
+static const char * sg_snt_rev_s = "0100";              /* 4 bytes long */
 
 static int
 sg_ln_snt_inq(struct sg_pt_linux_scsi * ptp, const uint8_t * cdbp,
@@ -680,8 +683,11 @@ sg_ln_snt_inq(struct sg_pt_linux_scsi * ptp, const uint8_t * cdbp,
         case SG_NVME_VPD_NICR:  /* 0xde (vendor (sg3_utils) specific) */
             /* 16 byte page header then NVME Identify controller response */
             inq_dout[1] = pg_cd;
-            sg_put_unaligned_be16((16 + 4096) - 4, inq_dout + 2);
-            n = 16 + 4096;
+            sg_put_unaligned_be16((64 + 4096) - 4, inq_dout + 2);
+	    memcpy(inq_dout + 8, sg_snt_vend_s, 8);
+	    memcpy(inq_dout + 16, sg_snt_prod_s, 16);
+	    memcpy(inq_dout + 32, sg_snt_rev_s, 4);
+            n = 64 + 4096;
             cp_id_ctl = true;
             break;
         default:        /* Point to page_code field in cdb */
@@ -696,9 +702,9 @@ sg_ln_snt_inq(struct sg_pt_linux_scsi * ptp, const uint8_t * cdbp,
                 uint8_t * dp = (uint8_t *)(sg_uintptr_t)ptp->io_hdr.din_xferp;
 
                 if (cp_id_ctl) {
-                    memcpy(dp, inq_dout, (n < 16 ? n : 16));
-                    if (n > 16)
-                        memcpy(dp + 16, ptp->nvme_id_ctlp, n - 16);
+                    memcpy(dp, inq_dout, (n < 64 ? n : 64));
+                    if (n > 64)
+                        memcpy(dp + 64, ptp->nvme_id_ctlp, n - 64);
                 } else
                     memcpy(dp, inq_dout, n);
             }

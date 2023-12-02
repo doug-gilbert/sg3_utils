@@ -86,6 +86,8 @@ const char * fp_vpdp = "Format presets VPD page";
 const char * cpr_vpdp = "Concurrent positioning ranges VPD page";
 const char * cap_vpdp = "Capacity/Product identification mapping VPD page";
 
+const char * snt_vpdp = "SNT NVMe information VPD page";
+
 static const char * const y_s = "yes";
 static const char * const n_s = "no";
 static const char * const nl_s = "no limit";
@@ -152,8 +154,6 @@ const struct svpd_values_name_t vendor_vpd_pg[] = {
      "(HP LTO)"},
     {VPD_V_MPDS_LTO, VPD_VP_IBM_LTO, 1, "mpds", "Mode parameter default "
      "settings (IBM LTO)"},
-    {SG_NVME_VPD_NICR, VPD_VP_SG, 0, "nicr",
-     "NVMe Identify Controller Response (sg3_utils)"},
     {VPD_V_PCA_LTO, VPD_VP_HP_LTO, 1, "pca", "PCA revision level (HP LTO)"},
     {VPD_V_FEAT_RDAC, VPD_VP_RDAC, 0, "prm4", "Feature Parameters (RDAC)"},
     {VPD_V_RVSI_RDAC, VPD_VP_RDAC, 0, "rvsi", "Replicated volume source "
@@ -3744,4 +3744,64 @@ decode_rdac_vpd_c9(uint8_t * buff, int len, struct opts_t * op,
             sgj_js_nv_ihexstr(jsp, jo3p, b, buff[13], NULL, d2);
         }
     }
+}
+
+#define NICR_RSP_LEN 4096
+#define NICR_RSP_OFF 64
+
+/* T10's SNT project has started [version descriptor: 1F60h] and this is
+ * this package's suggestion for a SNT specific VPD page. It is modelled
+ * on the ATA Info VPD page [0x89h] which has been stable in the SAT
+ * series of standards. It is currently given a identifier in the vendor
+ * VPD space: 0xde . If T10 accepts this idea then maybe it could be
+ * given a VPD identifier of 0x99 (0x10 more than the ATA Info VPD page).
+ * SG_NVME_VPD_NICR [0xde]. Proposed SNT NVME Info VPD page. */
+void
+decode_snt_nvme_info_vpd(uint8_t * buff, int len, struct opts_t * op,
+                      sgj_opaque_p jop)
+{
+    int n;
+    sgj_state * jsp = &op->json_st;
+    sgj_opaque_p jo2p = NULL;
+    char b[128];
+    static const int blen = sizeof(b);
+    static const char * snt_vendor_s = "SNT vendor identification";
+    static const char * snt_product_s = "SNT product identification";
+    static const char * snt_revision_s = "SNT product revision level";
+
+    if (op->do_hex > 0) {
+        if (op->do_hex > 2)
+            named_hhh_output(snt_vpdp, buff, len, op);
+        else
+            hex2stdout(buff, len, no_ascii_4hex(op));
+        return;
+    }   
+    if (len < 36) {
+        pr2serr("%s length too short=%d\n", snt_vpdp, len);
+        return;
+    }
+    if (jsp->pr_as_json)
+	jo2p = sg_vpd_js_hdr(jsp, jop, snt_vpdp, buff);
+    snprintf(b, blen, "%.8s", buff + 8);
+    sgj_haj_vs(jsp, jo2p, 2, snt_vendor_s, SGJ_SEP_COLON_1_SPACE, b);
+    snprintf(b, blen, "%.16s", buff + 16);
+    sgj_haj_vs(jsp, jo2p, 2, snt_product_s, SGJ_SEP_COLON_1_SPACE, b);
+    snprintf(b, blen, "%.4s", buff + 32);
+    sgj_haj_vs(jsp, jo2p, 2, snt_revision_s, SGJ_SEP_COLON_1_SPACE, b);
+    if (len < NICR_RSP_OFF) {
+        pr2serr("%s length too short=%dto show NVMe Identify Controller "
+		"Response\n", snt_vpdp, len);
+        return;
+    }
+    n = len - NICR_RSP_OFF;
+    if (n > NICR_RSP_LEN) {
+	pr2serr("NVMe Identify response expected to be <= NICR_RSP_LEN "
+		"bytes (got: %d)\n", n);
+	return;
+    }
+    if (jsp->pr_as_json)
+	sgj_js_nv_hex_bytes(jsp, jo2p, "response_bytes",
+			     buff + NICR_RSP_OFF, n);
+    else
+	hex2stdout(buff + NICR_RSP_OFF, n, 1);
 }

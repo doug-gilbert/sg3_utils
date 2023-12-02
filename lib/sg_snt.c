@@ -47,66 +47,66 @@ static const char * nvme_scsi_vendor_str = "NVMe    ";
 /* Table of SCSI operation code (opcodes) supported by SNTL */
 static struct sg_opcode_info_t sg_opcode_info_arr[] =
 {
-    {0x0, 0, 0, {6,              /* TEST UNIT READY */
+    {-1 /* SPC */, 0x0, 0, 0, {6,  /* TEST UNIT READY */
       0, 0, 0, 0, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-    {0x3, 0, 0, {6,             /* REQUEST SENSE */
+    {-1, 0x3, 0, 0, {6,             /* REQUEST SENSE */
       0xe1, 0, 0, 0xff, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-    {0x12, 0, 0, {6,            /* INQUIRY */
+    {-1, 0x12, 0, 0, {6,            /* INQUIRY */
       0xe3, 0xff, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-    {0x1b, 0, 0, {6,            /* START STOP UNIT */
+    {0, 0x1b, 0, 0, {6,            /* START STOP UNIT */
       0x1, 0, 0xf, 0xf7, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-    {0x1c, 0, 0, {6,            /* RECEIVE DIAGNOSTIC RESULTS */
+    {-1, 0x1c, 0, 0, {6,            /* RECEIVE DIAGNOSTIC RESULTS */
       0x1, 0xff, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-    {0x1d, 0, 0, {6,            /* SEND DIAGNOSTIC */
+    {-1, 0x1d, 0, 0, {6,            /* SEND DIAGNOSTIC */
       0xf7, 0x0, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-    {0x25, 0, 0, {10,            /* READ CAPACITY(10) */
+    {0, 0x25, 0, 0, {10,            /* READ CAPACITY(10) */
       0x1, 0xff, 0xff, 0xff, 0xff, 0, 0, 0x1, 0xc7, 0, 0, 0, 0, 0, 0} },
-    {0x28, 0, 0, {10,            /* READ(10) */
+    {0, 0x28, 0, 0, {10,            /* READ(10) */
       0xff, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xc7, 0, 0, 0, 0,
       0, 0} },
-    {0x2a, 0, 0, {10,            /* WRITE(10) */
+    {0, 0x2a, 0, 0, {10,            /* WRITE(10) */
       0xfb, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xc7, 0, 0, 0, 0,
       0, 0} },
-    {0x2f, 0, 0, {10,            /* VERIFY(10) */
+    {0, 0x2f, 0, 0, {10,            /* VERIFY(10) */
       0xf6, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xc7, 0, 0, 0, 0,
       0, 0} },
-    {0x35, 0, 0, {10,            /* SYNCHRONIZE CACHE(10) */
+    {0, 0x35, 0, 0, {10,            /* SYNCHRONIZE CACHE(10) */
       0x7, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xc7, 0, 0, 0, 0,
       0, 0} },
-    {0x41, 0, 0, {10,            /* WRITE SAME(10) */
+    {0, 0x41, 0, 0, {10,            /* WRITE SAME(10) */
       0xff, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xc7, 0, 0, 0, 0,
       0, 0} },
-    {0x55, 0, 0, {10,           /* MODE SELECT(10) */
+    {-1, 0x55, 0, 0, {10,           /* MODE SELECT(10) */
       0x13, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0} },
-    {0x5a, 0, 0, {10,           /* MODE SENSE(10) */
+    {-1, 0x5a, 0, 0, {10,           /* MODE SENSE(10) */
       0x18, 0xff, 0xff, 0x0, 0x0, 0x0, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0} },
-    {0x88, 0, 0, {16,            /* READ(16) */
+    {0, 0x88, 0, 0, {16,            /* READ(16) */
       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
       0xff, 0xff, 0xff, 0xc7} },
-    {0x8a, 0, 0, {16,            /* WRITE(16) */
+    {0, 0x8a, 0, 0, {16,            /* WRITE(16) */
       0xfb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
       0xff, 0xff, 0xff, 0xc7} },
-    {0x8f, 0, 0, {16,            /* VERIFY(16) */
+    {0, 0x8f, 0, 0, {16,            /* VERIFY(16) */
       0xf6, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
       0xff, 0xff, 0x3f, 0xc7} },
-    {0x91, 0, 0, {16,            /* SYNCHRONIZE CACHE(16) */
+    {0, 0x91, 0, 0, {16,            /* SYNCHRONIZE CACHE(16) */
       0x7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
       0xff, 0xff, 0x3f, 0xc7} },
-    {0x93, 0, 0, {16,            /* WRITE SAME(16) */
+    {0, 0x93, 0, 0, {16,            /* WRITE SAME(16) */
       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
       0xff, 0xff, 0x3f, 0xc7} },
-    {0x9e, 0x10, F_SA_LOW, {16,  /* READ CAPACITY(16) [service action in] */
+    {0, 0x9e, 0x10, F_SA_LOW, {16,  /* READ CAPACITY(16) [service action in] */
       0x10, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
       0xff, 0xff, 0x1, 0xc7} },
-    {0xa0, 0, 0, {12,           /* REPORT LUNS */
+    {-1, 0xa0, 0, 0, {12,           /* REPORT LUNS */
       0xe3, 0xff, 0, 0, 0, 0xff, 0xff, 0xff, 0xff, 0, 0xc7, 0, 0, 0, 0} },
-    {0xa3, 0xc, F_SA_LOW, {12,  /* REPORT SUPPORTED OPERATION CODES */
+    {-1, 0xa3, 0xc, F_SA_LOW, {12,  /* REPORT SUPPORTED OPERATION CODES */
       0xc, 0x87, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0xc7, 0, 0, 0,
       0} },
-    {0xa3, 0xd, F_SA_LOW, {12,  /* REPORT SUPPORTED TASK MAN. FUNCTIONS */
+    {-1, 0xa3, 0xd, F_SA_LOW, {12,  /* REPORT SUPPORTED TASK MAN. FUNCTIONS */
       0xd, 0x80, 0, 0, 0, 0xff, 0xff, 0xff, 0xff, 0, 0xc7, 0, 0, 0, 0} },
 
-    {0xff, 0xffff, 0xffff, {0,  /* Sentinel, keep as last element */
+    {-127, 0xff, 0xffff, 0xffff, {0,  /* Sentinel, keep as last element */
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
 };
 
@@ -403,7 +403,7 @@ sg_snt_std_inq(const uint8_t nvme_id_ctlp[], uint8_t pdt, bool enc_serv,
     inq_dout[3] = 2;   /* NORMACA=0, HISUP=0, response data format: 2 */
     inq_dout[4] = 69;  /* response length this_field+4+1 so 74 bytes */
     inq_dout[6] = enc_serv ? 0x40 : 0;
-    if (0x1 & nvme_id_ctlp[76]) /* is bit 0 of the CMIC field set? */
+    if (0x1 & nvme_id_ctlp[76]) /* is bit 0 of the ctl::CMIC field set? */
         inq_dout[6] |= 0x10;    /* then set SCSI MultiP bit */
     inq_dout[7] = 0x2;    /* CMDQUE=1 */
     memcpy(inq_dout + 8, nvme_scsi_vendor_str, 8);  /* NVMe not Intel */

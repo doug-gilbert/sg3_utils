@@ -1038,7 +1038,7 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
 		   sgj_opaque_p jop, int off)
 {
     bool as_json;
-    int len, pdt, plen, pn, dhex;
+    int len, pdt, pn, dhex;
     int alloc_len = op->maxlen;
     int res = 0;
     const struct svpd_values_name_t * vnp;
@@ -1267,54 +1267,6 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
                 decode_vpd_d2_hit(rp, len);
             else
                 res = SG_LIB_CAT_OTHER;
-            break;
-        case SG_NVME_VPD_NICR:          /* 0xde */
-            if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
-                    hex2stdout(rp, len, no_ascii_4hex(op));
-                break;
-            } else if (VPD_VP_SG != op->vend_prod_num) {
-                res = SG_LIB_CAT_OTHER;
-                break;
-            }
-            /* NVMe: Identify Controller data structure (CNS 01h) */
-            plen = sg_get_unaligned_be16(rp + 2) + 4;
-            if (plen > len) {   /* fetch the whole page */
-                res = vpd_fetch_page(ptvp, rp, pn, plen, op->do_quiet,
-				     op->verbose, &len);
-                if (res) {
-                    pr2serr("Vendor VPD page=0x%x  failed to fetch\n", pn);
-                    return res;
-                }
-            }
-            if (len < 16) {
-                pr2serr("%s expected to be > 15 bytes long (got: %d)\n",
-                        name, len);
-                break;
-            } else {
-                int n = len - 16;
-                const char * np = "NVMe Identify Controller Response VPD page";
-                /* NVMe: Identify Controller data structure (CNS 01h) */
-                const char * ep = "(sg3_utils)";
-
-                if (n > 4096) {
-                    pr2serr("NVMe Identify response expected to be "
-                            "<= 4096 bytes (got: %d)\n", n);
-                    break;
-                }
-                if (op->do_hex < 3)
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
-                if (op->do_hex)
-                    hex2stdout(rp, len, no_ascii_4hex(op));
-                else if (jsp->pr_as_json) {
-                    jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
-                    sgj_js_nv_hex_bytes(jsp, jo2p, "response_bytes",
-                                        rp + 16, n);
-                } else
-                    hex2stdout(rp + 16, n, 1);
-            }
             break;
         default:
             res = SG_LIB_CAT_OTHER;

@@ -40,6 +40,7 @@ struct sg_snt_result_t {
 };
 
 struct sg_opcode_info_t {
+    int8_t doc_pdt;         /* -1 --> SPC; 0 --> SBC, 1 --> SSC, etc */
     uint8_t opcode;
     uint16_t sa;            /* service action, 0 for none */
     uint32_t flags;         /* OR-ed set of F_* flags */
