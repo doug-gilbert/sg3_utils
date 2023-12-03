@@ -36,7 +36,7 @@
  * to the given SCSI device. Based on sbc4r15.pdf .
  */
 
-static const char * version_str = "1.16 20231020";
+static const char * version_str = "1.17 20231202";
 #define MY_NAME "sg_stream_ctl"
 
 #define STREAM_CONTROL_SA 0x14
@@ -703,14 +703,6 @@ start_get_response:
                 goto fini;
             }
         }
-#if 0
-sgj_haj_vi(jsp, jo2p, 0, "Parameter data length",
-           SGJ_SEP_COLON_1_SPACE, param_dl, false);
-sgj_pr_hr(jsp, "No complete physical element status descriptors "
-                  "available\n");
-sgj_js_nv_ihex(jsp, jo2p, "element_identifier",
-                           (int64_t)a_ped.elem_id);
-#endif
         num_streams = sg_get_unaligned_be16(arr + 6);
         if (! op->do_brief) {
             if (op->stream_id > 0)
@@ -724,22 +716,22 @@ sgj_js_nv_ihex(jsp, jo2p, "element_identifier",
             jap = sgj_named_subarray_r(jsp, jo2p, "stream_status_descriptor");
 
         for (k = 8; k < op->maxlen; k += 8) {
-            uint8_t perm = (0x1 & arr[k]);
+            bool perm = !! (0x80 & arr[k]);
             uint8_t rel_lt = (0x7f & arr[k + 4]);
             uint16_t strm_id = sg_get_unaligned_be16(arr + k + 2);
 
             if (jsp->pr_as_json) {
                 jo3p = sgj_new_unattached_object_r(jsp);
-                sgj_js_nv_ihex_nex(jsp, jo3p, "perm", perm, false,
+                sgj_js_nv_ihex_nex(jsp, jo3p, "perm", (int)perm, false,
                                    "permanent stream");
-                sgj_js_nv_ihex(jsp, jo3p, "element_identifier", strm_id);
+                sgj_js_nv_ihex(jsp, jo3p, "stream_identifier", strm_id);
                 sgj_js_nv_ihex(jsp, jo3p, "relative_lifetime", rel_lt);
             }
             if (op->do_brief)
                 sgj_pr_hr(jsp, "  %u\n", strm_id);
             else {
-                sgj_pr_hr(jsp, "  PERM: %u\n", perm);
-                sgj_pr_hr(jsp, "    Open stream id: %u\n", strm_id);
+                sgj_pr_hr(jsp, "  PERM: %u\n", (int)perm);
+                sgj_pr_hr(jsp, "    Stream identifier: %u\n", strm_id);
                 sgj_pr_hr(jsp, "    Relative lifetime: %u\n", rel_lt);
             }
             if (jsp->pr_as_json)

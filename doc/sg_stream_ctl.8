@@ -1,4 +1,4 @@
-.TH SG_STREAM_CTL "8" "October 2023" "sg3_utils\-1.49" SG3_UTILS
+.TH SG_STREAM_CTL "8" "December 2023" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_stream_ctl \- send SCSI GET STREAM STATUS or STREAM CONTROL command
 .SH SYNOPSIS
@@ -50,14 +50,16 @@ command (cdb). It is a two bit field so has 4 variants: 0 and 3 are reserved;
 equivalent to '\-\-open' while '\-\-ctl=2' is equivalent to '\-\-close'.
 .TP
 \fB\-g\fR, \fB\-\-get\fR
-selects the GET STREAM STATUS command. If the \fI\-\-id=SID\fR option is
-also given the the response starts lists open stream ids from and including
+selects the GET STREAM STATUS command. If the \fI\-\-id=SID\fR option is also
+given then the response starts listing open stream ids from and including
 \fISID\fR. If the \fI\-\-id=SID\fR option is not given (or \fISID\fR is 0)
-then all open stream id will be returned in the response (data\-in) as long
-as the allocation length (defaults to 248 bytes which can be overridden by
-the \fI\-\-maxlen=LEN\fR option) is long enough. This is the default action
-of this utility (i.e. GET STREAM STATUS command) if no "selecting" options
-are given.
+then all open stream ids will be returned in the response (data\-in) as long
+as the allocation length is long enough. The allocation length defaults to
+248 bytes which can be overridden by the \fI\-\-maxlen=LEN\fR option.
+.IP
+This option usually does not need to be given as calling the GET STREAM
+STATUS command is the default action of this utility in the absence of any
+other "selecting" option.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -79,7 +81,7 @@ CONTROL (close) to identify the stream to close. It is used by the GET
 STREAM STATUS command as the starting stream id (from and including); so
 stream ids that are less than \fISID\fR will not appear in the response.
 .TP
-\fB\-i\fR, \fB\-\-inhex\fR=\fIFN\fR
+\fB\-I\fR, \fB\-\-inhex\fR=\fIFN\fR
 where \fIFN\fR is a file name whose contents are assumed to be ASCII
 hexadecimal. If \fIDEVICE\fR is also given then \fIDEVICE\fR is ignored,
 a warning is issued and the utility continues, decoding the file named
