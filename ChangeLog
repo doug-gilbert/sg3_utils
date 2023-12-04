@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20231202] [svn: r1070]
+Changelog for pre-release sg3_utils-1.49 [20231203] [svn: r1070]
   - JSON: make output more consistent so most command
     responses have a *_paramter_data or similar sub-object
   - apply https://github.com/doug-gilbert/sg3_utils/pull/39
@@ -25,6 +25,7 @@ Changelog for pre-release sg3_utils-1.49 [20231202] [svn: r1070]
   - sg_stream_ctl: add --hex, --inhex=, --json= and --raw
     options; additions in sbc5r05 (perm and relative_lifetime
     fields).
+  - sg_dd: add grpnum=GN operand and --nocopy option
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
     and 44.diff

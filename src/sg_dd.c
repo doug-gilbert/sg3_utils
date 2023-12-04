@@ -78,7 +78,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"              /* used to get to SNTL for NVMe devices */
 
-static const char * version_str = "6.47 20231015";
+static const char * version_str = "6.48 20231203";
 
 static const char * my_name = "sg_dd: ";
 
@@ -221,8 +221,11 @@ struct opts_t
     bool do_sync;
     bool do_time;
     bool do_verify;          /* when false: do copy (which is default) */
+    bool nocopy;
     bool verbose_given;
     bool version_given;
+    uint8_t if_grpnum;
+    uint8_t of_grpnum;
     int infd;
     int cmd_timeout;            /* in milliseconds */
     int coe_limit;
@@ -479,11 +482,12 @@ usage()
             "              [blk_sgio=0|1] [bpt=BPT] [cdbsz=6|10|12|16] "
             "[cdl=CDL]\n"
             "              [coe=0|1|2|3] [coe_limit=CL] [dio=0|1] "
-            "[odir=0|1]\n"
-            "              [of2=OFILE2] [retries=RETR] [sync=0|1] "
-            "[time=0|1[,TO]]\n"
-            "              [verbose=VERB] [--compare] [--progress] "
-            "[--verify]\n"
+            "[grpnum=GN]\n"
+            "              [odir=0|1] [of2=OFILE2] [retries=RETR] "
+            "[sync=0|1]\n"
+            "              [time=0|1[,TO]] [verbose=VERB] [--compare] "
+            "[--progress]\n"
+            "              [--verify]\n"
             "  where:\n"
             "    blk_sgio    0->block device use normal I/O(def), 1->use "
             "SG_IO\n"
@@ -508,6 +512,7 @@ usage()
             "    count       number of blocks to copy (def: device size)\n"
             "    dio         for direct IO, 1->attempt, 0->indirect IO "
             "(def)\n"
+            "    grpnum      field in SCSI READ and WRITE commands (def: 0)\n"
             "    ibs         input logical block size (if given must be same "
             "as 'bs=')\n"
             "    if          file or device to read from (def: stdin)\n"
@@ -647,7 +652,7 @@ read_blkdev_capacity(int sg_fd, int64_t * num_sect, int * sect_sz,
 
 static int
 sg_build_scsi_cdb(uint8_t * cdbp, unsigned int blocks, int64_t start_block,
-                  bool is_verify, bool write_true, struct opts_t * op)
+                  bool write_true, struct opts_t * op)
 {
     int sz_ind;
     const struct flags_t * flagp = write_true ? &op->oflag : &op->iflag;
@@ -655,9 +660,10 @@ sg_build_scsi_cdb(uint8_t * cdbp, unsigned int blocks, int64_t start_block,
     static const int ve_opcode[] = {0xff /* no VERIFY(6) */, VERIFY10,
                                     VERIFY12, VERIFY16};
     static const int wr_opcode[] = {0xa, 0x2a, 0xaa, 0x8a};
+    uint8_t grpnum = write_true ? op->of_grpnum : op->if_grpnum;
 
     memset(cdbp, 0, flagp->cdbsz);
-    if (is_verify)
+    if (op->do_verify)
         cdbp[1] = 0x2;  /* (BYTCHK=1) << 1 */
     else {
         if (flagp->dpo)
@@ -668,7 +674,7 @@ sg_build_scsi_cdb(uint8_t * cdbp, unsigned int blocks, int64_t start_block,
     switch (flagp->cdbsz) {
     case 6:
         sz_ind = 0;
-        if (is_verify && write_true) {
+        if (op->do_verify && write_true) {
             pr2serr("%sthere is no VERIFY(6), choose a larger cdbsz\n",
                      my_name);
             return 1;
@@ -695,12 +701,13 @@ sg_build_scsi_cdb(uint8_t * cdbp, unsigned int blocks, int64_t start_block,
         break;
     case 10:
         sz_ind = 1;
-        if (is_verify && write_true)
+        if (op->do_verify && write_true)
             cdbp[0] = ve_opcode[sz_ind];
         else
             cdbp[0] = (uint8_t)(write_true ? wr_opcode[sz_ind] :
                                              rd_opcode[sz_ind]);
         sg_put_unaligned_be32(start_block, cdbp + 2);
+        cdbp[6] = 0x3f & grpnum;
         sg_put_unaligned_be16(blocks, cdbp + 7);
         if (blocks & (~0xffff)) {
             pr2serr("%sfor 10 byte commands, maximum number of blocks "
@@ -710,22 +717,23 @@ sg_build_scsi_cdb(uint8_t * cdbp, unsigned int blocks, int64_t start_block,
         break;
     case 12:
         sz_ind = 2;
-        if (is_verify && write_true)
+        if (op->do_verify && write_true)
             cdbp[0] = ve_opcode[sz_ind];
         else
             cdbp[0] = (uint8_t)(write_true ? wr_opcode[sz_ind] :
                                              rd_opcode[sz_ind]);
         sg_put_unaligned_be32(start_block, cdbp + 2);
         sg_put_unaligned_be32(blocks, cdbp + 6);
+        cdbp[10] = 0x3f & grpnum;
         break;
     case 16:
         sz_ind = 3;
-        if (is_verify && write_true)
+        if (op->do_verify && write_true)
             cdbp[0] = ve_opcode[sz_ind];
         else
             cdbp[0] = (uint8_t)(write_true ? wr_opcode[sz_ind] :
                                              rd_opcode[sz_ind]);
-        if ((! is_verify) && (flagp->cdl > 0)) {
+        if ((! op->do_verify) && (flagp->cdl > 0)) {
             if (flagp->cdl & 0x4)
                 cdbp[1] |= 0x1;
             if (flagp->cdl & 0x3)
@@ -733,6 +741,7 @@ sg_build_scsi_cdb(uint8_t * cdbp, unsigned int blocks, int64_t start_block,
         }
         sg_put_unaligned_be64(start_block, cdbp + 2);
         sg_put_unaligned_be32(blocks, cdbp + 10);
+        cdbp[14] |= 0x3f & grpnum;
         break;
     default:
         pr2serr("%sexpected cdb size of 6, 10, 12, or 16 but got %d\n",
@@ -872,8 +881,7 @@ sg_read_low(uint8_t * buff, int blocks, int64_t from_block,
     uint8_t senseBuff[SENSE_BUFF_LEN] SG_C_CPP_ZERO_INIT;
     struct sg_io_hdr io_hdr;
 
-    if (sg_build_scsi_cdb(rdCmd, blocks, from_block, op->do_verify,
-                          false, op)) {
+    if (sg_build_scsi_cdb(rdCmd, blocks, from_block, false, op)) {
         pr2serr("%sbad rd cdb build, from_block=%" PRId64 ", blocks=%d\n",
                 my_name, from_block, blocks);
         return SG_LIB_SYNTAX_ERROR;
@@ -1291,7 +1299,7 @@ sg_write(int sg_fd, uint8_t * buff, int blocks, int64_t to_block,
     struct sg_io_hdr io_hdr;
     const char * op_str = op->do_verify ? "verifying" : "writing";
 
-    if (sg_build_scsi_cdb(wrCmd, blocks, to_block, op->do_verify, true, op)) {
+    if (sg_build_scsi_cdb(wrCmd, blocks, to_block, true, op)) {
         pr2serr("%sbad wr cdb build, to_block=%" PRId64 ", blocks=%d\n",
                 my_name, to_block, blocks);
         return SG_LIB_SYNTAX_ERROR;
@@ -1756,6 +1764,11 @@ open_of(struct opts_t * op)
     if (vb)
         pr2serr(" >> Output file type: %s\n",
                 dd_filetype_str(ft, ebuff, ofp->sgio));
+    if (op->nocopy && (! op->do_verify) && (! (FT_DEV_NULL & ft))) {
+        pr2serr("%swants to write to %s but --nocopy given, exit\n", my_name,
+                outf);
+        return -SG_LIB_CONTRADICT;
+    }
     not_found = (FT_ERROR & ft);/* assume error was regular file not found */
 
     if ((FT_BLOCK & ft) && ofp->sgio)
@@ -2115,6 +2128,25 @@ parse_cmd_line(int argc, char * argv[], struct opts_t * op)
             t = sg_get_num(buf);
             ofp->fua = !! (t & 1);
             ifp->fua = !! (t & 2);
+        } else if (0 == strcmp(key, "grpnum")) {
+            const char * cp = strchr(buf, ',');
+
+            t = sg_get_num(buf);
+            if ((t < 0) || (t > 0x3f)) {
+                pr2serr("%sbad argument to 'grpnum='  expect 0 to 63\n",
+                        my_name);
+                return SG_LIB_SYNTAX_ERROR;
+            }
+            op->if_grpnum = t;
+            if (cp) {
+                t = sg_get_num(cp + 1);
+                if ((t < 0) || (t > 0x3f)) {
+                    pr2serr("%sbad 2nd argument to 'grpnum='  expect 0 to "
+                            "63\n", my_name);
+                    return SG_LIB_SYNTAX_ERROR;
+                }
+            }
+            op->of_grpnum = t;
         } else if (0 == strcmp(key, "ibs")) {
             ibs = sg_get_num(buf);
             if ((ibs < 0) || (ibs > MAX_BPT_VALUE)) {
@@ -2213,6 +2245,10 @@ parse_cmd_line(int argc, char * argv[], struct opts_t * op)
                 usage();
                 return SG_LIB_OK_FALSE;
             }
+            n = num_chs_in_str(key + 1, keylen - 1, 'n');
+            if (n > 0)
+                op->nocopy = true;
+            res += n;
             n = num_chs_in_str(key + 1, keylen - 1, 'p');
             op->progress += n;
             res += n;
@@ -2243,7 +2279,10 @@ parse_cmd_line(int argc, char * argv[], struct opts_t * op)
                  (0 == strcmp(key, "-?"))) {
             usage();
             return 0;
-        } else if (0 == strncmp(key, "--progress", 10))
+        } else if ((0 == strncmp(key, "--nc", 4)) ||
+                   (0 == strncmp(key, "--nocopy", 8)))
+            op->nocopy = true;
+        else if (0 == strncmp(key, "--progress", 10))
             ++op->progress;
         else if (0 == strncmp(key, "--verb", 6)) {
             op->verbose_given = true;
@@ -2422,14 +2461,22 @@ main(int argc, char * argv[])
         op->infd = -1;
     } else if (op->in_fname[0] && ('-' != op->in_fname[0])) {
         op->infd = open_if(op);
-        if (op->infd < 0)
-            return -op->infd;
+        if (op->infd < 0) {
+            ret = -op->infd;
+            goto bypass_copy;
+        }
     }
 
     if (op->out_fname[0] && ('-' != op->out_fname[0])) {
         op->outfd = open_of(op);
-        if (op->outfd < -1)
-            return -op->outfd;
+        if (op->outfd < -1) {
+            ret = -op->outfd;
+            goto bypass_copy;
+        }
+    } else if (op->nocopy) {
+        pr2serr("wants to write to stdout but --nocopy given so exit\n");
+        ret = SG_LIB_CONTRADICT;
+        goto bypass_copy;
     }
     if (op->do_verify) {
         if (! (FT_SG & ofp->file_type)) {
@@ -2470,6 +2517,8 @@ main(int argc, char * argv[])
         }
     }
 
+    if ((op->verbose > 0) && (STDIN_FILENO == op->infd))
+        pr2serr("%sinput expected from stdin\n", my_name);
     if ((STDIN_FILENO == op->infd) && (STDOUT_FILENO == op->outfd)) {
         pr2serr("Can't have both 'if' as stdin _and_ 'of' as stdout\n");
         pr2serr("For more information use '--help'\n");
@@ -2878,9 +2927,9 @@ main(int argc, char * argv[])
                 if (ofp->dio && (! dio_tmp))
                     op->dio_incomplete_count++;
             }
-        } else if (FT_DEV_NULL & ofp->file_type)
-            out_full += blocks; /* act as if written out without error */
-        else {
+        } else if (FT_DEV_NULL & ofp->file_type) {
+            ; /* previosuly did: out_full += blocks; */
+        } else {
             while (((res = write(op->outfd, wrkPos, blocks * bs)) < 0) &&
                    ((EINTR == errno) || (EAGAIN == errno) ||
                     (EBUSY == errno)))

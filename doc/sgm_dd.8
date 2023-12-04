@@ -1,4 +1,4 @@
-.TH SGM_DD "8" "February 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SGM_DD "8" "December 2023" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sgm_dd \- copy data to and from files and devices, especially SCSI
 devices
@@ -10,7 +10,7 @@ devices
 .PP
 [\fIbpt=BPT\fR] [\fIcdbsz=\fR6|10|12|16] [\fIdio=\fR0|1] [\fIsync=\fR0|1]
 [\fItime=\fR0|1] [\fIverbose=VERB\fR] [\fI\-\-dry\-run\fR]
-[\fI\-\-progress\fR] [\fI\-\-verbose\fR]
+[\fI\-\-nocopy\fR] [\fI\-\-progress\fR] [\fI\-\-verbose\fR]
 .SH DESCRIPTION
 .\" Add any additional description here
 Copy data to and from any files. Specialized for "files" that are
@@ -143,6 +143,14 @@ executing them.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 outputs usage message and exits.
+.TP
+\fB\-n\fR, \fB\-\-nocopy\fR
+this option causes this utility to exit when it would otherwise attempt
+to write to \fIOFILE\fR or stdout. The long option variant may be
+abbreviated to \fI\-\-nc\fR. The explicit way to instruct this utility to
+read only \fIIFILE\f is to use '\-\-of=/dev/null' in the invocation. This
+option may viewed as extra safety in case when the '\-\-of=/dev/null' is
+not given or misspelt.
 .TP
 \fB\-p\fR, \fB\-\-progress\fR
 this option causes a progress report to be output every two minutes until

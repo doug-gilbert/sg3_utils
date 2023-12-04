@@ -76,7 +76,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.27 20231201";
+static const char * version_str = "1.28 20231203";
 
 static const char * my_name = "sgm_dd: ";
 
@@ -130,6 +130,7 @@ static int progress = 0;        /* accept --progress or -p, does nothing */
 
 static bool do_time = false;
 static bool start_tm_valid = false;
+static bool nocopy = false;
 static struct timeval start_tm;
 static int blk_sz = 0;
 static uint32_t glob_pack_id = 0;       /* pre-increment */
@@ -375,7 +376,7 @@ usage()
             "[fua=0|1|2|3]\n"
             "               [sync=0|1] [time=0|1] [verbose=VERB] "
             "[--dry-run]\n"
-            "               [--progress] [--verbose]\n\n"
+            "               [--nocopy] [--progress] [--verbose]\n\n"
             "  where:\n"
             "    bpt         is blocks_per_transfer (default is 128)\n"
             "    bs          must be device logical block size (default "
@@ -407,6 +408,7 @@ usage()
             "etc\n"
             "    --dry-run|-d    prepare but bypass copy/read\n"
             "    --help|-h       print usage message then exit\n"
+            "    --nocopy|-n     prevent copy apart to of=/dev/null\n"
             "    --progress|-p    outputs progress report every 2 minutes\n"
             "    --verbose|-v    increase verbosity\n"
             "    --version|-V    print version information then exit\n\n"
@@ -1132,6 +1134,10 @@ main(int argc, char * argv[])
                 usage();
                 return 0;
             }
+            n = num_chs_in_str(key + 1, keylen - 1, 'n');
+            if (n > 0)
+                nocopy = true;
+            res += n;
             n = num_chs_in_str(key + 1, keylen - 1, 'p');
             progress += n;
             res += n;
@@ -1154,7 +1160,10 @@ main(int argc, char * argv[])
                  (0 == strcmp(key, "-?"))) {
             usage();
             return 0;
-        } else if (0 == strncmp(key, "--prog", 6))
+        } else if ((0 == strncmp(key, "--nc", 4)) ||
+                   (0 == strncmp(key, "--nocopy", 8)))
+            nocopy = true;
+        else if (0 == strncmp(key, "--prog", 6))
             ++progress;
         else if (0 == strncmp(key, "--verb", 6))
             ++verbose;
@@ -1329,6 +1338,11 @@ main(int argc, char * argv[])
             pr2serr(" >> Output file type: %s\n",
                     dd_filetype_str(out_type, ebuff, sizeof(ebuff)));
 
+        if (nocopy && (! (FT_DEV_NULL & out_type))) {
+            pr2serr("%swants to write to %s but --nocopy given, exit\n",
+                    my_name, outf);
+            return SG_LIB_CONTRADICT;
+        }
         if (FT_ST == out_type) {
             pr2serr("%sunable to use scsi tape device %s\n", my_name, outf);
             return SG_LIB_FILE_ERROR;
@@ -1383,8 +1397,7 @@ main(int argc, char * argv[])
                     return sg_convert_errno(err);
                 }
             }
-        }
-        else if (FT_DEV_NULL == out_type)
+        } else if (FT_DEV_NULL == out_type)
             outfd = -1; /* don't bother opening */
         else {
             if (FT_RAW != out_type) {
@@ -1430,7 +1443,12 @@ main(int argc, char * argv[])
                             PRIx64 "\n", (uint64_t)offset);
             }
         }
+    } else if (nocopy) {
+        pr2serr("wants to write to stdout but --nocopy given so exit\n");
+        return SG_LIB_CONTRADICT;
     }
+    if ((verbose > 0) && (STDIN_FILENO == infd))
+        pr2serr("%sinput expected from stdin\n", my_name);
     if ((STDIN_FILENO == infd) && (STDOUT_FILENO == outfd)) {
         pr2serr("Won't default both IFILE to stdin _and_ OFILE to as "
                 "stdout\n");
@@ -1656,7 +1674,7 @@ main(int argc, char * argv[])
             }
         }
         else if (FT_DEV_NULL == out_type)
-            out_full += blocks; /* act as if written out without error */
+            ; /* was: out_full += blocks; */
         else {
             while (((res = write(outfd, wrkPos, blocks * blk_sz)) < 0) &&
                    ((EINTR == errno) || (EAGAIN == errno) ||

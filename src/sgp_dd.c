@@ -94,7 +94,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "5.94 20231015";
+static const char * version_str = "5.95 20231203";
 
 #define DEF_BLOCK_SIZE 512
 #define DEF_BLOCKS_PER_TRANSFER 128
@@ -183,8 +183,9 @@ struct opts_t
     int chkaddr;        /* check read data contains 4 byte, big endian block
                          * addresses, once: check only 4 bytes per block */
     int progress;       /* --progress or -p, checked in sig_listen_thread */
-    int debug;
+    int verbose;
     int dry_run;
+    int nocopy;
 };
 
 struct thread_arg
@@ -216,7 +217,7 @@ typedef struct request_element
     int cdbsz_out;
     struct flags_t in_flags;
     struct flags_t out_flags;
-    int debug;
+    int verbose;
     uint32_t pack_id;
 } Rq_elem;
 
@@ -224,6 +225,8 @@ static sigset_t signal_set;
 static pthread_t sig_listen_thread_id;
 
 static const char * sg_allow_dio = "/sys/module/sg/parameters/allow_dio";
+
+static bool out_is_dev_null = false;
 
 static void sg_in_operation(struct opts_t * clp, Rq_elem * rep);
 static void sg_out_operation(struct opts_t * clp, Rq_elem * rep,
@@ -419,9 +422,13 @@ print_stats(const char * str)
     pr2serr("%s%" PRId64 "+%d records in\n", str,
             infull - my_opts.in_partial, my_opts.in_partial);
 
-    outfull = dd_count - my_opts.out_rem_count;
-    pr2serr("%s%" PRId64 "+%d records out\n", str,
-            outfull - my_opts.out_partial, my_opts.out_partial);
+    if (out_is_dev_null)
+        pr2serr("%s0+0 records out\n", str);
+    else {
+        outfull = dd_count - my_opts.out_rem_count;
+        pr2serr("%s%" PRId64 "+%d records out\n", str,
+                outfull - my_opts.out_partial, my_opts.out_partial);
+    }
 }
 
 static void
@@ -538,7 +545,8 @@ usage()
             "[deb=VERB] [dio=0|1]\n"
             "               [fua=0|1|2|3] [sync=0|1] [thr=THR] "
             "[time=0|1] [verbose=VERB]\n"
-            "               [--dry-run] [--progress] [--verbose]\n"
+            "               [--dry-run] [--nocopy] [--progress] "
+            "[--verbose]\n"
             "  where:\n"
             "    bpt         is blocks_per_transfer (default is 128)\n"
             "    bs          must be device logical block size (default "
@@ -575,6 +583,7 @@ usage()
             "    --chkaddr|-c    check read data contains blk address\n"
             "    --dry-run|-d    prepare but bypass copy/read\n"
             "    --help|-h      output this usage message then exit\n"
+            "    --nocopy|-n    prevent copy apart to of=/dev/null\n"
             "    --progress|-p    outputs progress report every 2 minutes\n"
             "    --verbose|-v   increase verbosity of utility\n"
             "    --version|-V   output version string then exit\n"
@@ -847,7 +856,7 @@ read_write_thread(void * v_tap)
         rep->outfd = clp->outfd;
     }
     sz = clp->bpt * rep->bs;
-    rep->debug = clp->debug;
+    rep->verbose = clp->verbose;
     rep->cdbsz_in = clp->cdbsz_in;
     rep->cdbsz_out = clp->cdbsz_out;
     rep->in_flags = clp->in_flags;
@@ -1213,7 +1222,7 @@ sg_in_operation(struct opts_t * clp, Rq_elem * rep)
             if (0 != status) err_exit(status, "unlock inout_mutex");
             return;
         case SG_LIB_CAT_ILLEGAL_REQ:
-            if (clp->debug)
+            if (clp->verbose)
                 sg_print_command_len(rep->cdb, rep->cdbsz_in);
             /* FALL THROUGH */
         default:
@@ -1281,7 +1290,7 @@ sg_out_operation(struct opts_t * clp, Rq_elem * rep, bool bump_out_blk)
             if (0 != status) err_exit(status, "unlock inout_mutex");
             return;
         case SG_LIB_CAT_ILLEGAL_REQ:
-            if (clp->debug)
+            if (clp->verbose)
                 sg_print_command_len(rep->cdb, rep->cdbsz_out);
             /* FALL THROUGH */
         default:
@@ -1331,7 +1340,7 @@ sg_start_io(Rq_elem * rep)
         hp->flags |= SG_FLAG_MMAP_IO;
     if (no_dxfer)
         hp->flags |= SG_FLAG_NO_DXFER;
-    if (rep->debug > 8) {
+    if (rep->verbose > 8) {
         pr2serr("%s: SCSI %s, blk=%" PRId64 " num_blks=%d\n", __func__,
                 rep->wr ? "WRITE" : "READ", rep->blk, rep->num_blks);
         sg_print_command(hp->cmdp);
@@ -1400,14 +1409,14 @@ sg_finish_io(bool wr, Rq_elem * rep, pthread_mutex_t * a_mutp)
             break;
         case SG_LIB_CAT_ABORTED_COMMAND:
         case SG_LIB_CAT_UNIT_ATTENTION:
-            if (rep->debug)
+            if (rep->verbose)
                 sg_chk_n_print3((wr ? "writing": "reading"), hp, false);
             return res;
         case SG_LIB_CAT_NOT_READY:
         case SG_LIB_PROGRESS_NOT_READY:
         default:
             rep->out_err = false;
-            if (rep->debug) {
+            if (rep->verbose) {
                 char ebuff[EBUFF_SZ];
 
                 snprintf(ebuff, EBUFF_SZ, "%s blk=%" PRId64,
@@ -1429,7 +1438,7 @@ sg_finish_io(bool wr, Rq_elem * rep, pthread_mutex_t * a_mutp)
     else
         rep->dio_incomplete_count = 0;
     rep->resid = hp->resid;
-    if (rep->debug > 8)
+    if (rep->verbose > 8)
         pr2serr("%s: completed %s\n", __func__, wr ? "WRITE" : "READ");
     return 0;
 }
@@ -1715,7 +1724,7 @@ main(int argc, char * argv[])
             }   /* treat 'count=-1' as calculate count (same as not given) */
         } else if ((0 == strncmp(key,"deb", 3)) ||
                    (0 == strncmp(key,"verb", 4)))
-            clp->debug = sg_get_num(buf);
+            clp->verbose = sg_get_num(buf);
         else if (0 == strcmp(key,"dio")) {
             clp->in_flags.dio = !! sg_get_num(buf);
             clp->out_flags.dio = clp->in_flags.dio;
@@ -1794,13 +1803,17 @@ main(int argc, char * argv[])
                 usage();
                 return 0;
             }
+            n = num_chs_in_str(key + 1, keylen - 1, 'n');
+            if (n > 0)
+                clp->nocopy = true;
+            res += n;
             n = num_chs_in_str(key + 1, keylen - 1, 'p');
             clp->progress += n;
             res += n;
             n = num_chs_in_str(key + 1, keylen - 1, 'v');
             if (n > 0)
                 verbose_given = true;
-            clp->debug += n;   /* -v  ---> --verbose */
+            clp->verbose += n;   /* -v  ---> --verbose */
             res += n;
             n = num_chs_in_str(key + 1, keylen - 1, 'V');
             if (n > 0)
@@ -1821,11 +1834,14 @@ main(int argc, char * argv[])
                    (0 == strcmp(key, "-?"))) {
             usage();
             return 0;
-        } else if (0 == strncmp(key, "--prog", 6))
+        } else if ((0 == strncmp(key, "--nc", 4)) ||
+                   (0 == strncmp(key, "--nocopy", 8)))
+            clp->nocopy = true;
+        else if (0 == strncmp(key, "--prog", 6))
             ++clp->progress;
         else if (0 == strncmp(key, "--verb", 6)) {
             verbose_given = true;
-            ++clp->debug;      /* --verbose */
+            ++clp->verbose;      /* --verbose */
         } else if (0 == strncmp(key, "--vers", 6))
             version_given = true;
         else {
@@ -1843,12 +1859,12 @@ main(int argc, char * argv[])
         pr2serr("but override: '-vV' given, zero verbose and continue\n");
         /* verbose_given = false;       */
         version_given = false;
-        clp->debug = 0;
+        clp->verbose = 0;
     } else if (! verbose_given) {
         pr2serr("set '-vv'\n");
-        clp->debug = 2;
+        clp->verbose = 2;
     } else
-        pr2serr("keep verbose=%d\n", clp->debug);
+        pr2serr("keep verbose=%d\n", clp->verbose);
 #else
     if (verbose_given && version_given)
         pr2serr("Not in DEBUG mode, so '-vV' has no special action\n");
@@ -1895,7 +1911,7 @@ main(int argc, char * argv[])
         usage();
         return SG_LIB_SYNTAX_ERROR;
     }
-    if (clp->debug > 2)
+    if (clp->verbose > 2)
         pr2serr("%sif=%s skip=%" PRId64 " of=%s seek=%" PRId64 " count=%"
                 PRId64 "\n", my_name, infn, skip, outfn, seek, dd_count);
 
@@ -1952,7 +1968,11 @@ main(int argc, char * argv[])
     }
     if (outfn[0] && ('-' != outfn[0])) {
         clp->out_type = dd_filetype(outfn);
-
+        if (clp->nocopy && (! (FT_DEV_NULL & clp->out_type))) {
+            pr2serr("%swants to write to %s but --nocopy given, exit\n",
+                    my_name, outfn);
+            return SG_LIB_CONTRADICT;
+        }
         if (FT_ST == clp->out_type) {
             pr2serr("%sunable to use scsi tape device %s\n", my_name, outfn);
             return SG_LIB_FILE_ERROR;
@@ -1961,9 +1981,10 @@ main(int argc, char * argv[])
                                      clp->bpt);
             if (clp->outfd < 0)
                 return -clp->outfd;
-        } else if (FT_DEV_NULL == clp->out_type)
+        } else if (FT_DEV_NULL == clp->out_type) {
             clp->outfd = -1; /* don't bother opening */
-        else {
+	    out_is_dev_null = true;
+        } else {
             if (FT_RAW != clp->out_type) {
                 flags = O_WRONLY | O_CREAT;
                 if (clp->out_flags.direct)
@@ -2005,7 +2026,12 @@ main(int argc, char * argv[])
                 }
             }
         }
+    } else if (clp->nocopy) {
+        pr2serr("wants to write to stdout but --nocopy given so exit\n");
+        return SG_LIB_CONTRADICT;
     }
+    if ((clp->verbose > 0) && (STDIN_FILENO == clp->infd))
+        pr2serr("%sinput expected from stdin\n", my_name);
     if ((STDIN_FILENO == clp->infd) && (STDOUT_FILENO == clp->outfd)) {
         pr2serr("Won't default both IFILE to stdin _and_ OFILE to stdout\n");
         pr2serr("For more information use '--help'\n");
@@ -2088,7 +2114,7 @@ main(int argc, char * argv[])
         else
             dd_count = out_num_sect;
     }
-    if (clp->debug > 1)
+    if (clp->verbose > 1)
         pr2serr("Start of loop, count=%" PRId64 ", in_num_sect=%" PRId64
                 ", out_num_sect=%" PRId64 "\n", dd_count, in_num_sect,
                 out_num_sect);
@@ -2161,7 +2187,7 @@ main(int argc, char * argv[])
         status = pthread_create(&threads[0], NULL, read_write_thread,
                                 (void *)(thr_arg_a + 0));
         if (0 != status) err_exit(status, "pthread_create");
-        if (clp->debug)
+        if (clp->verbose)
             pr2serr("Starting worker thread k=0\n");
 
         /* wait for any broadcast */
@@ -2180,7 +2206,7 @@ main(int argc, char * argv[])
             status = pthread_create(&threads[k], NULL, read_write_thread,
                                     (void *)(thr_arg_a + k));
             if (0 != status) err_exit(status, "pthread_create");
-            if (clp->debug > 2)
+            if (clp->verbose > 2)
                 pr2serr("Starting worker thread k=%d\n", k);
         }
 
@@ -2188,7 +2214,7 @@ main(int argc, char * argv[])
         for (k = 0; k < clp->num_threads; ++k) {
             status = pthread_join(threads[k], &vp);
             if (0 != status) err_exit(status, "pthread_join");
-            if (clp->debug > 2)
+            if (clp->verbose > 2)
                 pr2serr("Worker thread k=%d terminated\n", k);
         }
     }   /* started worker threads and here after they have all exited */
