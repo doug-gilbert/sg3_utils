@@ -1,4 +1,4 @@
-.TH SG_DD "8" "October 2023" "sg3_utils\-1.49" SG3_UTILS
+.TH SG_DD "8" "December 2023" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_dd \- copy data to and from files and devices, especially SCSI
 devices
@@ -11,10 +11,10 @@ devices
 .PP
 [\fIblk_sgio=\fR{0|1}] [\fIbpt=BPT\fR] [\fIcdbsz=\fR{6|10|12|16}]
 [\fIcdl=CDL\fR] [\fIcoe=\fR{0|1|2|3}] [\fIcoe_limit=CL\fR]
-[\fIdio=\fR{0|1}] [\fIodir=\fR{0|1}] [\fIof2=OFILE2\fR]
+[\fIdio=\fR{0|1}] [\fIgrpnum=\fRGN] [\fIodir=\fR{0|1}] [\fIof2=OFILE2\fR]
 [\fIretries=RETR\fR] [\fIsync=\fR{0|1}] [\fItime=\fR{0|1}[,TO]]
-[\fIverbose=VERB\fR] [\fI\-\-dry\-run\fR] [\fI\-\-progress\fR]
-[\fI\-\-verify\fR]
+[\fIverbose=VERB\fR] [\fI\-\-dry\-run\fR] [\fI\-\-nocopy\fR]
+[\fI\-\-progress\fR] [\fI\-\-verify\fR]
 .SH DESCRIPTION
 .\" Add any additional description here
 Copy data to and from any files. Specialized for "files" that are Linux SCSI
@@ -146,6 +146,15 @@ notes this at completion. If direct IO is selected and
 issued (and indirect IO is performed). For finer grain control
 use 'iflag=dio' or 'oflag=dio'.
 .TP
+\fBgrpnum\fR=\fIGN\fR
+the 'Group number' field is a 6 bit field (0 to 0x3f) found in all SCSI
+READ and WRITE commands (apart from the deprecated READ(6) and WRITE(6)).
+\fIGN\fR is either a single value or a pair of values separated by a
+comma. The default value is 0. If a pair of values is given, the first
+is used for the \fIIFILE\fR side (i.e. the SCSI READ) and the second is
+used for the \fIOFILE\fR side (i.e. the SCSI WRITE). The group number
+is ignored for non-passthrough devices.
+.TP
 \fBibs\fR=\fIBS\fR
 if given must be the same as \fIBS\fR given to 'bs=' option.
 .TP
@@ -237,6 +246,16 @@ executing them.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 outputs usage message and exits.
+.TP
+\fB\-n\fR, \fB\-\-nocopy\fR
+this option causes this utility to exit when it would otherwise attempt
+to write to \fIOFILE\fR or stdout. It will not block an attempt to
+verify (i.e. using the \fI\-\-verify\fR option) as in that case \fIOFILE\fR
+should not be modified. The long option variant may be abbreviated to
+\fI\-\-nc\fR. The explicit way to instruct this utility to read only
+\fIIFILE\f is to use '\-\-of=/dev/null' in the invocation. This option may
+viewed as extra safety in case when the '\-\-of=/dev/null' is not given
+or misspelt.
 .TP
 \fB\-p\fR, \fB\-\-progress\fR
 this option causes a progress report to be output every two minutes until
