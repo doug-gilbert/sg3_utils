@@ -78,7 +78,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"              /* used to get to SNTL for NVMe devices */
 
-static const char * version_str = "6.49 20231205";
+static const char * version_str = "6.50 20231206";
 
 static const char * my_name = "sg_dd: ";
 
@@ -423,7 +423,7 @@ dd_filetype(const char * filename, const struct opts_t * op)
         if (nvme_gen_major == (int)major(st.st_rdev))   /* e.g. /dev/ng0n1 */
             return FT_SG | FT_NVME;     /* treat as sg device */
     } else if (S_ISBLK(st.st_mode)) {
-        if (BLOCK_EXT_MAJOR)
+        if (BLOCK_EXT_MAJOR == (int)major(st.st_rdev))
             return FT_BLOCK | FT_NVME;
         else
             return FT_BLOCK;
