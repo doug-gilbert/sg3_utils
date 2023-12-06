@@ -54,7 +54,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.55 20231201";  /* spc6r11, sbc5r05 */
+static const char * version_str = "2.56 20231204";  /* spc6r11, sbc5r06 */
 
 #define MY_NAME "sg_inq"
 
@@ -226,6 +226,7 @@ static const struct option long_options[] = {
 #endif
     {"block", required_argument, 0, 'B'},
     {"cmddt", no_argument, 0, 'c'},
+    {"cns", required_argument, 0, 'C'},
     {"descriptors", no_argument, 0, 'd'},
     {"debug", no_argument, 0, 'D'},
     {"export", no_argument, 0, 'u'},
@@ -265,13 +266,14 @@ usage()
 #if defined(SG_LIB_LINUX) && defined(SG_SCSI_STRINGS) && \
     defined(HDIO_GET_IDENTITY)
 
-    pr2serr("Usage: sg_inq [--ata] [--block=0|1] [--cmddt] [--descriptors] "
-            "[--export]\n"
-            "              [--extended] [--help] [--hex] [--id] "
-            "[--inhex=FN]\n"
-            "              [--json[=JO]] [--js-file=JFN] [--len=LEN] "
-            "[--long]\n"
-            "              [--maxlen=LEN] [--only] [--page=PG] [--raw]\n"
+    pr2serr("Usage: sg_inq [--ata] [--block=0|1] [--cmddt] [cns=CNS] "
+            "[--descriptors]\n"
+            "              [--export] [--extended] [--help] [--hex] "
+            "[--id]\n"
+            "              [--inhex=FN] [--json[=JO]] [--js-file=JFN] "
+            "[--len=LEN]\n"
+            "              [--long] [--maxlen=LEN] [--only] [--page=PG] "
+            "[--raw]\n"
             "              [--sinq_inraw=RFN] [--vendor] [--verbose] "
             "[--version]\n"
             "              [--vpd] DEVICE\n"
@@ -279,8 +281,8 @@ usage()
             "    --ata|-a        treat DEVICE as (directly attached) ATA "
             "device\n");
 #else
-    pr2serr("Usage: sg_inq [--block=0|1] [--cmddt] [--descriptors] "
-            "[--export]\n"
+    pr2serr("Usage: sg_inq [--block=0|1] [--cmddt] [cns=CNS] "
+            "[--descriptors] [--export]\n"
             "              [--extended] [--help] [--hex] [--id] "
             "[--inhex=FN]\n"
             "              [--json[=JO]] [--js-file=JFN] [--len=LEN] "
@@ -295,10 +297,9 @@ usage()
     pr2serr("    --block=0|1     0-> open(non-blocking); 1-> "
             "open(blocking)\n"
             "      -B 0|1        (def: depends on OS; Linux pt: 0)\n"
-            "    --cmddt|-c      command support data mode (set opcode "
-            "with '--page=PG')\n"
-            "                    use twice for list of supported "
-            "commands; obsolete\n"
+            "    --cmddt|-c      command support data mode (obsolete, "
+            "see sg_opcodes)\n"
+            "    --cns=CNS       value for NVMe Identify command\n"
             "    --descriptors|-d    fetch and decode version descriptors\n"
             "    --export|-u     SCSI_IDENT_<assoc>_<type>=<ident> output "
             "format.\n"
@@ -554,7 +555,7 @@ new_parse_cmd_line(struct opts_t * op, int argc, char * argv[])
 #ifdef SG_LIB_LINUX
 #ifdef SG_SCSI_STRINGS
         c = getopt_long(argc, argv,
-                        "^aB:cdDeEfhHiI:j::J:l:Lm:M:NoOp:qQ:rsuvVx",
+                        "^aB:cC:dDeEfhHiI:j::J:l:Lm:M:NoOp:qQ:rsuvVx",
                         long_options, &option_index);
 #else
         c = getopt_long(argc, argv, "^B:cdDeEfhHiI:j::J:l:Lm:M:op:qQ:rsuvVx",
@@ -595,6 +596,14 @@ new_parse_cmd_line(struct opts_t * op, int argc, char * argv[])
             break;
         case 'c':
             ++op->do_cmddt;
+            break;
+        case 'C':
+            n = sg_get_num(optarg);
+            if ((n < 0) || (n > 255)) {
+                pr2serr("bad argument to '--cns=' want 0 or 255\n");
+                usage_for(op);
+                return SG_LIB_SYNTAX_ERROR;
+            }
             break;
         case 'd':
             op->do_descriptors = true;
@@ -4307,6 +4316,7 @@ main(int argc, char * argv[])
     struct opts_t * op;
 
     op = &opts;
+    op->cns = -1;
     op->vpd_pn = -1;
     op->vend_prod_num = -1;
     op->page_pdt = -1;

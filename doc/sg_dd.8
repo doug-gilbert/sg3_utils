@@ -152,8 +152,13 @@ READ and WRITE commands (apart from the deprecated READ(6) and WRITE(6)).
 \fIGN\fR is either a single value or a pair of values separated by a
 comma. The default value is 0. If a pair of values is given, the first
 is used for the \fIIFILE\fR side (i.e. the SCSI READ) and the second is
-used for the \fIOFILE\fR side (i.e. the SCSI WRITE). The group number
-is ignored for non-passthrough devices.
+used for the \fIOFILE\fR side (i.e. the SCSI WRITE).
+.IP
+The group number is applied to non\-passthrough devices using
+fcntl(F_SET_FILE_RW_HINT) . For the \fIOFILE\fR side, oflag=direct is
+needed to defeat the write cache because F_SET_FILE_RW_HINT does not
+change the handling of the write cache (but fcntl(F_SET_RW_HINT) does
+change the write cache handling).
 .TP
 \fBibs\fR=\fIBS\fR
 if given must be the same as \fIBS\fR given to 'bs=' option.

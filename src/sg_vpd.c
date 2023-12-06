@@ -43,7 +43,7 @@
 
 */
 
-static const char * version_str = "2.01 20231127";  /* spc6r08 + sbc5r04 */
+static const char * version_str = "2.02 20231204";  /* spc6r11 + sbc5r06 */
 
 #define MY_NAME "sg_vpd"
 
@@ -2511,6 +2511,7 @@ main(int argc, char * argv[])
     if (getenv("SG3_UTILS_INVOCATION"))
         sg_rep_invocation(MY_NAME, version_str, argc, argv, stderr);
     op->vend_prod_num = -1;
+    op->cns = -1;
     while (1) {
         int option_index = 0;
 
