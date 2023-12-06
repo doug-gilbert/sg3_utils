@@ -78,7 +78,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"              /* used to get to SNTL for NVMe devices */
 
-static const char * version_str = "6.48 20231203";
+static const char * version_str = "6.50 20231206";
 
 static const char * my_name = "sg_dd: ";
 
@@ -221,6 +221,7 @@ struct opts_t
     bool do_sync;
     bool do_time;
     bool do_verify;          /* when false: do copy (which is default) */
+    bool grpnum_given;
     bool nocopy;
     bool verbose_given;
     bool version_given;
@@ -422,7 +423,7 @@ dd_filetype(const char * filename, const struct opts_t * op)
         if (nvme_gen_major == (int)major(st.st_rdev))   /* e.g. /dev/ng0n1 */
             return FT_SG | FT_NVME;     /* treat as sg device */
     } else if (S_ISBLK(st.st_mode)) {
-        if (BLOCK_EXT_MAJOR)
+        if (BLOCK_EXT_MAJOR == (int)major(st.st_rdev))
             return FT_BLOCK | FT_NVME;
         else
             return FT_BLOCK;
@@ -1720,6 +1721,23 @@ open_if(struct opts_t * op)
                             rt);
             }
 #endif
+            if (op->grpnum_given) {
+#ifdef F_SET_FILE_RW_HINT       /* defined in recent <fcntl.h> header */
+                uint64_t arg = op->if_grpnum;
+
+                res = fcntl(infd, F_SET_FILE_RW_HINT, &arg);
+                if (res < 0) {
+                    snprintf(ebuff, EBUFF_SZ, "%sfcntl(F_SET_FILE_RW_HINT) "
+                             "failed on %s", my_name, inf);
+                    perror(ebuff);
+                }
+#else
+                if (vb > 1)
+                    pr2serr("%s: grpnum (group number) but "
+                            "fcntl(F_SET_FILE_RW_HINT) on %s not supported\n",
+                            __func__, inf);
+#endif
+            }
         }
     }
     if (ifp->flock && (infd >= 0)) {
@@ -1853,6 +1871,23 @@ open_of(struct opts_t * op)
         if (vb)
             pr2serr("        %s output, flags=0x%x\n",
                     (not_found ? "create" : "open"), flags);
+        if (op->grpnum_given) {
+#ifdef F_SET_FILE_RW_HINT       /* defined in recent <fcntl.h> header */
+            uint64_t arg = op->of_grpnum;
+
+            res = fcntl(outfd, F_SET_FILE_RW_HINT, &arg);
+            if (res < 0) {
+                snprintf(ebuff, EBUFF_SZ, "%sfcntl(F_SET_FILE_RW_HINT) "
+                         "failed on %s", my_name, outf);
+                perror(ebuff);
+            }
+#else
+            if (vb > 1)
+                pr2serr("%s: grpnum (group number) but "
+                        "fcntl(F_SET_FILE_RW_HINT) on %s not supported\n",
+                        __func__, outf);
+#endif
+        }
         if (op->seek > 0) {
             off64_t offset = op->seek;
 
@@ -2146,6 +2181,7 @@ parse_cmd_line(int argc, char * argv[], struct opts_t * op)
                     return SG_LIB_SYNTAX_ERROR;
                 }
             }
+            op->grpnum_given = true;
             op->of_grpnum = t;
         } else if (0 == strcmp(key, "ibs")) {
             ibs = sg_get_num(buf);

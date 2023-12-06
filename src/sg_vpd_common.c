@@ -2193,29 +2193,29 @@ decode_block_limits_ext_vpd(const uint8_t * buff, int len, struct opts_t * op,
                    "Reduced Stream Control Supported");
     u = sg_get_unaligned_be16(buff + 6);
     sgj_haj_vistr(jsp, jop, 2, "Maximum number of streams",
-                  SGJ_SEP_COLON_1_SPACE, u, true,
+                  SGJ_SEP_COLON_1_SPACE, u, false,
                   (0 == u) ? "Stream control not supported" : NULL);
     u = sg_get_unaligned_be16(buff + 8);
     sgj_haj_vi_nex(jsp, jop, 2, "Optimal stream write size",
-                   SGJ_SEP_COLON_1_SPACE, u, true, "unit: LB");
+                   SGJ_SEP_COLON_1_SPACE, u, false, "unit: LB");
     u = sg_get_unaligned_be32(buff + 10);
     sgj_haj_vi_nex(jsp, jop, 2, "Stream granularity size",
-                   SGJ_SEP_COLON_1_SPACE, u, true,
+                   SGJ_SEP_COLON_1_SPACE, u, false,
                    "unit: number of optimal stream write size blocks");
     if (len < 28)
         return;
     u = sg_get_unaligned_be32(buff + 16);
     sgj_haj_vistr_nex(jsp, jop, 2, "Maximum scattered LBA range transfer "
-                      "length", SGJ_SEP_COLON_1_SPACE, u, true,
+                      "length", SGJ_SEP_COLON_1_SPACE, u, false,
                       (0 == u ? nlr_s : NULL),
                       "unit: LB (in a single LBA range descriptor)");
     u = sg_get_unaligned_be16(buff + 22);
     sgj_haj_vistr(jsp, jop, 2, "Maximum scattered LBA range descriptor "
-                  "count", SGJ_SEP_COLON_1_SPACE, u, true,
+                  "count", SGJ_SEP_COLON_1_SPACE, u, false,
                   (0 == u ? nlr_s : NULL));
     u = sg_get_unaligned_be32(buff + 24);
     sgj_haj_vistr_nex(jsp, jop, 2, "Maximum scattered transfer length",
-                      SGJ_SEP_COLON_1_SPACE, u, true,
+                      SGJ_SEP_COLON_1_SPACE, u, false,
                       (0 == u ? nlr_s : NULL),
                       "unit: LB (per single Write Scattered command)");
 }
@@ -3775,13 +3775,13 @@ decode_snt_nvme_info_vpd(uint8_t * buff, int len, struct opts_t * op,
         else
             hex2stdout(buff, len, no_ascii_4hex(op));
         return;
-    }   
+    }
     if (len < 36) {
         pr2serr("%s length too short=%d\n", snt_vpdp, len);
         return;
     }
     if (jsp->pr_as_json)
-	jo2p = sg_vpd_js_hdr(jsp, jop, snt_vpdp, buff);
+        jo2p = sg_vpd_js_hdr(jsp, jop, snt_vpdp, buff);
     snprintf(b, blen, "%.8s", buff + 8);
     sgj_haj_vs(jsp, jo2p, 2, snt_vendor_s, SGJ_SEP_COLON_1_SPACE, b);
     snprintf(b, blen, "%.16s", buff + 16);
@@ -3790,18 +3790,18 @@ decode_snt_nvme_info_vpd(uint8_t * buff, int len, struct opts_t * op,
     sgj_haj_vs(jsp, jo2p, 2, snt_revision_s, SGJ_SEP_COLON_1_SPACE, b);
     if (len < NICR_RSP_OFF) {
         pr2serr("%s length too short=%dto show NVMe Identify Controller "
-		"Response\n", snt_vpdp, len);
+                "Response\n", snt_vpdp, len);
         return;
     }
     n = len - NICR_RSP_OFF;
     if (n > NICR_RSP_LEN) {
-	pr2serr("NVMe Identify response expected to be <= NICR_RSP_LEN "
-		"bytes (got: %d)\n", n);
-	return;
+        pr2serr("NVMe Identify response expected to be <= NICR_RSP_LEN "
+                "bytes (got: %d)\n", n);
+        return;
     }
     if (jsp->pr_as_json)
-	sgj_js_nv_hex_bytes(jsp, jo2p, "response_bytes",
-			     buff + NICR_RSP_OFF, n);
+        sgj_js_nv_hex_bytes(jsp, jo2p, "response_bytes",
+                             buff + NICR_RSP_OFF, n);
     else
-	hex2stdout(buff + NICR_RSP_OFF, n, 1);
+        hex2stdout(buff + NICR_RSP_OFF, n, 1);
 }

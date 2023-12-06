@@ -144,7 +144,8 @@ struct opts_t {
 #ifdef SG_SCSI_STRINGS
     bool opt_new;               /* sg_inq */
 #endif
-    int do_block;               /* do_block */
+    int cns;                    /* sg_inq(nvme device) */
+    int do_block;               /* sg_inq */
     int do_cmddt;               /* sg_inq */
     int do_help;                /* sg_inq */
     int do_hex;                 /* sg_inq + sg_vpd */
