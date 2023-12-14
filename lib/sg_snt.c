@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 #define __STDC_FORMAT_MACROS 1
 #include <inttypes.h>
 
@@ -35,11 +36,6 @@
 #define INVALID_FIELD_IN_CDB 0x24
 #define INVALID_FIELD_IN_PARAM_LIST 0x26
 #define PARAMETER_LIST_LENGTH_ERR 0x1a
-
-#define F_SA_LOW                0x80    /* cdb byte 1, bits 4 to 0 */
-#define F_SA_HIGH               0x100   /* as used by variable length cdbs */
-#define FF_SA (F_SA_HIGH | F_SA_LOW)
-#define F_INV_OP                0x200
 
 
 static const char * nvme_scsi_vendor_str = "NVMe    ";
@@ -105,6 +101,10 @@ static struct sg_opcode_info_t sg_opcode_info_arr[] =
       0} },
     {-1, 0xa3, 0xd, F_SA_LOW, {12,  /* REPORT SUPPORTED TASK MAN. FUNCTIONS */
       0xd, 0x80, 0, 0, 0, 0xff, 0xff, 0xff, 0xff, 0, 0xc7, 0, 0, 0, 0} },
+    {-1, 0xa3, 0xf, F_SA_LOW | F_NEED_TS_SUP, {12,  /* REPORT TIMESTAMP */
+      0xf, 0x0, 0, 0, 0, 0xff, 0xff, 0xff, 0xff, 0, 0xc7, 0, 0, 0, 0} },
+    {-1, 0xa4, 0xf, F_SA_LOW | F_NEED_TS_SUP, {12,  /* SET TIMESTAMP */
+      0xf, 0x0, 0, 0, 0, 0xff, 0xff, 0xff, 0xff, 0, 0xc7, 0, 0, 0, 0} },
 
     {-127, 0xff, 0xffff, 0xffff, {0,  /* Sentinel, keep as last element */
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
@@ -118,60 +118,84 @@ sg_get_opcode_translation(void)
     return sg_opcode_info_arr;
 }
 
+void
+sg_snt_mk_sense_asc_ascq(struct sg_snt_result_t * resp, int sk,
+                         int asc, int ascq)
+{
+    resp->sstatus = SAM_STAT_CHECK_CONDITION;
+    resp->sk = sk;
+    resp->asc = asc;
+    resp->ascq = ascq;
+    resp->in_byte = 0;
+    resp->in_bit = 255;
+}
+
+void
+sg_snt_mk_sense_invalid_fld(struct sg_snt_result_t * resp, bool in_cdb,
+                            int in_byte, int in_bit)
+{
+    resp->sstatus = SAM_STAT_CHECK_CONDITION;
+    resp->sk = SPC_SK_ILLEGAL_REQUEST;
+    resp->asc = in_cdb ? INVALID_FIELD_IN_CDB : INVALID_FIELD_IN_PARAM_LIST;
+    resp->ascq = 0;
+    resp->in_byte = in_byte;
+    resp->in_bit = in_bit;
+}
+
 /* Given the NVMe Identify controller response and optionally the NVMe
  * Identify namespace response (NULL otherwise), generate the SCSI VPD
- * page 0x83 (device identification) descriptor(s) in dop. Return the
- * number of bytes written which will not exceed max_do_len. Probably use
+ * page 0x83 (device identification) descriptor(s) in dip. Return the
+ * number of bytes written which will not exceed max_di_len. Probably use
  * Peripheral Device Type (pdt) of 0 (disk) for don't know. Transport
  * protocol (tproto) should be -1 if not known, else SCSI value.
- * N.B. Does not write total VPD page length into dop[2:3] . */
+ * N.B. Does not write total VPD page length into dip[2:3] . */
 int
 sg_make_vpd_devid_for_nvme(const uint8_t * nvme_id_ctl_p,
                            const uint8_t * nvme_id_ns_p, int pdt,
-                           int tproto, uint8_t * dop, int max_do_len)
+                           int tproto, uint8_t * dip, int max_di_len)
 {
     bool have_nguid, have_eui64;
     int k, n;
     char b[4];
 
-    if ((NULL == nvme_id_ctl_p) || (NULL == dop) || (max_do_len < 56))
+    if ((NULL == nvme_id_ctl_p) || (NULL == dip) || (max_di_len < 56))
         return 0;
 
-    memset(dop, 0, max_do_len);
-    dop[0] = 0x1f & pdt;  /* (PQ=0)<<5 | (PDT=pdt); 0 or 0xd (SES) */
-    dop[1] = 0x83;      /* Device Identification VPD page number */
+    memset(dip, 0, max_di_len);
+    dip[0] = 0x1f & pdt;  /* (PQ=0)<<5 | (PDT=pdt); 0 or 0xd (SES) */
+    dip[1] = 0x83;      /* Device Identification VPD page number */
     /* Build a T10 Vendor ID based designator (desig_id=1) for controller */
     if (tproto >= 0) {
-        dop[4] = ((0xf & tproto) << 4) | 0x2;
-        dop[5] = 0xa1; /* PIV=1, ASSOC=2 (target device), desig_id=1 */
+        dip[4] = ((0xf & tproto) << 4) | 0x2;
+        dip[5] = 0xa1; /* PIV=1, ASSOC=2 (target device), desig_id=1 */
     } else {
-        dop[4] = 0x2;  /* Prococol id=0, code_set=2 (ASCII) */
-        dop[5] = 0x21; /* PIV=0, ASSOC=2 (target device), desig_id=1 */
+        dip[4] = 0x2;  /* Prococol id=0, code_set=2 (ASCII) */
+        dip[5] = 0x21; /* PIV=0, ASSOC=2 (target device), desig_id=1 */
     }
-    memcpy(dop + 8, nvme_scsi_vendor_str, 8); /* N.B. this is "NVMe    " */
-    memcpy(dop + 16, nvme_id_ctl_p + 24, 40);  /* MN */
+    memcpy(dip + 8, nvme_scsi_vendor_str, 8); /* N.B. this is "NVMe    " */
+    memcpy(dip + 16, nvme_id_ctl_p + 24, 40);  /* MN */
     for (k = 40; k > 0; --k) {
-        if (' ' == dop[15 + k])
-            dop[15 + k] = '_'; /* convert trailing spaces */
+        if (' ' == dip[15 + k])
+            dip[15 + k] = '_'; /* convert trailing spaces */
         else
             break;
     }
     if (40 == k)
         --k;
     n = 16 + 1 + k;
-    if (max_do_len < (n + 20))
+    if (max_di_len < (n + 20))
         return 0;
-    memcpy(dop + n, nvme_id_ctl_p + 4, 20); /* SN */
+    memcpy(dip + n, nvme_id_ctl_p + 4, 20); /* SN */
     for (k = 20; k > 0; --k) {  /* trim trailing spaces */
-        if (' ' == dop[n + k - 1])
-            dop[n + k - 1] = '\0';
+        if (' ' == dip[n + k - 1])
+            dip[n + k - 1] = '\0';
         else
             break;
     }
     n += k;
     if (0 != (n % 4))
         n = ((n / 4) + 1) * 4;  /* round up to next modulo 4 */
-    dop[7] = n - 8;
+    dip[7] = n - 8;
     if (NULL == nvme_id_ns_p)
         return n;
 
@@ -183,41 +207,41 @@ sg_make_vpd_devid_for_nvme(const uint8_t * nvme_id_ctl_p,
     if ((! have_nguid) && (! have_eui64))
         return n;
     if (have_nguid) {
-        if (max_do_len < (n + 20))
+        if (max_di_len < (n + 20))
             return n;
-        dop[n + 0] = 0x1;  /* Prococol id=0, code_set=1 (binary) */
-        dop[n + 1] = 0x02; /* PIV=0, ASSOC=0 (lu), desig_id=2 (eui) */
-        dop[n + 3] = 16;
-        memcpy(dop + n + 4, nvme_id_ns_p + 104, 16);
+        dip[n + 0] = 0x1;  /* Prococol id=0, code_set=1 (binary) */
+        dip[n + 1] = 0x02; /* PIV=0, ASSOC=0 (lu), desig_id=2 (eui) */
+        dip[n + 3] = 16;
+        memcpy(dip + n + 4, nvme_id_ns_p + 104, 16);
         n += 20;
-        if (max_do_len < (n + 40))
+        if (max_di_len < (n + 40))
             return n;
-        dop[n + 0] = 0x3;  /* Prococol id=0, code_set=3 (utf8) */
-        dop[n + 1] = 0x08; /* PIV=0, ASSOC=0 (lu), desig_id=8 (scsi string) */
-        dop[n + 3] = 36;
-        memcpy(dop + n + 4, "eui.", 4);
+        dip[n + 0] = 0x3;  /* Prococol id=0, code_set=3 (utf8) */
+        dip[n + 1] = 0x08; /* PIV=0, ASSOC=0 (lu), desig_id=8 (scsi string) */
+        dip[n + 3] = 36;
+        memcpy(dip + n + 4, "eui.", 4);
         for (k = 0; k < 16; ++k) {
             snprintf(b, sizeof(b), "%02X", nvme_id_ns_p[104 + k]);
-            memcpy(dop + n + 8 + (2 * k), b, 2);
+            memcpy(dip + n + 8 + (2 * k), b, 2);
         }
         return n + 40;
     } else {    /* have_eui64 is true, 8 byte identifier */
-        if (max_do_len < (n + 12))
+        if (max_di_len < (n + 12))
             return n;
-        dop[n + 0] = 0x1;  /* Prococol id=0, code_set=1 (binary) */
-        dop[n + 1] = 0x02; /* PIV=0, ASSOC=0 (lu), desig_id=2 (eui) */
-        dop[n + 3] = 8;
-        memcpy(dop + n + 4, nvme_id_ns_p + 120, 8);
+        dip[n + 0] = 0x1;  /* Prococol id=0, code_set=1 (binary) */
+        dip[n + 1] = 0x02; /* PIV=0, ASSOC=0 (lu), desig_id=2 (eui) */
+        dip[n + 3] = 8;
+        memcpy(dip + n + 4, nvme_id_ns_p + 120, 8);
         n += 12;
-        if (max_do_len < (n + 24))
+        if (max_di_len < (n + 24))
             return n;
-        dop[n + 0] = 0x3;  /* Prococol id=0, code_set=3 (utf8) */
-        dop[n + 1] = 0x08; /* PIV=0, ASSOC=0 (lu), desig_id=8 (scsi string) */
-        dop[n + 3] = 20;
-        memcpy(dop + n + 4, "eui.", 4);
+        dip[n + 0] = 0x3;  /* Prococol id=0, code_set=3 (utf8) */
+        dip[n + 1] = 0x08; /* PIV=0, ASSOC=0 (lu), desig_id=8 (scsi string) */
+        dip[n + 3] = 20;
+        memcpy(dip + n + 4, "eui.", 4);
         for (k = 0; k < 8; ++k) {
             snprintf(b, sizeof(b), "%02X", nvme_id_ns_p[120 + k]);
-            memcpy(dop + n + 8 + (2 * k), b, 2);
+            memcpy(dip + n + 8 + (2 * k), b, 2);
         }
         return n + 24;
     }
@@ -373,19 +397,20 @@ static uint16_t std_inq_vers_desc[] = {
     UINT16_MAX,         /* end sentinel */
 };
 
-static uint16_t disk_vers_desc = 0x0602;         /* SBC-4 INCITS 506-2021 */
-static uint16_t ses_vers_desc = 0x0682;          /* SES-4 INCITS 555-2020 */
+static const uint16_t inq_resp_len = 74;        /* want version descriptors */
+static const uint16_t disk_vers_desc = 0x0602;  /* SBC-4 INCITS 506-2021 */
+static const uint16_t ses_vers_desc = 0x0682;   /* SES-4 INCITS 555-2020 */
 
-/* Assumes 'inq_dout' points to an array that is at least 74 bytes long
+/* Assumes 'inq_dip' points to an array that is at least 74 bytes long
  * which will be written to. Also assume that nvme_id_ctlp points to a
- * 4096 bytes array, some of which will be read. 
+ * 4096 bytes array, some of which will be read.
  * Note: Tried to use C's "arr[static 4096]" syntax but:
  *   1) it is not supported by C++
  *   2) not recommended since violation causes UB but not necessarily
  *      a compile error so it gives a false sense of security */
-void
-sg_snt_std_inq(const uint8_t nvme_id_ctlp[], uint8_t pdt, bool enc_serv,
-               uint8_t * inq_dout)
+int
+sg_snt_std_inq(const uint8_t * nvme_id_ctlp, uint8_t pdt, bool enc_serv,
+               uint8_t * inq_dip)
 {
     bool skip_rest = false;
     uint16_t vd;
@@ -395,21 +420,21 @@ sg_snt_std_inq(const uint8_t nvme_id_ctlp[], uint8_t pdt, bool enc_serv,
     static const int blen = sizeof(b);
     static const int bblen = sizeof(bb);
 
-    memset(inq_dout, 0, 74);
+    memset(inq_dip, 0, inq_resp_len);
     /* pdt=0 --> disk; pdt=0xd --> SES; pdt=3 --> processor (safte) */
-    inq_dout[0] = (0x1f & pdt);  /* (PQ=0)<<5 */
-    /* inq_dout[1] = (RMD=0)<<7 | (LU_CONG=0)<<6 | (HOT_PLUG=0)<<4; */
-    inq_dout[2] = 7;   /* version: SPC-5 */
-    inq_dout[3] = 2;   /* NORMACA=0, HISUP=0, response data format: 2 */
-    inq_dout[4] = 69;  /* response length this_field+4+1 so 74 bytes */
-    inq_dout[6] = enc_serv ? 0x40 : 0;
+    inq_dip[0] = (0x1f & pdt);  /* (PQ=0)<<5 */
+    /* inq_dip[1] = (RMD=0)<<7 | (LU_CONG=0)<<6 | (HOT_PLUG=0)<<4; */
+    inq_dip[2] = 7;   /* version: SPC-5 */
+    inq_dip[3] = 2;   /* NORMACA=0, HISUP=0, response data format: 2 */
+    inq_dip[4] = inq_resp_len - 5;  /* response length this_field+4+1 */
+    inq_dip[6] = enc_serv ? 0x40 : 0;
     if (0x1 & nvme_id_ctlp[76]) /* is bit 0 of the ctl::CMIC field set? */
-        inq_dout[6] |= 0x10;    /* then set SCSI MultiP bit */
-    inq_dout[7] = 0x2;    /* CMDQUE=1 */
-    memcpy(inq_dout + 8, nvme_scsi_vendor_str, 8);  /* NVMe not Intel */
-    memcpy(inq_dout + 16, nvme_id_ctlp + 24, 16); /* Prod <-- MN */
+        inq_dip[6] |= 0x10;    /* then set SCSI MultiP bit */
+    inq_dip[7] = 0x2;    /* CMDQUE=1 */
+    memcpy(inq_dip + 8, nvme_scsi_vendor_str, 8);  /* NVMe not Intel */
+    memcpy(inq_dip + 16, nvme_id_ctlp + 24, 16); /* Prod <-- MN */
     snprintf(b, blen, "%.8s", (const char *)(nvme_id_ctlp + 64));
-    memcpy(inq_dout + 32,
+    memcpy(inq_dip + 32,
            sg_last_n_non_blank(b, 4, bb, bblen), 4);  /* Rev <-- FR */
     for (k = 0; k < 8; ++k) {
         vd = std_inq_vers_desc[k];
@@ -422,10 +447,11 @@ sg_snt_std_inq(const uint8_t nvme_id_ctlp[], uint8_t pdt, bool enc_serv,
                 vd = disk_vers_desc;
             skip_rest = true;
         }
-        sg_put_unaligned_be16(vd, inq_dout + 58 + (k << 1));
+        sg_put_unaligned_be16(vd, inq_dip + 58 + (k << 1));
         if (skip_rest)
             break;
     }
+    return inq_resp_len;
 }
 
 #define SG_PT_C_MAX_MSENSE_SZ 256
@@ -459,8 +485,9 @@ sg_snt_resp_mode_sense10(const struct sg_snt_dev_state_t * dsp,
     alloc_len = sg_get_unaligned_be16(cdbp + 7);
     memset(arr, 0, SG_PT_C_MAX_MSENSE_SZ);
     if (0x3 == pcontrol) {  /* Saving values not supported */
-        resp->asc = SAVING_PARAMS_UNSUP;
-        goto err_out;
+        sg_snt_mk_sense_asc_ascq(resp, SPC_SK_ILLEGAL_REQUEST,
+                                 SAVING_PARAMS_UNSUP, 0);
+        return -1;
     }
     /* for disks set DPOFUA bit and clear write protect (WP) bit */
     if (is_disk)
@@ -542,10 +569,8 @@ sg_snt_resp_mode_sense10(const struct sg_snt_dev_state_t * dsp,
             len += resp_vs_ua_m_pg(ap + len, pcontrol);
             offset += len;
         } else {
-            resp->asc = INVALID_FIELD_IN_CDB;
-            resp->in_byte = 3;
-            resp->in_bit = 255;
-            goto err_out;
+            sg_snt_mk_sense_invalid_fld(resp, true, 3, 255);
+            return -1;
         }
         break;
     case 0x0:       /* Vendor specific "Unit Attention" mode page */
@@ -558,21 +583,14 @@ sg_snt_resp_mode_sense10(const struct sg_snt_dev_state_t * dsp,
         break;
     }
     if (bad_pcode) {
-        resp->asc = INVALID_FIELD_IN_CDB;
-        resp->in_byte = 2;
-        resp->in_bit = 5;
-        goto err_out;
+        sg_snt_mk_sense_invalid_fld(resp, true, 2, 5);
+        return -1;
     }
     sg_put_unaligned_be16(offset - 2, arr + 0);
     len = (alloc_len < offset) ? alloc_len : offset;
     len = (len < mx_di_len) ? len : mx_di_len;
     memcpy(dip, arr, len);
     return len;
-
-err_out:
-    resp->sstatus = SAM_STAT_CHECK_CONDITION;
-    resp->sk = SPC_SK_ILLEGAL_REQUEST;
-    return -1;
 }
 
 #define SG_PT_C_MAX_MSELECT_SZ 512
@@ -594,44 +612,43 @@ sg_snt_resp_mode_select10(struct sg_snt_dev_state_t * dsp,
     sp = cdbp[1] & 0x1;
     param_len = sg_get_unaligned_be16(cdbp + 7);
     if ((0 == pf) || sp || (param_len > SG_PT_C_MAX_MSELECT_SZ)) {
-        resp->asc = INVALID_FIELD_IN_CDB;
-        resp->in_byte = 1;
+        int in_byte, in_bit;
+
+        in_byte = 1;
         if (sp)
-            resp->in_bit = 0;
+            in_bit = 0;
         else if (0 == pf)
-            resp->in_bit = 4;
+            in_bit = 4;
         else {
-            resp->in_byte = 7;
-            resp->in_bit = 255;
+            in_byte = 7;
+            in_bit = 255;
         }
-        goto err_out;
+        sg_snt_mk_sense_invalid_fld(resp, true, in_byte, in_bit);
+        return -1;
     }
     rlen = (do_len < param_len) ? do_len : param_len;
     memcpy(arr, dop, rlen);
     md_len = sg_get_unaligned_be16(arr + 0) + 2;
     bd_len = sg_get_unaligned_be16(arr + 6);
     if (md_len > 2) {
-        resp->asc = INVALID_FIELD_IN_PARAM_LIST;
-        resp->in_byte = 0;
-        resp->in_bit = 255;
-        goto err_out;
+        sg_snt_mk_sense_invalid_fld(resp, false, 0, 255);
+        return -1;
     }
     off = bd_len + 8;
     mpage = arr[off] & 0x3f;
     ps = !!(arr[off] & 0x80);
     if (ps) {
-        resp->asc = INVALID_FIELD_IN_PARAM_LIST;
-        resp->in_byte = off;
-        resp->in_bit = 7;
-        goto err_out;
+        sg_snt_mk_sense_invalid_fld(resp, false, off, 7);
+        return -1;
     }
     spf = !!(arr[off] & 0x40);
     pg_len = spf ? (sg_get_unaligned_be16(arr + off + 2) + 4) :
                    (arr[off + 1] + 2);
     sub_mpage = spf ? arr[off + 1] : 0;
     if ((pg_len + off) > param_len) {
-        resp->asc = PARAMETER_LIST_LENGTH_ERR;
-        goto err_out;
+        sg_snt_mk_sense_asc_ascq(resp, SPC_SK_ILLEGAL_REQUEST,
+                                 PARAMETER_LIST_LENGTH_ERR, 0);
+        return -1;
     }
     switch (mpage) {
     case 0x8:      /* Caching Mode page */
@@ -673,17 +690,339 @@ sg_snt_resp_mode_select10(struct sg_snt_dev_state_t * dsp,
         break;
     default:
 def_case:
-        resp->asc = INVALID_FIELD_IN_PARAM_LIST;
-        resp->in_byte = off;
-        resp->in_bit = 5;
-        goto err_out;
+        sg_snt_mk_sense_invalid_fld(resp, false, off, 5);
+        return -1;
     }
     return rlen;
-
-err_out:
-    resp->sk = SPC_SK_ILLEGAL_REQUEST;
-    resp->sstatus = SAM_STAT_CHECK_CONDITION;
-    return -1;
 }
 
-#endif          /* (HAVE_NVME && (! IGNORE_NVME)) [near line 140] */
+int
+sg_snt_resp_rep_opcodes(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
+                        uint16_t oacs, uint16_t oncs, uint8_t * dip,
+                        int mx_di_len, struct sg_snt_result_t * resp)
+{
+    bool rctd;
+    uint8_t reporting_opts, req_opcode, supp;
+    uint16_t req_sa;
+    uint32_t alloc_len, offset, a_len;
+    uint32_t pg_sz = sg_get_page_size();
+    int len, count, bump;
+    int res = -1;
+    const struct sg_opcode_info_t *oip;
+    uint8_t *arr;
+    uint8_t *free_arr;
+
+    if (dsp->vb > 5)
+        pr2ws("%s: oacs=0x%x, oncs=0x%x\n", __func__, oacs, oncs);
+    rctd = !!(cdbp[2] & 0x80);      /* report command timeout desc. */
+    reporting_opts = cdbp[2] & 0x7;
+    req_opcode = cdbp[3];
+    req_sa = sg_get_unaligned_be16(cdbp + 4);
+    alloc_len = sg_get_unaligned_be32(cdbp + 6);
+    if (alloc_len < 4 || alloc_len > 0xffff) {
+        sg_snt_mk_sense_invalid_fld(resp, true, 6, 255);
+        return -1;
+    }
+    a_len = pg_sz - 72;
+    arr = sg_memalign(pg_sz, pg_sz, &free_arr, false);
+    if (NULL == arr) {
+        pr2ws("%s: calloc() failed to get memory\n", __func__);
+        return sg_convert_errno(ENOMEM);
+    }
+    switch (reporting_opts) {
+    case 0: /* all commands */
+        count = 0;
+        bump = rctd ? 20 : 8;
+        for (offset = 4, oip = sg_get_opcode_translation();
+             (oip->flags != 0xffff) && (offset < a_len); ++oip) {
+            if (F_INV_OP & oip->flags)
+                continue;
+            ++count;
+            arr[offset] = oip->opcode;
+            sg_put_unaligned_be16(oip->sa, arr + offset + 2);
+            if (rctd)
+                arr[offset + 5] |= 0x2;
+            if (FF_SA & oip->flags)
+                arr[offset + 5] |= 0x1;
+            sg_put_unaligned_be16(oip->len_mask[0], arr + offset + 6);
+            if (rctd)
+                sg_put_unaligned_be16(0xa, arr + offset + 8);
+            offset += bump;
+        }
+        sg_put_unaligned_be32(count * bump, arr + 0);
+        break;
+    case 1: /* one command: opcode only */
+    case 2: /* one command: opcode plus service action */
+    case 3: /* one command: if sa==0 then opcode only else opcode+sa */
+        for (oip = sg_get_opcode_translation(); oip->flags != 0xffff; ++oip) {
+            if ((req_opcode == oip->opcode) && (req_sa == oip->sa))
+                break;
+        }
+        if ((0xffff == oip->flags) || (F_INV_OP & oip->flags)) {
+            supp = 1;
+            offset = 4;
+        } else {
+            if (1 == reporting_opts) {
+                if (FF_SA & oip->flags) {
+                    sg_snt_mk_sense_invalid_fld(resp, true, 2, 2);
+                    goto fini;
+                }
+                req_sa = 0;
+            } else if ((2 == reporting_opts) && 0 == (FF_SA & oip->flags)) {
+                sg_snt_mk_sense_invalid_fld(resp, true, 4, -1);
+                goto fini;
+            }
+            if ((0 == (FF_SA & oip->flags)) && (req_opcode == oip->opcode))
+                supp = 3;
+            else if (0 == (FF_SA & oip->flags))
+                supp = 1;
+            else if (req_sa != oip->sa)
+                supp = 1;
+            else
+                supp = 3;
+            if (3 == supp) {
+                uint16_t u;
+                int k;
+
+                u = oip->len_mask[0];
+                sg_put_unaligned_be16(u, arr + 2);
+                arr[4] = oip->opcode;
+                for (k = 1; k < u; ++k)
+                    arr[4 + k] = (k < 16) ?
+                oip->len_mask[k] : 0xff;
+                offset = 4 + u;
+            } else
+                offset = 4;
+        }
+        arr[1] = (rctd ? 0x80 : 0) | supp;
+        if (rctd) {
+            sg_put_unaligned_be16(0xa, arr + offset);
+            offset += 12;
+        }
+        break;
+    default:
+        sg_snt_mk_sense_invalid_fld(resp, true, 2, 2);
+        goto fini;
+    }
+    offset = (offset < a_len) ? offset : a_len;
+    len = (offset < alloc_len) ? offset : alloc_len;
+    len = (len < mx_di_len) ? len : mx_di_len;
+    // ptp->io_hdr.din_resid = ptp->io_hdr.din_xfer_len - len;
+    if (len > 0)
+        memcpy(dip, arr, len);
+    res = len;
+fini:
+    free(free_arr);
+    return res;
+}
+
+int
+sg_snt_resp_rep_tmfs(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
+                     uint8_t * dip, int mx_di_len,
+                     struct sg_snt_result_t * resp)
+{
+    bool repd;
+    int len, alloc_len;
+    uint8_t arr[16];
+
+    if (dsp->vb > 5)
+        pr2ws("%s: enter\n", __func__);
+    memset(arr, 0, sizeof(arr));
+    repd = !!(cdbp[2] & 0x80);
+    alloc_len = sg_get_unaligned_be32(cdbp + 6);
+    if (alloc_len < 4) {
+        sg_snt_mk_sense_invalid_fld(resp, true, 6, 255);
+        return -1;
+    }
+    arr[0] = 0xc8;          /* ATS | ATSS | LURS */
+    arr[1] = 0x1;           /* ITNRS */
+    if (repd) {
+        arr[3] = 0xc;
+        len = 16;
+    } else
+        len = 4;
+
+    len = (len < alloc_len) ? len : alloc_len;
+    len = (len < mx_di_len) ? len : mx_di_len;
+    // ptp->io_hdr.din_resid = ptp->io_hdr.din_xfer_len - len;
+    if (len > 0)
+        memcpy(dip, arr, len);
+    return len;
+}
+
+static const char * sg_snt_vend_s = "SG3_UTIL";         /* 8 bytes long */
+static const char * sg_snt_prod_s = "SNT in sg3_utils"; /* 16 bytes long */
+static const char * sg_snt_rev_s = "0100";              /* 4 bytes long */
+
+int
+sg_snt_resp_inq(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
+                const uint8_t * nvme_id_ctlp, const uint8_t * nvme_id_nsp,
+                uint8_t * dip, int mx_di_len, struct sg_snt_result_t * resp)
+{
+    bool evpd;
+    uint16_t alloc_len, pg_cd;
+    int n = 0;
+    uint8_t inq_din[256];
+    static const int inq_din_sz = sizeof(inq_din);
+
+    if (0x2 & cdbp[1]) {        /* Reject CmdDt=1 */
+        sg_snt_mk_sense_invalid_fld(resp, true, 1, 1);
+        return -1;
+    }
+    alloc_len = sg_get_unaligned_be16(cdbp + 3);
+    evpd = !!(0x1 & cdbp[1]);
+    pg_cd = cdbp[2];
+    if (evpd) {         /* VPD page responses */
+        bool cp_id_ctl = false;
+
+        memset(inq_din, 0, inq_din_sz);
+        switch (pg_cd) {
+        case 0:
+            /* inq_din[0] = (PQ=0)<<5 | (PDT=0); prefer pdt=0xd --> SES */
+            inq_din[1] = pg_cd;
+            n = 12;
+            sg_put_unaligned_be16(n - 4, inq_din + 2);
+            inq_din[4] = 0x0;
+            inq_din[5] = 0x80;
+            inq_din[6] = 0x83;
+            inq_din[7] = 0x86;
+            inq_din[8] = 0x87;
+            inq_din[9] = 0x92;
+            inq_din[10] = 0xb1;
+            inq_din[n - 1] = SG_NVME_VPD_NICR;     /* last VPD number */
+            break;
+        case 0x80:
+            /* inq_din[0] = (PQ=0)<<5 | (PDT=0); prefer pdt=0xd --> SES */
+            inq_din[1] = pg_cd;
+            n = 24;
+            sg_put_unaligned_be16(n - 4, inq_din + 2);
+            memcpy(inq_din + 4, nvme_id_ctlp + 4, 20);    /* SN */
+            break;
+        case 0x83:
+            n = sg_make_vpd_devid_for_nvme(nvme_id_ctlp, nvme_id_nsp,
+                                           dsp->pdt, -1 /*tproto */,
+                                           inq_din, inq_din_sz);
+            if (n > 3)
+                sg_put_unaligned_be16(n - 4, inq_din + 2);
+            break;
+        case 0x86:      /* Extended INQUIRY (per SFS SPC Discovery 2016) */
+            inq_din[1] = pg_cd;
+            n = 64;
+            sg_put_unaligned_be16(n - 4, inq_din + 2);
+            inq_din[5] = 0x1;          /* SIMPSUP=1 */
+            inq_din[7] = 0x1;          /* LUICLR=1 */
+            inq_din[13] = 0x40;        /* max supported sense data length */
+            break;
+        case 0x87:      /* Mode page policy (per SFS SPC Discovery 2016) */
+            inq_din[1] = pg_cd;
+            n = 8;
+            sg_put_unaligned_be16(n - 4, inq_din + 2);
+            inq_din[4] = 0x3f;         /* all mode pages */
+            inq_din[5] = 0xff;         /*     and their sub-pages */
+            inq_din[6] = 0x80;         /* MLUS=1, policy=shared */
+            break;
+        case 0x92:      /* SCSI Feature set: only SPC Discovery 2016 */
+            inq_din[1] = pg_cd;
+            n = 10;
+            sg_put_unaligned_be16(n - 4, inq_din + 2);
+            inq_din[9] = 0x1;  /* SFS SPC Discovery 2016 */
+            break;
+        case 0xb1:      /* Block Device Characteristics */
+            inq_din[1] = pg_cd;
+            n = 64;
+            sg_put_unaligned_be16(n - 4, inq_din + 2);
+            inq_din[3] = 0x3c;
+            inq_din[5] = 0x01;
+            break;
+        case SG_NVME_VPD_NICR:  /* 0xde (vendor (sg3_utils) specific) */
+            /* 16 byte page header then NVME Identify controller response */
+            inq_din[1] = pg_cd;
+            sg_put_unaligned_be16((64 + 4096) - 4, inq_din + 2);
+            memcpy(inq_din + 8, sg_snt_vend_s, 8);
+            memcpy(inq_din + 16, sg_snt_prod_s, 16);
+            memcpy(inq_din + 32, sg_snt_rev_s, 4);
+            n = 64 + 4096;
+            cp_id_ctl = true;
+            break;
+        default:        /* Point to page_code field in cdb */
+            sg_snt_mk_sense_invalid_fld(resp, true, 2, 7);
+            return -1;
+        }
+        if (alloc_len > 0) {
+            n = (alloc_len < n) ? alloc_len : n;
+            n = (n < mx_di_len) ? n : mx_di_len;
+            if (n > 0) {
+                if (cp_id_ctl) {
+                    memcpy(dip, inq_din, (n < 64 ? n : 64));
+                    if (n > 64)
+                        memcpy(dip + 64, nvme_id_ctlp, n - 64);
+                } else
+                    memcpy(dip, inq_din, n);
+            }
+        }
+    } else {            /* Standard INQUIRY response */
+        n = sg_snt_std_inq(nvme_id_ctlp, dsp->pdt, dsp->enc_serv, inq_din);
+        if (alloc_len > 0) {
+            n = (alloc_len < n) ? alloc_len : n;
+            n = (n < mx_di_len) ? n : mx_di_len;
+            if (n > 0)
+                memcpy(dip, inq_din, n);
+        }
+    }
+    return n;
+}
+
+int
+sg_snt_resp_rluns(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
+                  const uint8_t * nvme_id_ctlp, uint32_t nsid, uint8_t * dip,
+                  int mx_di_len, struct sg_snt_result_t * resp)
+{
+    uint16_t sel_report, alloc_len;
+    uint32_t k, num, max_nsid;
+    int n = 0;
+    uint8_t rl_din[256];
+    uint8_t * up;
+    static const int rl_din_sz = sizeof(rl_din);
+
+    sel_report = cdbp[2];
+    alloc_len = sg_get_unaligned_be32(cdbp + 6);
+    max_nsid = sg_get_unaligned_le32(nvme_id_ctlp + 516);
+    if (dsp->vb > 5)
+        pr2ws("%s: max_nsid=%u\n", __func__, max_nsid);
+    switch (sel_report) {
+    case 0:
+    case 2:
+        num = max_nsid;
+        break;
+    case 1:
+    case 0x10:
+    case 0x12:
+        num = 0;
+        break;
+    case 0x11:
+        num = (1 == nsid) ? max_nsid :  0;
+        break;
+    default:
+        if (dsp->vb > 1)
+            pr2ws("%s: bad select_report value: 0x%x\n", __func__,
+                  sel_report);
+        sg_snt_mk_sense_invalid_fld(resp, true, 2, 7);
+        return 0;
+    }
+    for (k = 0, up = rl_din + 8; k < num; ++k, up += 8) {
+        if (up < (rl_din + rl_din_sz))
+            sg_put_unaligned_be16(k, up);
+    }
+    n = num * 8;
+    sg_put_unaligned_be32(n, rl_din);
+    n+= 8;
+    if (alloc_len > 0) {
+        n = (alloc_len < n) ? alloc_len : n;
+        n = (n < mx_di_len) ? n : mx_di_len;
+        if (n > 0)
+            memcpy(dip, rl_din, n);
+    }
+    return n;
+}
+
+#endif          /* (HAVE_NVME && (! IGNORE_NVME)) */

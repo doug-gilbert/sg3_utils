@@ -19,8 +19,8 @@
 #include "sg_lib_data.h"
 
 
-const char * const sg_lib_version_str = "3.14 20231125";
-/* spc6r11, sbc5r05, zbc3r03 */
+const char * const sg_lib_version_str = "3.15 20231213";
+/* spc6r11, sbc5r06, zbc3r03 */
 
 
 /* indexed by pdt; those that map to own index do not decay */
@@ -1976,7 +1976,8 @@ const struct sg_value_2names_t sg_exit_str_arr[] = {
     {27, "Task set full", "type: SCSI status"},
     {28, "ACA aactive", "type: SCSI status"},
     {29, "Task aborted", "type: SCSI status"},
-    {31, "Contradict", "command line options contradict or select bad mode"},
+    {31, "CL options contradict",
+         "command line options contradict or select bad mode"},
     {32, "Logic error", "unexpected situation, contact author"},
     {33, "SCSI command timeout", NULL},         /* OS timed out command */
     {34, "Windows error number", "doesn't fit in 7 bits"},

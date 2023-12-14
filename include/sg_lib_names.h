@@ -20,9 +20,12 @@ extern "C" {
 
 extern const struct sg_lib_simple_value_name_t sg_lib_names_mode_arr[];
 extern const struct sg_lib_simple_value_name_t sg_lib_names_vpd_arr[];
+extern const struct sg_lib_simple_value_name_t
+					sg_lib_version_descriptor_arr[];
 
 extern const size_t sg_lib_names_mode_len;
 extern const size_t sg_lib_names_vpd_len;
+extern const size_t sg_lib_version_descriptor_len;
 
 #ifdef __cplusplus
 }
