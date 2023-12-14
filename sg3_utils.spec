@@ -3,7 +3,7 @@ Name: sg3_utils
 Version: 1.49
 # Release: 1%{?dist}
 Release: 1
-License: GPL
+License: BSD-2-Clause and GPL
 Group: Utilities/System
 Source: https://sg.danny.cz/sg/p/sg3_utils-%{version}.tar.gz
 Url: https://sg.danny.cz/sg/sg3_utils.html

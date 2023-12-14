@@ -34,7 +34,7 @@
 
 #include "sg_pt.h"
 
-static const char * version_str = "1.02 20230622";    /* spc6r08 */
+static const char * version_str = "1.03 20231209";    /* spc6r11 */
 
 #define MY_NAME "sg_opcodes"
 
@@ -1394,7 +1394,7 @@ main(int argc, char * argv[])
         else
             op->rep_opts = 0;
     } else if (op->opcode < 0)
-	op->opcode = 0;
+        op->opcode = 0;
 
     if (op->inhex_fn) {
         if ((res = sg_f2hex_arr(op->inhex_fn, op->do_raw, false, rsoc_buff,
@@ -1443,9 +1443,9 @@ main(int argc, char * argv[])
             no_final_msg = true;
             goto err_out;
         }
-        if (op->no_inquiry && (peri_dtype < 0))
+        if (op->no_inquiry && (! op->do_taskman) && (peri_dtype < 0))
             pr2serr("--no-inquiry ignored because --pdt= not given\n");
-        if (op->no_inquiry && (peri_dtype >= 0))
+        if (op->no_inquiry && (op->do_taskman || (peri_dtype >= 0)))
             ;
         else if (0 == sg_simple_inquiry_pt(ptvp, &inq_resp, true, vb)) {
             peri_dtype = inq_resp.peripheral_type;

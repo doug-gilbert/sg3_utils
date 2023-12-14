@@ -43,6 +43,7 @@
 
 #include "sg_lib.h"
 #include "sg_lib_data.h"
+#include "sg_lib_names.h"
 #include "sg_cmds_basic.h"
 #include "sg_pt.h"
 #include "sg_unaligned.h"
@@ -54,7 +55,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.56 20231204";  /* spc6r11, sbc5r06 */
+static const char * version_str = "2.58 20231213";  /* spc6r11, sbc5r06 */
 
 #define MY_NAME "sg_inq"
 
@@ -104,7 +105,6 @@ static const char * version_str = "2.56 20231204";  /* spc6r11, sbc5r06 */
 #define VPD_DI_SEL_AS_IS 32
 
 #define DEF_ALLOC_LEN 252       /* highest 1 byte value that is modulo 4 */
-#define SAFE_STD_INQ_RESP_LEN 36
 #define MX_ALLOC_LEN (0xc000 + 0x80)
 #define VPD_ATA_INFO_LEN  572
 
@@ -122,7 +122,6 @@ static const int rsp_buff_sz = MX_ALLOC_LEN + 1;
 static char xtra_buff[MX_ALLOC_LEN + 1];
 static char usn_buff[MX_ALLOC_LEN + 1];
 
-static const char * find_version_descriptor_str(int value);
 static void decode_dev_ids(const char * leadin, uint8_t * buff, int len,
                            struct opts_t * op, sgj_opaque_p jop);
 static int vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op,
@@ -158,16 +157,6 @@ static const struct svpd_values_name_t t10_vpd_pg[] = {
      "(SBC)"},
     {VPD_DEVICE_CONSTITUENTS, 0, -1, "dc", "Device constituents"},
     {VPD_DEVICE_ID, 0, -1, "di", "Device identification"},
-#if 0           /* following found in sg_vpd */
-    {VPD_DEVICE_ID, VPD_DI_SEL_AS_IS, -1, "di_asis", "Like 'di' "
-     "but designators ordered as found"},
-    {VPD_DEVICE_ID, VPD_DI_SEL_LU, -1, "di_lu", "Device identification, "
-     "lu only"},
-    {VPD_DEVICE_ID, VPD_DI_SEL_TPORT, -1, "di_port", "Device "
-     "identification, target port only"},
-    {VPD_DEVICE_ID, VPD_DI_SEL_TARGET, -1, "di_target", "Device "
-     "identification, target device only"},
-#endif
     {VPD_DTDE_ADDRESS, 0, 1, "dtde", "Data transfer device element address "
      "(SSC)"},
     {VPD_EXT_INQ, 0, -1, "ei", "Extended inquiry data"},
@@ -227,8 +216,9 @@ static const struct option long_options[] = {
     {"block", required_argument, 0, 'B'},
     {"cmddt", no_argument, 0, 'c'},
     {"cns", required_argument, 0, 'C'},
-    {"descriptors", no_argument, 0, 'd'},
     {"debug", no_argument, 0, 'D'},
+    {"descriptors", no_argument, 0, 'd'},
+    {"desc", no_argument, 0, 'd'},
     {"export", no_argument, 0, 'u'},
     {"extended", no_argument, 0, 'x'},
     {"force", no_argument, 0, 'f'},
@@ -300,7 +290,8 @@ usage()
             "    --cmddt|-c      command support data mode (obsolete, "
             "see sg_opcodes)\n"
             "    --cns=CNS       value for NVMe Identify command\n"
-            "    --descriptors|-d    fetch and decode version descriptors\n"
+            "    --descriptors|-d    display standard inquiry version "
+            "descriptors\n"
             "    --export|-u     SCSI_IDENT_<assoc>_<type>=<ident> output "
             "format.\n"
             "                    Defaults to device id page (0x83) if --page "
@@ -688,12 +679,12 @@ new_parse_cmd_line(struct opts_t * op, int argc, char * argv[])
             op->maxlen = n;
             break;
         case 'M':
-            if (op->vend_prod) {
+            if (op->vend_prod_arg) {
                 pr2serr("only one '--vendor=' option permitted\n");
                 usage();
                 return SG_LIB_SYNTAX_ERROR;
             } else
-                op->vend_prod = optarg;
+                op->vend_prod_arg = optarg;
             break;
         case 'L':
             ++op->do_long;
@@ -2234,6 +2225,27 @@ decode_b3_vpd(uint8_t * buff, int len, struct opts_t * op, sgj_opaque_p jop)
     }
 }
 
+static const char *
+find_version_descriptor_str(int value)
+{
+#ifdef SG_SCSI_STRINGS
+    int k;
+    const struct sg_lib_simple_value_name_t * vdp;
+
+    for (k = 0; ((vdp = sg_lib_version_descriptor_arr + k) && vdp->name);
+         ++k) {
+        if (value == vdp->value)
+            return vdp->name;
+        if (value < vdp->value)
+            break;
+    }
+    return NULL;
+#else
+    if (value) { }      /* defeat warning */
+    return "    ";
+#endif
+}
+
 static void
 std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
                sgj_opaque_p jop)
@@ -2280,11 +2292,11 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
     if (rp[4] > 0)
         rsp_len = rp[4] + 5;
     else {      /* not looking good if we are here */
-        if (len >= SAFE_STD_INQ_RESP_LEN) {
+        if (len >= SINQ_COMMON_RESP_LEN) {
             if (vb > 1)
                 pr2serr("%s: malformed but got enough, assume 36 bytes "
                         "long\n", __func__);
-            rsp_len = SAFE_STD_INQ_RESP_LEN;
+            rsp_len = SINQ_COMMON_RESP_LEN;
         } else
             rsp_len = 5;
     }
@@ -2339,7 +2351,7 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
         else
             sgj_pr_hr(jsp, "    length=%d (0x%x), but only fetched %d bytes",
                       len, len, gv_len);
-        if ((ansi_version >= 2) && (len < SAFE_STD_INQ_RESP_LEN))
+        if ((ansi_version >= 2) && (len < SINQ_COMMON_RESP_LEN))
             sgj_pr_hr(jsp, "\n  [for SCSI>=2, len>=36 is expected]");
         cp = sg_get_pdt_str(pdt, blen, b);
         if (strlen(cp) > 0)
@@ -2366,10 +2378,10 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
                 printf("SCSI_VENDOR_ENC=%s\n", xtra_buff);
             }
         } else
-            sgj_pr_hr(jsp, " Vendor identification: %s\n", xtra_buff);
+            sgj_pr_hr(jsp, "  Vendor identification: %s\n", xtra_buff);
         if (len <= 16) {
             if (! op->do_export)
-                sgj_pr_hr(jsp, " Product identification: <none>\n");
+                sgj_pr_hr(jsp, "  Product identification: <none>\n");
         } else {
             memcpy(xtra_buff, &rp[16], 16);
             xtra_buff[16] = '\0';
@@ -2381,11 +2393,11 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
                     printf("SCSI_MODEL_ENC=%s\n", xtra_buff);
                 }
             } else
-                sgj_pr_hr(jsp, " Product identification: %s\n", xtra_buff);
+                sgj_pr_hr(jsp, "  Product identification: %s\n", xtra_buff);
         }
         if (len <= 32) {
             if (! op->do_export)
-                sgj_pr_hr(jsp, " Product revision level: <none>\n");
+                sgj_pr_hr(jsp, "  Product revision level: <none>\n");
         } else {
             memcpy(xtra_buff, &rp[32], 4);
             xtra_buff[4] = '\0';
@@ -2394,7 +2406,7 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
                 if (len > 0)
                     printf("SCSI_REVISION=%s\n", xtra_buff);
             } else
-                sgj_pr_hr(jsp, " Product revision level: %s\n", xtra_buff);
+                sgj_pr_hr(jsp, "  Product revision level: %s\n", xtra_buff);
         }
         if (op->do_vendor && (len > 36) && ('\0' != rp[36]) &&
             (' ' != rp[36])) {
@@ -2404,7 +2416,7 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
                 if (len > 0)
                     printf("VENDOR_SPECIFIC=%s\n", xtra_buff);
             } else
-                sgj_pr_hr(jsp, " Vendor specific: %s\n", xtra_buff);
+                sgj_pr_hr(jsp, "  Vendor specific: %s\n", xtra_buff);
         }
         if (op->do_descriptors) {
             for (j = 0, k = 58; ((j < 8) && ((k + 1) < len));
@@ -2419,7 +2431,7 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
                 if (len > 0)
                     printf("VENDOR_SPECIFIC=%s\n", xtra_buff);
             } else
-                sgj_pr_hr(jsp, " Vendor specific: %s\n", xtra_buff);
+                sgj_pr_hr(jsp, "  Vendor specific: %s\n", xtra_buff);
         }
         if (op->do_vendor && (len > 243) &&
             (0 == strncmp("OPEN-V", (const char *)&rp[16], 6))) {
@@ -2429,7 +2441,7 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
                 if (len > 0)
                     printf("VENDOR_SPECIFIC_OPEN-V_LDEV_NAME=%s\n", xtra_buff);
             } else
-                sgj_pr_hr(jsp, " Vendor specific OPEN-V LDEV Name: %s\n",
+                sgj_pr_hr(jsp, "  Vendor specific OPEN-V LDEV Name: %s\n",
                           xtra_buff);
         }
     }
@@ -2439,7 +2451,7 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
         if (as_json)
             jo2p = std_inq_decode_js(rp, len, op, jop);
         if ((0 == len) && usn_buff[0])
-            sgj_pr_hr(jsp, " Unit serial number: %s\n", usn_buff);
+            sgj_pr_hr(jsp, "  Unit serial number: %s\n", usn_buff);
         if (op->do_descriptors) {
             sgj_opaque_p jap = sgj_named_subarray_r(jsp, jo2p,
                                                 "version_descriptor_list");
@@ -2448,7 +2460,12 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
                 sgj_pr_hr(jsp, "  No version descriptors available\n");
             } else {
                 sgj_pr_hr(jsp, "\n");
+#ifdef SG_SCSI_STRINGS
                 sgj_pr_hr(jsp, "  Version descriptors:\n");
+#else
+                sgj_pr_hr(jsp, "  Version descriptors [--disable-scsistrings "
+                          "active]:\n");
+#endif
                 for (k = 0; k < 8; ++k) {
                     sgj_opaque_p jo3p = sgj_new_unattached_object_r(jsp);
                     int vdv = vdesc_arr[k];
@@ -2456,9 +2473,12 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
                     if (0 == vdv)
                         break;
                     cp = find_version_descriptor_str(vdv);
-                    if (cp)
-                        sgj_pr_hr(jsp, "    %s\n", cp);
-                    else
+                    if (cp) {
+                        if (' ' == *cp)
+                            sgj_pr_hr(jsp, "    code: 0x%x\n", vdv);
+                        else
+                            sgj_pr_hr(jsp, "    %s\n", cp);
+                    } else
                         sgj_pr_hr(jsp, "    [unrecognised version descriptor "
                                   "code: 0x%x]\n", vdv);
                     sgj_js_nv_ihexstr(jsp, jo3p, "version_descriptor", vdv,
@@ -2543,7 +2563,7 @@ std_inq_process(struct sg_pt_base * ptvp, struct opts_t * op,
     int vb, resid;
     char buff[48];
 
-    rlen = (op->maxlen > 0) ? op->maxlen : SAFE_STD_INQ_RESP_LEN;
+    rlen = (op->maxlen > 0) ? op->maxlen : SINQ_COMMON_RESP_LEN;
     vb = op->verbose;
     if (NULL == ptvp) {    /* assume --inhex=FD usage */
         std_inq_decode(rsp_buff + off, rlen, op, jop);
@@ -2557,7 +2577,7 @@ std_inq_process(struct sg_pt_base * ptvp, struct opts_t * op,
             hex2stderr(rsp_buff, rlen - resid, 0);
         }
         len = rsp_buff[4] + 5;
-        if ((len > SAFE_STD_INQ_RESP_LEN) && (len < 256) &&
+        if ((len > SINQ_COMMON_RESP_LEN) && (len < 256) &&
             (0 == op->maxlen)) {
             rlen = len;
             memset(rsp_buff, 0, rlen);
@@ -2579,7 +2599,7 @@ std_inq_process(struct sg_pt_base * ptvp, struct opts_t * op,
         /* don't use more than HBA's resid says was transferred from LU */
         if (act_len > (rlen - resid))
             act_len = rlen - resid;
-        if (act_len < SAFE_STD_INQ_RESP_LEN)
+        if (act_len < SINQ_COMMON_RESP_LEN)
             rsp_buff[act_len] = '\0';
         if ((! op->do_only) && (! op->do_export) && (0 == op->maxlen)) {
             if (fetch_unit_serial_num(ptvp, usn_buff, sizeof(usn_buff), vb))
@@ -4417,7 +4437,7 @@ main(int argc, char * argv[])
             op->page_pdt = vnp->pdt;
         } else {
             cp = strchr(op->page_str, ',');
-            if (cp && op->vend_prod) {
+            if (cp && op->vend_prod_arg) {
                 pr2serr("the --page=pg,vp and the --vendor=vp forms overlap, "
                         "choose one or the other\n");
                 ret = SG_LIB_SYNTAX_ERROR;
@@ -4445,12 +4465,12 @@ main(int argc, char * argv[])
                     goto err_out;
                 }
                 subvalue = op->vend_prod_num;
-            } else if (op->vend_prod) {
-                if (isdigit((uint8_t)op->vend_prod[0]))
-                    op->vend_prod_num = sg_get_num_nomult(op->vend_prod);
+            } else if (op->vend_prod_arg) {
+                if (isdigit((uint8_t)op->vend_prod_arg[0]))
+                    op->vend_prod_num = sg_get_num_nomult(op->vend_prod_arg);
                 else
                     op->vend_prod_num =
-                        svpd_find_vp_num_by_acron(op->vend_prod);
+                        svpd_find_vp_num_by_acron(op->vend_prod_arg);
                 if ((op->vend_prod_num < 0) || (op->vend_prod_num > 255)) {
                     pr2serr("Bad vendor/product acronym after '--vendor=' "
                             "option\n");
@@ -4461,54 +4481,16 @@ main(int argc, char * argv[])
                 subvalue = op->vend_prod_num;
             }
         }
+        if ((0 == op->do_raw) && (0 == op->do_hex))
+            op->do_decode = true;
         if (vb > 3)
-           pr2serr("'--page=' matched pn=%d [0x%x], subvalue=%d\n",
-                   op->vpd_pn, op->vpd_pn, subvalue);
-#if 0
-        else {
-#ifdef SG_SCSI_STRINGS
-            if (op->opt_new) {
-                n = sg_get_num(op->page_str);
-                if ((n < 0) || (n > 255)) {
-                    pr2serr("Bad argument to '--page=', "
-                            "expecting 0 to 255 inclusive\n");
-                    usage_for(op);
-                    return SG_LIB_SYNTAX_ERROR;
-                }
-                if ((1 != op->do_hex) && (0 == op->do_raw))
-                    op->do_decode = true;
-            } else {
-                int num;
-                unsigned int u;
-
-                num = sscanf(op->page_str, "%x", &u);
-                if ((1 != num) || (u > 255)) {
-                    pr2serr("Inappropriate value after '-o=' "
-                            "or '-p=' option\n");
-                    usage_for(op);
-                    return SG_LIB_SYNTAX_ERROR;
-                }
-                n = u;
-            }
-#else
-            n = sg_get_num(op->page_str);
-            if ((n < 0) || (n > 255)) {
-                pr2serr("Bad argument to '--page=', "
-                        "expecting 0 to 255 inclusive\n");
-                usage_for(op);
-                return SG_LIB_SYNTAX_ERROR;
-            }
-            if ((1 != op->do_hex) && (0 == op->do_raw))
-                op->do_decode = true;
-#endif /* SG_SCSI_STRINGS */
-            op->vpd_pn = n;
-        }
-#endif
-    } else if (op->vend_prod) {
-        if (isdigit((uint8_t)op->vend_prod[0]))
-            op->vend_prod_num = sg_get_num_nomult(op->vend_prod);
+            pr2serr("'--page=' matched pn=%d [0x%x], subvalue=%d\n",
+                    op->vpd_pn, op->vpd_pn, subvalue);
+    } else if (op->vend_prod_arg) {
+        if (isdigit((uint8_t)op->vend_prod_arg[0]))
+            op->vend_prod_num = sg_get_num_nomult(op->vend_prod_arg);
         else
-            op->vend_prod_num = svpd_find_vp_num_by_acron(op->vend_prod);
+            op->vend_prod_num = svpd_find_vp_num_by_acron(op->vend_prod_arg);
         if ((op->vend_prod_num < 0) || (op->vend_prod_num > 255)) {
             pr2serr("Bad vendor/product acronym after '--vendor=' "
                     "option\n");
@@ -4674,7 +4656,7 @@ main(int argc, char * argv[])
         }
         if (op->do_vpd || op->do_cmddt) {
             pr2serr("version descriptors require standard INQUIRY\n");
-            ret = SG_LIB_SYNTAX_ERROR;
+            ret = SG_LIB_CONTRADICT;
             goto err_out;
         }
     }
@@ -4770,12 +4752,6 @@ main(int argc, char * argv[])
     }
 
 #if (HAVE_NVME && (! IGNORE_NVME))
-#if 0
-    n = check_pt_file_handle(sg_fd, op->device_name, vb);
-    if (vb > 1)
-        pr2serr("check_pt_file_handle()-->%d, page_given: %s\n", n,
-                (op->page_given ? "yes" : "no"));
-#endif
     if (pt_device_is_nvme(ptvp)) {   /* NVMe char or NVMe block */
         op->possible_nvme = true;
         if (! op->page_given) {
@@ -4810,6 +4786,7 @@ main(int argc, char * argv[])
         if (ret)
             goto err_out;
     } else if (op->do_vpd) {
+pr2serr("do_decode=%d\n", !! op->do_decode);
         if (op->do_decode) {
             ret = vpd_decode(ptvp, op, jop, 0);
             if (ret)
@@ -5075,22 +5052,3 @@ try_ata_identify(int ata_fd, int do_hex, int do_raw, int verbose)
     return 0;
 }
 #endif
-
-/* structure defined in sg_lib_data.h */
-extern struct sg_lib_simple_value_name_t sg_version_descriptor_arr[];
-
-
-static const char *
-find_version_descriptor_str(int value)
-{
-    int k;
-    const struct sg_lib_simple_value_name_t * vdp;
-
-    for (k = 0; ((vdp = sg_version_descriptor_arr + k) && vdp->name); ++k) {
-        if (value == vdp->value)
-            return vdp->name;
-        if (value < vdp->value)
-            break;
-    }
-    return NULL;
-}

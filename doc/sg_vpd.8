@@ -3,10 +3,11 @@
 sg_vpd \- fetch SCSI VPD page and/or decode its response
 .SH SYNOPSIS
 .B sg_vpd
-[\fI\-\-all\fR] [\fI\-\-enumerate\fR] [\fI\-\-examine\fR] [\fI\-\-force\fR]
-[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-ident\fR] [\fI\-\-inhex=FN\fR]
-[\fI\-\-json[=JO]\fR] [\fI\-\-js\-file=JFN\fR] [\fI\-\-long\fR]
-[\fI\-\-maxlen=LEN\fR] [\fI\-\-page=PG\fR] [\fI\-\-quiet\fR] [\fI\-\-raw\fR]
+[\fI\-\-all\fR] [\fI\-\-descriptors\fR] [\fI\-\-enumerate\fR]
+[\fI\-\-examine\fR] [\fI\-\-force\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-ident\fR] [\fI\-\-inhex=FN\fR] [\fI\-\-json[=JO]\fR]
+[\fI\-\-js\-file=JFN\fR] [\fI\-\-long\fR] [\fI\-\-maxlen=LEN\fR]
+[\fI\-\-page=PG\fR] [\fI\-\-quiet\fR] [\fI\-\-raw\fR]
 [\fI\-\-sinq_inraw=RFN\fR] [\fI\-\-vendor=VP\fR] [\fI\-\-verbose\fR]
 [\fI\-\-version\fR] [\fIDEVICE\fR]
 .SH DESCRIPTION
@@ -50,6 +51,14 @@ page numbers (required by SPC\-4) so bad data may be detected.
 .br
 If the \fI\-\-page=PG\fR option is also given then no VPD page whose page
 number is greater than \fIPG\fR (or its numeric equivalent) is decoded.
+.TP
+\fB\-d\fR, \fB\-\-descriptors\fR
+this option causes the standard INQUIRY command to be sent and its response
+to be decoded followed by any version descriptors found. This option
+implicitly sets '\-\-page=sinq' and will generate an error if
+\fI\-\-page=PG\fR tries to set a different value.
+.br
+The long form of this option can be shortened to \fI\-\-desc\fR .
 .TP
 \fB\-e\fR, \fB\-\-enumerate\fR
 list the names of the known VPD pages, first the standard pages (i.e.

@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+#define SINQ_COMMON_RESP_LEN 36
+#define SINQ_VER_DESC_RESP_LEN 74
+
 /* standard VPD pages, in ascending page number order */
 #define VPD_SUPPORTED_VPDS 0x0
 #define VPD_UNIT_SERIAL_NUM 0x80
@@ -126,7 +129,7 @@ struct opts_t {
     bool do_ata;                /* sg_inq */
     bool do_decode;             /* sg_inq */
     bool do_debug;              /* sg_inq + sg_vpd (hidden) */
-    bool do_descriptors;        /* sg_inq */
+    bool do_descriptors;        /* sg_inq + sg_vpd */
     bool do_enum;               /* sg_enum */
     bool do_export;             /* sg_inq */
     bool do_force;              /* sg_inq + sg_vpd */
@@ -166,9 +169,9 @@ struct opts_t {
     const char * json_arg;      /* sg_inq + sg_vpd */
     const char * js_file;       /* sg_inq + sg_vpd */
     const char * sinq_inraw_fn; /* sg_inq + sg_vpd */
-    const char * vend_prod;     /* sg_vpd */
+    const char * vend_prod_arg; /* sg_vpd */
     sgj_state json_st;
-    uint8_t std_inq_a[36];
+    uint8_t std_inq_a[SINQ_VER_DESC_RESP_LEN];
 };
 
 struct svpd_values_name_t {

@@ -21,23 +21,32 @@ extern "C" {
 
 
 struct sg_snt_dev_state_t {
+    bool wce;           /* Write Cache Enable (WCE) setting */
+    bool wce_changed;   /* WCE setting has been changed */
     uint8_t scsi_dsense;
     uint8_t enclosure_override; /* ENC_OV in sdparm */
     uint8_t pdt;        /* 6 bit value in INQUIRY response */
     uint8_t enc_serv;   /* single bit in INQUIRY response */
     uint8_t id_ctl253;  /* NVMSR field of Identify controller (byte 253) */
-    bool wce;           /* Write Cache Enable (WCE) setting */
-    bool wce_changed;   /* WCE setting has been changed */
+    uint16_t oacs;      /* 2 byte field of Identify controller */
+    uint16_t oncs;      /* 2 byte field of Identify controller */
+    int vb;             /* carries verbose argument */
 };
 
 struct sg_snt_result_t {
-    uint8_t sstatus;
-    uint8_t sk;
+    uint8_t sstatus;    /* SCSI Status value */
+    uint8_t sk;         /* Sense Key */
     uint8_t asc;
     uint8_t ascq;
-    uint8_t in_byte;
-    uint8_t in_bit;     /* use 255 for 'no bit position given' */
+    uint16_t in_byte;   /* > 0 for Illeg Req sense key specific */
+    uint8_t in_bit;     /* > 7 for 'no bit position given' */
 };
+
+#define F_SA_LOW                0x80    /* cdb byte 1, bits 4 to 0 */
+#define F_SA_HIGH               0x100   /* as used by variable length cdbs */
+#define FF_SA (F_SA_HIGH | F_SA_LOW)
+#define F_INV_OP                0x200
+#define F_NEED_TS_SUP           0x100000  /* Needs NVMe Timestamp support */
 
 struct sg_opcode_info_t {
     int8_t doc_pdt;         /* -1 --> SPC; 0 --> SBC, 1 --> SSC, etc */
@@ -62,6 +71,11 @@ int sg_make_vpd_devid_for_nvme(const uint8_t * nvme_id_ctl_p,
 /* Initialize dev_stat pointed to by dsp */
 void sg_snt_init_dev_stat(struct sg_snt_dev_state_t * dsp);
 
+void sg_snt_mk_sense_asc_ascq(struct sg_snt_result_t * resp, int sk,
+                              int asc, int ascq);
+void sg_snt_mk_sense_invalid_fld(struct sg_snt_result_t * resp,
+                                 bool in_cdb, int in_byte, int in_bit);
+
 /* Internal function (common to all OSes) to support the SNTL SCSI MODE
  * SENSE(10) command. Has a vendor specific Unit Attention mpage which
  * has only one field currently: ENC_OV (enclosure override) */
@@ -79,9 +93,27 @@ int sg_snt_resp_mode_select10(struct sg_snt_dev_state_t * dsp,
  * translated to NVMe. */
 const struct sg_opcode_info_t * sg_get_opcode_translation(void);
 
-void
-sg_snt_std_inq(const uint8_t nvme_id_ctlp[], uint8_t pdt, bool enc_serv,
-               uint8_t * inq_dout);
+int sg_snt_std_inq(const uint8_t * nvme_id_ctlp, uint8_t pdt, bool enc_serv,
+                   uint8_t * inq_dout);
+
+int sg_snt_resp_inq(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
+                    const uint8_t * nvme_id_ctlp,
+                    const uint8_t * nvme_id_nsp, uint8_t * dip, int mx_di_len,
+                    struct sg_snt_result_t * resp);
+
+int sg_snt_resp_rluns(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
+                      const uint8_t * nvme_id_ctlp, uint32_t nsid,
+                      uint8_t * dip, int mx_di_len,
+                      struct sg_snt_result_t * resp);
+
+int sg_snt_resp_rep_opcodes(struct sg_snt_dev_state_t * dsp,
+                            const uint8_t * cdbp, uint16_t oacs,
+                            uint16_t oncs, uint8_t * dip,
+                            int mx_di_len, struct sg_snt_result_t * resp);
+
+int sg_snt_resp_rep_tmfs(struct sg_snt_dev_state_t * dsp,
+                         const uint8_t * cdbp, uint8_t * dip, int mx_di_len,
+                         struct sg_snt_result_t * resp);
 
 #ifdef __cplusplus
 }

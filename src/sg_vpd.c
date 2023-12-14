@@ -27,6 +27,7 @@
 #endif
 
 #include "sg_lib.h"
+#include "sg_lib_names.h"
 #include "sg_cmds_basic.h"
 #include "sg_pt.h"
 #include "sg_unaligned.h"
@@ -87,6 +88,8 @@ static uint8_t * free_rsp_buff;
 static const struct option long_options[] = {
     {"all", no_argument, 0, 'a'},
     {"debug", no_argument, 0, 'D'},
+    {"descriptors", no_argument, 0, 'd'},
+    {"desc", no_argument, 0, 'd'},
     {"enumerate", no_argument, 0, 'e'},
     {"examine", no_argument, 0, 'E'},
     {"force", no_argument, 0, 'f'},
@@ -181,68 +184,71 @@ static const struct svpd_values_name_t standard_vpd_pg[] = {
 static void
 usage()
 {
-    pr2serr("Usage: sg_vpd  [--all] [--enumerate] [--examine] [--force] "
-            "[--help] [--hex]\n"
-            "               [--ident] [--inhex=FN] [--json[=JO]] "
-            "[--js-file=JFN]\n"
-            "               [--long] [--maxlen=LEN] [--page=PG] [--quiet] "
-            "[--raw]\n"
-            "               [--sinq_inraw=RFN] [--vendor=VP] [--verbose] "
-            "[--version]\n"
-            "               DEVICE\n");
-    pr2serr("  where:\n"
-            "    --all|-a        output all pages listed in the supported "
-            "pages VPD\n"
-            "                    page\n"
-            "    --enumerate|-e    enumerate known VPD pages names (ignore "
-            "DEVICE),\n"
-            "                      can be used with --page=num to search\n"
-            "    --examine|-E    starting at 0x80 scan pages code to 0xff\n"
-            "    --force|-f      skip VPD page 0 (supported VPD pages) "
-            "checking\n"
-            "    --help|-h       output this usage message then exit\n"
-            "    --hex|-H        output page in ASCII hexadecimal\n"
-            "    --ident|-i      output device identification VPD page, "
-            "twice for\n"
-            "                    short logical unit designator (equiv: "
-            "'-qp di_lu')\n"
-            "    --inhex=FN|-I FN    read ASCII hex from file FN instead of "
-            "DEVICE;\n"
-            "                        if used with --raw then read binary "
-            "from FN\n"
-            "    --json[=JO]|-j[=JO]    output in JSON instead of plain "
-            "text\n"
-            "                           Use --json=? for JSON help\n"
-            "    --js-file=JFN|-J JFN    JFN is a filename to which JSON "
-            "output is\n"
-            "                            written (def: stdout); truncates "
-            "then writes\n"
-            "    --long|-l       perform extra decoding\n"
-            "    --maxlen=LEN|-m LEN    max response length (allocation "
-            "length in cdb)\n"
-            "                           (def: 0 -> 252 bytes)\n"
-            "    --page=PG|-p PG    fetch VPD page where PG is an "
-            "acronym, or a decimal\n"
-            "                       number unless hex indicator "
-            "is given (e.g. '0x83');\n"
-            "                       can also take PG,VP as an "
-            "operand\n"
-            "    --quiet|-q      suppress some decoding and error output\n"
-            "    --raw|-r        output page in binary; if --inhex=FN is "
-            "also\n"
-            "                    given, FN is in binary (else FN is in "
-            "hex)\n"
-            "    --sinq_inraw=RFN|-Q RFN    read raw (binary) standard "
-            "INQUIRY\n"
-            "                               response from the RFN filename\n"
-            "    --vendor=VP|-M VP    vendor/product abbreviation [or "
-            "number]\n"
-            "    --verbose|-v    increase verbosity\n"
-            "    --version|-V    print version string and exit\n\n"
-            "Fetch Vital Product Data (VPD) page using SCSI INQUIRY or "
-            "decodes VPD\npage response held in file FN. To list available "
-            "pages use '-e'. Also\n'-p -1' or '-p sinq' yields the standard "
-            "INQUIRY response.\n");
+    pr2serr(
+        "Usage: sg_vpd  [--all] [--descriptors] [--enumerate] "
+        "[--examine]\n"
+        "               [--force] [--help] [--hex] [--ident] [--inhex=FN]\n"
+        "               [--json[=JO]] [--js-file=JFN] [--long] "
+        "[--maxlen=LEN]\n"
+        "               [--page=PG] [--quiet] [--raw] "
+        "[--sinq_inraw=RFN]\n"
+        "               [--vendor=VP] [--verbose] [--version] DEVICE\n");
+    pr2serr(
+        "  where:\n"
+        "    --all|-a        output all pages listed in the supported "
+        "pages VPD\n"
+        "                    page\n"
+        "    --descriptors|-d    display standard inquiry version "
+        "descriptors\n"
+        "    --enumerate|-e    enumerate known VPD pages names (ignore "
+        "DEVICE),\n"
+        "                      can be used with --page=num to search\n"
+        "    --examine|-E    starting at 0x80 scan pages code to 0xff\n"
+        "    --force|-f      skip VPD page 0 (supported VPD pages) "
+        "checking\n"
+        "    --help|-h       output this usage message then exit\n"
+        "    --hex|-H        output page in ASCII hexadecimal\n"
+        "    --ident|-i      output device identification VPD page, "
+        "twice for\n"
+        "                    short logical unit designator (equiv: "
+        "'-qp di_lu')\n"
+        "    --inhex=FN|-I FN    read ASCII hex from file FN instead of "
+        "DEVICE;\n"
+        "                        if used with --raw then read binary "
+        "from FN\n"
+        "    --json[=JO]|-j[=JO]    output in JSON instead of plain "
+        "text\n"
+        "                           Use --json=? for JSON help\n"
+        "    --js-file=JFN|-J JFN    JFN is a filename to which JSON "
+        "output is\n"
+        "                            written (def: stdout); truncates "
+        "then writes\n"
+        "    --long|-l       perform extra decoding\n"
+        "    --maxlen=LEN|-m LEN    max response length (allocation "
+        "length in cdb)\n"
+        "                           (def: 0 -> 252 bytes)\n"
+        "    --page=PG|-p PG    fetch VPD page where PG is an "
+        "acronym, or a decimal\n"
+        "                       number unless hex indicator "
+        "is given (e.g. '0x83');\n"
+        "                       can also take PG,VP as an "
+        "operand\n"
+        "    --quiet|-q      suppress some decoding and error output\n"
+        "    --raw|-r        output page in binary; if --inhex=FN is "
+        "also\n"
+        "                    given, FN is in binary (else FN is in "
+        "hex)\n"
+        "    --sinq_inraw=RFN|-Q RFN    read raw (binary) standard "
+        "INQUIRY\n"
+        "                               response from the RFN filename\n"
+        "    --vendor=VP|-M VP    vendor/product abbreviation [or "
+        "number]\n"
+        "    --verbose|-v    increase verbosity\n"
+        "    --version|-V    print version string and exit\n\n"
+        "Fetch Vital Product Data (VPD) page using SCSI INQUIRY or "
+        "decodes VPD\npage response held in file FN. To list available "
+        "pages use '-e'. Also\n'-p -1' or '-p sinq' yields the standard "
+        "INQUIRY response.\n");
 }
 
 static const struct svpd_values_name_t *
@@ -328,15 +334,38 @@ dStrRaw(const uint8_t * str, int len)
         printf("%c", str[k]);
 }
 
+static const char *
+find_version_descriptor_str(int value)
+{
+#ifdef SG_SCSI_STRINGS
+    int k;
+    const struct sg_lib_simple_value_name_t * vdp;
+
+    for (k = 0; ((vdp = sg_lib_version_descriptor_arr + k) && vdp->name);
+         ++k) {
+        if (value == vdp->value)
+            return vdp->name;
+        if (value < vdp->value)
+            break;
+    }
+    return NULL;
+#else
+    if (value) { }      /* defeat warning */
+    return "    ";
+#endif
+}
+
 static void
 std_inq_decode(uint8_t * b, int len, struct opts_t * op, sgj_opaque_p jop)
 {
+    bool vd_active = false;
     uint8_t ver;
-    int pqual, pdt, hp, j, n;
+    int pqual, pdt, hp, j, k, n;
     sgj_state * jsp = &op->json_st;
     const char * cp;
     char c[256];
     char d[32];
+    int vdesc_arr[8];
     static const int clen = sizeof(c);
     static const int dlen = sizeof(d);
     static const char * np = "Standard INQUIRY data format:";
@@ -389,15 +418,56 @@ std_inq_decode(uint8_t * b, int len, struct opts_t * op, sgj_opaque_p jop)
               "[TranDis=%d]  CmdQue=%d\n", !!(b[7] & 0x80), !!(b[7] & 0x20),
               !!(b[7] & 0x10), !!(b[7] & 0x08), !!(b[7] & 0x04),
               !!(b[7] & 0x02));
-    if (len < 36)
+    if (len < SINQ_COMMON_RESP_LEN)
         goto skip1;
     sgj_pr_hr(jsp, "  %s: %.8s\n", t10_vendor_id_hr, b + 8);
     sgj_pr_hr(jsp, "  %s: %.16s\n", product_id_hr, b + 16);
     sgj_pr_hr(jsp, "  %s: %.4s\n", product_rev_lev_hr, b + 32);
+    vd_active = op->do_descriptors && (len > 73);
+    if (vd_active) {
+        for (j = 0, k = 58; ((j < 8) && ((k + 1) < len));
+             k +=2, ++j)
+            vdesc_arr[j] = sg_get_unaligned_be16(b + k);
+    }
 skip1:
-    if (! jsp->pr_as_json || (len < 8))
-        return;
-    std_inq_decode_js(b, len, op, jop);
+    if (jsp->pr_as_json && (len > 7))
+        std_inq_decode_js(b, len, op, jop);
+
+    if (vd_active) {
+        sgj_opaque_p jap = sgj_named_subarray_r(jsp, jop,
+                                            "version_descriptor_list");
+        if (0 == vdesc_arr[0]) {
+            sgj_pr_hr(jsp, "\n");
+            sgj_pr_hr(jsp, "  No version descriptors available\n");
+        } else {
+            sgj_pr_hr(jsp, "\n");
+#ifdef SG_SCSI_STRINGS
+            sgj_pr_hr(jsp, "  Version descriptors:\n");
+#else
+            sgj_pr_hr(jsp, "  Version descriptors [--disable-scsistrings "
+                      "active]:\n");
+#endif
+            for (k = 0; k < 8; ++k) {
+                sgj_opaque_p jo2p = sgj_new_unattached_object_r(jsp);
+                int vdv = vdesc_arr[k];
+
+                if (0 == vdv)
+                    break;
+                cp = find_version_descriptor_str(vdv);
+                if (cp) {
+                    if (' ' == *cp)
+                        sgj_pr_hr(jsp, "    code: 0x%x\n", vdv);
+                    else
+                        sgj_pr_hr(jsp, "    %s\n", cp);
+                } else
+                    sgj_pr_hr(jsp, "    [unrecognised version descriptor "
+                              "code: 0x%x]\n", vdv);
+                sgj_js_nv_ihexstr(jsp, jo2p, "version_descriptor", vdv,
+                                  NULL, cp ? cp : "unknown");
+                sgj_js_nv_o(jsp, jap, NULL /* name */, jo2p);
+            }
+        }
+    }
 }
 
 /* VPD_DEVICE_ID 0x83 ["di, di_asis, di_lu, di_port, di_target"] */
@@ -1251,8 +1321,10 @@ svpd_decode_t10(struct sg_pt_base * ptvp, struct opts_t * op,
                 alloc_len = op->maxlen;
             else if (op->do_long)
                 alloc_len = DEF_ALLOC_LEN;
+            else if (op->do_descriptors)
+                alloc_len = 74;
             else
-                alloc_len = 36;
+                alloc_len = SINQ_COMMON_RESP_LEN;
             res = sg_ll_inquiry_pt(ptvp, false, 0, rp, alloc_len,
                                    DEF_PT_TIMEOUT, &resid, ! op->do_quiet, vb);
         } else {
@@ -2438,6 +2510,9 @@ chk_short_opts(const char sopt_ch, struct opts_t * op)
     case 'a':
         op->do_all = true;
         break;
+    case 'd':
+        op->do_descriptors = true;
+        break;
     case 'D':
         op->do_debug = true;
         break;
@@ -2515,7 +2590,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "^aDeEfhHiI:j::J:lm:M:p:qQ:rvV",
+        c = getopt_long(argc, argv, "^adDeEfhHiI:j::J:lm:M:p:qQ:rvV",
                         long_options, &option_index);
         if (c == -1)
             break;
@@ -2523,6 +2598,9 @@ main(int argc, char * argv[])
         switch (c) {
         case 'a':
             op->do_all = true;
+            break;
+        case 'd':
+            op->do_descriptors = true;
             break;
         case 'D':
             op->do_debug = true;
@@ -2599,12 +2677,12 @@ main(int argc, char * argv[])
             }
             break;
         case 'M':
-            if (op->vend_prod) {
+            if (op->vend_prod_arg) {
                 pr2serr("only one '--vendor=' option permitted\n");
                 usage();
                 return SG_LIB_SYNTAX_ERROR;
             } else
-                op->vend_prod = optarg;
+                op->vend_prod_arg = optarg;
             break;
         case 'p':
             if (op->page_str) {
@@ -2676,16 +2754,17 @@ main(int argc, char * argv[])
         if (op->device_name)
             pr2serr("Device name %s ignored when --enumerate given\n",
                     op->device_name);
-        if (op->vend_prod) {
-            if (isdigit((uint8_t)op->vend_prod[0])) {
-                op->vend_prod_num = sg_get_num_nomult(op->vend_prod);
+        if (op->vend_prod_arg) {
+            if (isdigit((uint8_t)op->vend_prod_arg[0])) {
+                op->vend_prod_num = sg_get_num_nomult(op->vend_prod_arg);
                 if ((op->vend_prod_num < 0) || (op->vend_prod_num > 10)) {
                     pr2serr("Bad vendor/product number after '--vendor=' "
                             "option\n");
                     return SG_LIB_SYNTAX_ERROR;
                 }
             } else {
-                op->vend_prod_num = svpd_find_vp_num_by_acron(op->vend_prod);
+                op->vend_prod_num =
+                        svpd_find_vp_num_by_acron(op->vend_prod_arg);
                 if (op->vend_prod_num < 0) {
                     pr2serr("Bad vendor/product acronym after '--vendor=' "
                             "option\n");
@@ -2774,7 +2853,7 @@ main(int argc, char * argv[])
             op->vend_prod_num = subvalue;
         } else {
             cp = strchr(op->page_str, ',');
-            if (cp && op->vend_prod) {
+            if (cp && op->vend_prod_arg) {
                 pr2serr("the --page=pg,vp and the --vendor=vp forms overlap, "
                         "choose one or the other\n");
                 ret = SG_LIB_SYNTAX_ERROR;
@@ -2802,12 +2881,12 @@ main(int argc, char * argv[])
                     goto fini;
                 }
                 subvalue = op->vend_prod_num;
-            } else if (op->vend_prod) {
-                if (isdigit((uint8_t)op->vend_prod[0]))
-                    op->vend_prod_num = sg_get_num_nomult(op->vend_prod);
+            } else if (op->vend_prod_arg) {
+                if (isdigit((uint8_t)op->vend_prod_arg[0]))
+                    op->vend_prod_num = sg_get_num_nomult(op->vend_prod_arg);
                 else
                     op->vend_prod_num =
-                        svpd_find_vp_num_by_acron(op->vend_prod);
+                        svpd_find_vp_num_by_acron(op->vend_prod_arg);
                 if ((op->vend_prod_num < 0) || (op->vend_prod_num > 255)) {
                     pr2serr("Bad vendor/product acronym after '--vendor=' "
                             "option\n");
@@ -2821,11 +2900,11 @@ main(int argc, char * argv[])
         if (vb > 3)
                pr2serr("'--page=' matched pn=%d [0x%x], subvalue=%d\n",
                        op->vpd_pn, op->vpd_pn, subvalue);
-    } else if (op->vend_prod) {
-        if (isdigit((uint8_t)op->vend_prod[0]))
-            op->vend_prod_num = sg_get_num_nomult(op->vend_prod);
+    } else if (op->vend_prod_arg) {
+        if (isdigit((uint8_t)op->vend_prod_arg[0]))
+            op->vend_prod_num = sg_get_num_nomult(op->vend_prod_arg);
         else
-            op->vend_prod_num = svpd_find_vp_num_by_acron(op->vend_prod);
+            op->vend_prod_num = svpd_find_vp_num_by_acron(op->vend_prod_arg);
         if ((op->vend_prod_num < 0) || (op->vend_prod_num > 255)) {
             pr2serr("Bad vendor/product acronym after '--vendor=' "
                     "option\n");
@@ -2834,6 +2913,25 @@ main(int argc, char * argv[])
             goto fini;
         }
         subvalue = op->vend_prod_num;
+    }
+    if (op->do_descriptors) {
+        if (op->vend_prod_arg) {
+            pr2serr("--vendor= and --desc contradict, pick one\n");
+            ret = SG_LIB_CONTRADICT;
+            goto fini;
+        }
+        if (op->page_given) {
+            if (VPD_NOPE_WANT_STD_INQ != op->vpd_pn) {
+                pr2serr("--desc only valid with --page=sinq\n");
+                ret = SG_LIB_CONTRADICT;
+                goto fini;
+            }
+        } else if (op->do_ident) {
+            pr2serr("--desc and --ident are not compatible\n");
+            ret = SG_LIB_CONTRADICT;
+            goto fini;
+        } else
+            op->vpd_pn = VPD_NOPE_WANT_STD_INQ;
     }
 
     rsp_buff = sg_memalign(rsp_buff_sz, 0 /* page align */, &free_rsp_buff,
@@ -2849,13 +2947,15 @@ main(int argc, char * argv[])
                                 &inraw_len, rsp_buff_sz))) {
             goto err_out;
         }
-        if (inraw_len < 36) {
+        if (inraw_len < SINQ_COMMON_RESP_LEN) {
             pr2serr("Unable to read 36 or more bytes from %s\n",
                     op->sinq_inraw_fn);
             ret = SG_LIB_FILE_ERROR;
             goto err_out;
         }
-        memcpy(op->std_inq_a,  rsp_buff, 36);
+        if (inraw_len > SINQ_VER_DESC_RESP_LEN)
+            inraw_len = SINQ_VER_DESC_RESP_LEN;
+        memcpy(op->std_inq_a, rsp_buff, inraw_len);
         op->std_inq_a_valid = true;
     }
     if (op->inhex_fn) {
@@ -2960,9 +3060,8 @@ main(int argc, char * argv[])
 
     if ((sg_fd = sg_cmds_open_device(op->device_name, true /* ro */, vb)) <
          0) {
-        if (vb > 0)
-            pr2serr("error opening file: %s: %s\n", op->device_name,
-                    safe_strerror(-sg_fd));
+        pr2serr("error opening file: %s: %s\n", op->device_name,
+                safe_strerror(-sg_fd));
         ret = sg_convert_errno(-sg_fd);
         if (ret < 0)
             ret = SG_LIB_FILE_ERROR;

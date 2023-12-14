@@ -12,9 +12,9 @@ Upstream Authors: Douglas Gilbert <dgilbert at interlog dot com>,
 
 Copyright:
 
-This software is copyright(c) 1994-2021 by the authors
+This software is copyright(c) 1994-2023 by the authors
 
-Most of the code in this package is covered by a BSD license.
+Most of the code in this package is covered by the BSD 2 clause license.
 On Debian systems, the complete text of the BSD License
 can be found in `/usr/share/common-licenses/BSD'. All the code
 in the library (usually called libsgutils) is covered by a
@@ -29,4 +29,4 @@ file. The later GPL-3 is found in /usr/share/common-licenses/GPL-3
 file but no code in this package refers to that license.
 
 Douglas Gilbert
-4th October 2021
+11th December 2023
