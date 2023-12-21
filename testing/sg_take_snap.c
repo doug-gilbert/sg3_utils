@@ -93,7 +93,8 @@ usage(void)
 int main(int argc, char * argv[])
 {
     bool clear_first = false;
-    int c, k, sg_fd, res;
+    int c, k, res;
+    int sg_fd = -1;
     int ret = 0;
     int verbose = 0;
     const char * device_name = NULL;

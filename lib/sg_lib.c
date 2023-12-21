@@ -69,8 +69,9 @@ my_isprint(int ch)
     return ((ch >= ' ') && (ch < 0x7f));
 }
 
-void sg_rep_invocation(const char * util_name, const char * ver_str,
-                       int argc, char *argv[], FILE * fgp)
+void
+sg_rep_invocation(const char * util_name, const char * ver_str,
+                  int argc, char *argv[], FILE * fgp)
 {
     int k;
     FILE * fp = fgp ? fgp : stdout;
@@ -344,9 +345,9 @@ sg_get_sense_key_str(int sense_key, int buff_len, char * buff)
         return buff;
     }
     if ((sense_key >= 0) && (sense_key < 16))
-         sg_scnpr(buff, buff_len, "%s", sg_lib_sense_key_desc[sense_key]);
+        sg_scnpr(buff, buff_len, "%s", sg_lib_sense_key_desc[sense_key]);
     else
-         sg_scnpr(buff, buff_len, "invalid value: 0x%x", sense_key);
+        sg_scnpr(buff, buff_len, "invalid value: 0x%x", sense_key);
     return buff;
 }
 
@@ -366,8 +367,7 @@ sg_get_additional_sense_str(int asc, int ascq, bool add_sense_leadin,
         const struct sg_lib_asc_ascq_range_t * ei2p =
                                         &sg_lib_asc_ascq_range[k];
 
-        if ((ei2p->asc == asc) &&
-            (ascq >= ei2p->ascq_min)  &&
+        if ((ei2p->asc == asc) && (ascq >= ei2p->ascq_min)  &&
             (ascq <= ei2p->ascq_max)) {
             found = true;
             if (add_sense_leadin)
@@ -384,8 +384,7 @@ sg_get_additional_sense_str(int asc, int ascq, bool add_sense_leadin,
     for (k = 0; sg_lib_asc_ascq[k].text; ++k) {
         const struct sg_lib_asc_ascq_t * eip = &sg_lib_asc_ascq[k];
 
-        if (eip->asc == asc &&
-            eip->ascq == ascq) {
+        if (eip->asc == asc && eip->ascq == ascq) {
             found = true;
             if (add_sense_leadin)
                 sg_scnpr(buff, buff_len, "Additional sense: %s", eip->text);
@@ -433,7 +432,7 @@ sg_scsi_sense_desc_find(const uint8_t * sbp, int sb_len,
         int add_d_len;
 
         descp += desc_len;
-        add_d_len = (k < (add_sb_len - 1)) ? descp[1]: -1;
+        add_d_len = (k < (add_sb_len - 1)) ? descp[1] : -1;
         desc_len = add_d_len + 2;
         if (descp[0] == desc_type)
             return descp;
@@ -541,7 +540,7 @@ sg_get_sense_filemark_eom_ili(const uint8_t * sbp, int sb_len,
             return false;
     case 0x72:
     case 0x73:
-       /* Look for stream commands sense data descriptor */
+        /* Look for stream commands sense data descriptor */
         bp = sg_scsi_sense_desc_find(sbp, sb_len, 4);
         if (bp && (bp[1] >= 2)) {
             if (bp[3] & 0xe0) {

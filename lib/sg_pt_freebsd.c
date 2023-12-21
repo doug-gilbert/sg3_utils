@@ -591,13 +591,11 @@ destruct_scsi_pt_obj(struct sg_pt_base * vp)
 void
 clear_scsi_pt_obj(struct sg_pt_base * vp)
 {
-    struct sg_pt_freebsd_scsi * ptp;
-
     if (NULL == vp) {
         pr2ws(">>>>> %s: NULL pointer given\n", __func__);
         return;
-    }
-    if ((ptp = &vp->impl)) {
+    } else {
+        struct sg_pt_freebsd_scsi * ptp = &vp->impl;
         int dev_han = ptp->dev_han;
         struct freebsd_dev_channel *fdc_p = ptp->mchanp;
 
@@ -636,14 +634,12 @@ partial_clear_scsi_pt_obj(struct sg_pt_base * vp)
 int
 set_pt_file_handle(struct sg_pt_base * vp, int dev_han, int vb)
 {
-    struct sg_pt_freebsd_scsi * ptp;
-
     if (NULL == vp) {
         if (vb)
             pr2ws(">>>> %s: pointer to object is NULL\n", __func__);
         return EINVAL;
-    }
-    if ((ptp = &vp->impl)) {
+    } else {
+        struct sg_pt_freebsd_scsi * ptp = &vp->impl;
         struct freebsd_dev_channel *fdc_p;
 
         if (dev_han < 0) {
