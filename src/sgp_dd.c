@@ -1649,11 +1649,12 @@ main(int argc, char * argv[])
     char str[STR_SZ];
     char * key;
     char * buf;
-    int res, k, err, keylen;
+    int res, k, err, keylen, status, n, flags;
     int64_t in_num_sect = 0;
     int64_t out_num_sect = 0;
     int64_t seek_skip;
-    int in_sect_sz, out_sect_sz, status, n, flags;
+    int in_sect_sz = 0;
+    int out_sect_sz = 0;
     void * vp;
     struct opts_t * clp = &my_opts;
     char ebuff[EBUFF_SZ];
@@ -1983,7 +1984,7 @@ main(int argc, char * argv[])
                 return -clp->outfd;
         } else if (FT_DEV_NULL == clp->out_type) {
             clp->outfd = -1; /* don't bother opening */
-	    out_is_dev_null = true;
+            out_is_dev_null = true;
         } else {
             if (FT_RAW != clp->out_type) {
                 flags = O_WRONLY | O_CREAT;
