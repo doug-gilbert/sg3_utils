@@ -1240,7 +1240,9 @@ if [ -x /usr/bin/sg_inq ] ; then
   if [ "$sg_turs_version" -gt 353 ] ; then
     sg_turs_opt="--ascq=0x3a"
   else
-    sg_turs_opt=""
+    # Not really interested in timing a TUR but an empty string such as
+    # "" gets interpreted on the command line as a positional parameter.
+    sg_turs_opt="-t"
   fi
 else
   echo "WARN: /usr/bin/sg_inq not present -- please install sg3_utils"
