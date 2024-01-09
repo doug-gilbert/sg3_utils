@@ -147,6 +147,6 @@ ENV{SCSI_IDENT_SERIAL}=="?*", ENV{.SCSI_ID_SERIAL_SRC}=="*S*", \
     ENV{ID_SERIAL}="S$env{SCSI_VENDOR}_$env{SCSI_MODEL}_$env{SCSI_IDENT_SERIAL}", \
     ENV{ID_SERIAL_SHORT}="$env{SCSI_IDENT_SERIAL}"
 
-LABEL="sg3_utils_id_end"
 ENV{ID_SERIAL}!="?*", ENV{DEVTYPE}=="disk", \
     PROGRAM="/bin/logger -t 55-scsi-sg3_id.rules -p daemon.warning \"WARNING: SCSI device %k has no device ID, consider changing .SCSI_ID_SERIAL_SRC in 00-scsi-sg3_config.rules\""
+LABEL="sg3_utils_id_end"
