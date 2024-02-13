@@ -2371,8 +2371,8 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
             if (xtra_buff[i] == 0x09)
                 xtra_buff[i] = ' ';
         if (op->do_export) {
-            len = encode_whitespaces((uint8_t *)xtra_buff, 8);
-            if (len > 0) {
+            int vlen = encode_whitespaces((uint8_t *)xtra_buff, 8);
+            if (vlen > 0) {
                 printf("SCSI_VENDOR=%s\n", xtra_buff);
                 encode_string(xtra_buff, &rp[8], 8);
                 printf("SCSI_VENDOR_ENC=%s\n", xtra_buff);
@@ -2386,8 +2386,8 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
             memcpy(xtra_buff, &rp[16], 16);
             xtra_buff[16] = '\0';
             if (op->do_export) {
-                len = encode_whitespaces((uint8_t *)xtra_buff, 16);
-                if (len > 0) {
+                int mlen = encode_whitespaces((uint8_t *)xtra_buff, 16);
+                if (mlen > 0) {
                     printf("SCSI_MODEL=%s\n", xtra_buff);
                     encode_string(xtra_buff, &rp[16], 16);
                     printf("SCSI_MODEL_ENC=%s\n", xtra_buff);
@@ -2402,8 +2402,8 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
             memcpy(xtra_buff, &rp[32], 4);
             xtra_buff[4] = '\0';
             if (op->do_export) {
-                len = encode_whitespaces((uint8_t *)xtra_buff, 4);
-                if (len > 0)
+                int rlen = encode_whitespaces((uint8_t *)xtra_buff, 4);
+                if (rlen > 0)
                     printf("SCSI_REVISION=%s\n", xtra_buff);
             } else
                 sgj_pr_hr(jsp, "  Product revision level: %s\n", xtra_buff);
@@ -2412,8 +2412,8 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
             (' ' != rp[36])) {
             memcpy(xtra_buff, &rp[36], len < 56 ? len - 36 : 20);
             if (op->do_export) {
-                len = encode_whitespaces((uint8_t *)xtra_buff, 20);
-                if (len > 0)
+                int vlen = encode_whitespaces((uint8_t *)xtra_buff, 20);
+                if (vlen > 0)
                     printf("VENDOR_SPECIFIC=%s\n", xtra_buff);
             } else
                 sgj_pr_hr(jsp, "  Vendor specific: %s\n", xtra_buff);
@@ -2426,9 +2426,9 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
         if ((op->do_vendor > 1) && (len > 96)) {
             memcpy(xtra_buff, &rp[96], len - 96);
             if (op->do_export) {
-                len = encode_whitespaces((uint8_t *)xtra_buff,
+                int vlen = encode_whitespaces((uint8_t *)xtra_buff,
                                          len - 96);
-                if (len > 0)
+                if (vlen > 0)
                     printf("VENDOR_SPECIFIC=%s\n", xtra_buff);
             } else
                 sgj_pr_hr(jsp, "  Vendor specific: %s\n", xtra_buff);
@@ -2437,8 +2437,8 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
             (0 == strncmp("OPEN-V", (const char *)&rp[16], 6))) {
            memcpy(xtra_buff, &rp[212], 32);
            if (op->do_export) {
-                len = encode_whitespaces((uint8_t *)xtra_buff, 32);
-                if (len > 0)
+                int vlen = encode_whitespaces((uint8_t *)xtra_buff, 32);
+                if (vlen > 0)
                     printf("VENDOR_SPECIFIC_OPEN-V_LDEV_NAME=%s\n", xtra_buff);
             } else
                 sgj_pr_hr(jsp, "  Vendor specific OPEN-V LDEV Name: %s\n",
