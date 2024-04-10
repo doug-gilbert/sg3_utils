@@ -492,7 +492,7 @@ show_data_compression_page(const uint8_t * resp, int len,
                 js_pcb(jsp, jo3p, bp[2]);
         }
         /* variable length integer, max length 8 bytes */
-        ull = sg_get_unaligned_be(pl - 4, bp + 4);
+        ull = sg_get_unaligned_be(pl, bp + 4);
         ccp = NULL;
         is_x100 = false;
         is_pr = false;
@@ -536,7 +536,7 @@ show_data_compression_page(const uint8_t * resp, int len,
         default:
             sgj_pr_hr(jsp, "  unknown %s = 0x%x, contents in hex:\n", param_c,
                       pc);
-            hex2str(bp + 4, pl - 4, "    ", op->h2s_oformat, blen, b);
+            hex2str(bp + 4, pl, "    ", op->h2s_oformat, blen, b);
             sgj_pr_hr(jsp, "%s\n", b);
             is_pr = true;
             break;
