@@ -2450,7 +2450,7 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
 
         if (as_json)
             jo2p = std_inq_decode_js(rp, len, op, jop);
-        if ((0 == len) && usn_buff[0])
+        if ((0 == op->maxlen) && usn_buff[0])
             sgj_pr_hr(jsp, "  Unit serial number: %s\n", usn_buff);
         if (op->do_descriptors) {
             sgj_opaque_p jap = sgj_named_subarray_r(jsp, jo2p,
