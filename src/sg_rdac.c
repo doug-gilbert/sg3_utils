@@ -32,7 +32,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.18 20230622";
+static const char * version_str = "1.19 20241128";
 
 static const uint8_t mode6_hdr[] = {
     0x75, /* Length */
@@ -405,8 +405,13 @@ int main(int argc, char * argv[])
 
         for (k = 1; k < argc; ++k) {
                 argptr = argv + k;
-                if (!strcmp (*argptr, "-v"))
+                if (strcmp(argv[k], "--help") == 0 || strcmp(argv[k], "-h") == 0) {
+                        usage ();
+                        return 0;
+                }
+                else if (!strcmp (*argptr, "-v")) {
                         ++do_verbose;
+                }
                 else if (!strncmp(*argptr, "-f=",3)) {
                         fail_path = true;
                         lun = strtoul(*argptr + 3, NULL, 0);
