@@ -6549,11 +6549,11 @@ join_aes_helper(const uint8_t * ae_bp, const uint8_t * ae_last_bp,
                 if (eip && (1 == eiioe)) {         /* EIP and EIIOE=1 */
                     ei = ae_bp[3];
                     jr2p = tesp->j_base + ei;
-                    if ((ei >= tesp->num_j_eoe) ||
+                    if ((ei >= tesp->num_j_rows) ||
                         (NULL == jr2p->enc_statp)) {
-                        pr2serr("%s: oi=%d, ei=%d [num_eoe=%d], eiioe=1 "
+                        pr2serr("%s: oi=%d, ei=%d [num_rows=%d], eiioe=1 "
                                 "not in join_arr\n", __func__, k, ei,
-                                tesp->num_j_eoe);
+                                tesp->num_j_rows);
                         return broken_ei;
                     }
                     devslotnum_and_sasaddr(jr2p, ae_bp);
