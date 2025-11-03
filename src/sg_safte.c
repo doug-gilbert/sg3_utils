@@ -492,7 +492,7 @@ usage()
             "to stdout\n"
             "    --usage|-u          output usage statistics\n"
             "    --verbose|-v        increase verbosity\n"
-            "    --version|-v        output version then exit\n\n"
+            "    --version|-V        output version then exit\n\n"
             "Queries a SAF-TE processor device\n");
 }
 
