@@ -4,7 +4,7 @@
 # (c) 2006--2022 Hannes Reinecke, GNU GPL v2 or later
 # $Id: rescan-scsi-bus.sh,v 1.57 2012/03/31 14:08:48 garloff Exp $
 
-VERSION="20230413"
+VERSION="20260126"
 SCAN_WILD_CARD=4294967295
 
 CLEANUP=:
@@ -256,9 +256,10 @@ is_removable ()
 
   p=/sys/class/scsi_device/${host}:${channel}:${id}:${lun}/device/inquiry
   # Extract the second byte of the INQUIRY response and check bit 7 (mask 0x80).
-  b=$(hexdump -n1 -e '/1 "%02X"' "$p" 2>/dev/null)
+  b=$(od -j1 -N1 -An -t x1 "$p" 2>/dev/null)
   if [ -n "$b" ]; then
-    echo $(((0x$b & 0x80) != 0))
+    # Handle od leading space with parameter substitution.
+    echo $(((0x${b// /} & 0x80) != 0))
   else
     sg_inq "$sg_len_arg" /dev/$SGDEV 2>/dev/null | sed -n 's/^.*RMB=\([0-9]*\).*$/\1/p'
   fi
