@@ -48,7 +48,7 @@
 static const char * version_str = "1.21 20230623";    /* ses4r02 */
 
 #define ME "sg_ses_microcode: "
-#define MAX_XFER_LEN (128 * 1024 * 1024)
+#define MAX_XFER_LEN (256 * 1024 * 1024)
 #define DEF_XFER_LEN (8 * 1024 * 1024)
 #define DEF_DIN_LEN (8 * 1024)
 #define EBUFF_SZ 256
