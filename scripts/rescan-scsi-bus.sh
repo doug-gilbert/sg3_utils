@@ -288,6 +288,13 @@ testonline ()
 
   # Handle in progress of becoming ready and unit attention
   while [ $RC = 2 -o $RC = 6 ] && [ $ctr -lt $timeout ] ; do
+    # Check immediately for removable devices; TEST UNIT READY obviously will
+    # fail for a removable device with no medium
+    RMB=$(is_removable)
+    print_and_scroll_back "$host:$channel:$id:$lun $SGDEV ($RMB) "
+    [ $RC = 2 ] && [ "$RMB" = "1" ] && break
+
+    # Check non-removable devices second
     if [ $RC = 2 ] && [ "$RMB" != "1" ] && sg_inq "$sg_len_arg" /dev/$SGDEV | grep -q -i "PQual=0" ; then
       echo -n "."
       let LN+=1
@@ -298,11 +305,6 @@ testonline ()
     let ctr+=1
     sg_turs "$sg_turs_opt" /dev/$SGDEV >/dev/null 2>&1
     RC=$?
-    # Check for removable device; TEST UNIT READY obviously will
-    # fail for a removable device with no medium
-    RMB=$(is_removable)
-    print_and_scroll_back "$host:$channel:$id:$lun $SGDEV ($RMB) "
-    [ $RC = 2 ] && [ "$RMB" = "1" ] && break
   done
   if [ $ctr != 0 ] ; then
     white_out
