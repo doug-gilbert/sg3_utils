@@ -7,6 +7,10 @@
 VERSION="20260126"
 SCAN_WILD_CARD=4294967295
 
+# Only use standard PATH
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
 CLEANUP=:
 trap 'eval "$CLEANUP"' 0
 TMPD=$(mktemp -d /tmp/rsb.XXXXXXXX)
