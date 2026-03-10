@@ -11,6 +11,11 @@ SCAN_WILD_CARD=4294967295
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 
+UDEVADM=$(command -v udevadm) || {
+  echo "ERROR: udevadm not found" >&2
+  exit 1
+}
+
 CLEANUP=:
 trap 'eval "$CLEANUP"' 0
 TMPD=$(mktemp -d /tmp/rsb.XXXXXXXX)
@@ -479,12 +484,12 @@ getluns()
 udevadm_settle()
 {
   local tmo=60
-  if [ -x /sbin/udevadm ] ; then
+  if [ -x "$UDEVADM" ] ; then
     print_and_scroll_back " Calling udevadm settle (can take a while) "
     # Loop for up to 60 seconds if sd devices still are settling..
     # This allows us to continue if udev events are stuck on multipaths in recovery mode
     while [ $tmo -gt 0 ] ; do
-      if ! /sbin/udevadm settle --timeout=1 | grep -E -q sd[a-z]+ ; then
+      if ! "$UDEVADM" settle --timeout=1 | grep -E -q sd[a-z]+ ; then
         break;
       fi
       let tmo=$tmo-1
@@ -845,7 +850,7 @@ findremapped()
   for hctl in $devs ; do
     if [ -d "/sys/class/scsi_device/$hctl/device/block" ] ; then
       sddev=$(ls "/sys/class/scsi_device/$hctl/device/block")
-      id_serial_old=$(udevadm info -q all -n "$sddev" | grep "ID_SERIAL=" | cut -d"=" -f2)
+      id_serial_old=$("$UDEVADM" info -q all -n "$sddev" | grep "ID_SERIAL=" | cut -d"=" -f2)
       [ -z "$id_serial_old" ] && id_serial_old="none"
       echo "$hctl $sddev $id_serial_old" >> $tmpfile
     fi
@@ -853,7 +858,7 @@ findremapped()
 
   # Trigger udev to update the info
   echo -n "Triggering udev to update device information... "
-  /sbin/udevadm trigger
+  "$UDEVADM" trigger
   udevadm_settle 2>&1 /dev/null
   echo "Done"
 
@@ -862,7 +867,7 @@ findremapped()
   # See what changed and reload the respective multipath device if applicable
   while read -r hctl sddev id_serial_old ; do
     remapped=0
-    id_serial=$(udevadm info -q all -n "$sddev" | grep "ID_SERIAL=" | cut -d"=" -f2)
+    id_serial=$("$UDEVADM" info -q all -n "$sddev" | grep "ID_SERIAL=" | cut -d"=" -f2)
     [ -z "$id_serial" ] && id_serial="none"
     if [ "$id_serial_old" != "$id_serial" ] ; then
       remapped=1
@@ -1438,7 +1443,7 @@ if [ -n "$mp_enable" ] && [ $rmvd_found -gt 0 ] ; then
     flushmpaths 1
   fi
   if [ $found -gt 0 ] ; then
-    /sbin/udevadm trigger --sysname-match=sd*
+    "$UDEVADM" trigger --sysname-match=sd*
     udevadm_settle
     if [ -x "$MULTIPATH" ] ; then
       echo "Trying to discover new multipath mappings for newly discovered devices... "
