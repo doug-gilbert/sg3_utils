@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2023 Douglas Gilbert.
+ * Copyright (c) 1999-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -289,8 +289,8 @@ static const char * sg_lib_ansi_version_arr[16] = {
     "obsolete, [Ah]",
     "obsolete, [Bh]",
     "obsolete, [Ch]",
-    "SPC-6",            /* T10/BSR INCITS 566, added in spc6r08 */
-    "reserved [Eh]",
+    "SPC-6",            /* ANSI INCITS 566-2025 (SPC-6) */
+    "SPC-7",            /* T10/BSR INCITS 586 (in revision 5) */
     "reserved [Fh]",
 };
 

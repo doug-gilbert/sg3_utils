@@ -23,15 +23,6 @@ EXTRA_DIST = \
 	sg3_utils.spec
 
 EXTRA_DIST += \
-	archive/align_b4_memalign.c \
-	archive/llseek.c \
-	archive/llseek.h \
-	archive/o_scsi_logging_level \
-	archive/README \
-	archive/sg_json_writer.c \
-	archive/sg_json_writer.h
-
-EXTRA_DIST += \
 	debian/changelog \
 	debian/compat \
 	debian/control \
@@ -106,7 +97,7 @@ EXTRA_DIST += \
 	inhex/rep_zones.hex \
 	inhex/ses_areca_all.hex \
 	inhex/vpd_bdce.hex \
-	inhex/vpd_consistuents.hex \
+	inhex/vpd_constituents.hex \
 	inhex/vpd_cpr.hex \
 	inhex/vpd_dev_id.hex \
 	inhex/vpd_di_all.hex \
@@ -180,7 +171,24 @@ EXTRA_DIST += \
 	utils/README
 
 distclean-local:
-	rm -rf autom4te.cache
-	rm -f build-stamp configure-stamp
-	rm -rf lib/.deps
-	rm -rf src/.deps
+	rm -rf \
+          ar-lib \
+          autom4te.cache \
+          aclocal.m4 \
+          build-stamp \
+          compile \
+          configure \
+          config.guess \
+          config.guess.cdbs-orig \
+          config.sub.cdbs-orig \
+          config.sub \
+          config.h.in \
+          config.h \
+          config.log \
+          config.status \
+          Makefile \
+          Makefile.in \
+          missing \
+          install-sh \
+          depcomp \
+          ltmain.sh

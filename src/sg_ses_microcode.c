@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023 Douglas Gilbert.
+ * Copyright (c) 2014-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -45,7 +45,7 @@
  * RESULTS commands in order to send microcode to the given SES device.
  */
 
-static const char * version_str = "1.21 20230623";    /* ses4r02 */
+static const char * version_str = "1.22 20260321";    /* ses4r02 */
 
 #define ME "sg_ses_microcode: "
 #define MAX_XFER_LEN (256 * 1024 * 1024)

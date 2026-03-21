@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2023 Douglas Gilbert.
+ * Copyright (c) 2007-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -19,7 +19,7 @@
 #include "sg_lib_data.h"
 
 
-const char * const sg_lib_version_str = "3.15 20231213";
+const char * const sg_lib_version_str = "3.16 20260321";
 /* spc6r11, sbc5r06, zbc3r03 */
 
 
@@ -728,7 +728,7 @@ const char * const sg_lib_tapealert_strs[] = {
 
 /* A conveniently formatted list of SCSI ASC/ASCQ codes and their
  * corresponding text can be found at: www.t10.org/lists/asc-num.txt
- * The following should match asc-num.txt dated 20231114*/
+ * The following should match asc-num.txt dated 20241128 */
 
 #ifdef SG_SCSI_STRINGS
 const struct sg_lib_asc_ascq_range_t sg_lib_asc_ascq_range[] =
@@ -1151,6 +1151,7 @@ const struct sg_lib_asc_ascq_t sg_lib_asc_ascq[] =
     {0x38,0x06,"Esn - device busy class event"},
     {0x38,0x07,"Thin provisioning soft threshold reached"},
     {0x38,0x08,"Depopulation interrupted"},     /* spc6r03 */
+    {0x38,0x09,"Depopulation restoration interrupted"},
     {0x39,0x00,"Saving parameters not supported"},
     {0x3A,0x00,"Medium not present"},
     {0x3A,0x01,"Medium not present - tray closed"},
@@ -1458,6 +1459,7 @@ const struct sg_lib_asc_ascq_t sg_lib_asc_ascq[] =
     {0x67,0x0B,"ATA device feature not enabled"},
     {0x67,0x0C,"Command rejected"},
     {0x67,0x0D,"Explicit bind not allowed"},
+    {0x67,0x0e,"Feature not enabled"},
     {0x68,0x00,"Logical unit not configured"},
     {0x68,0x01,"Subsidiary logical unit not configured"},
     {0x69,0x00,"Data loss on logical unit"},

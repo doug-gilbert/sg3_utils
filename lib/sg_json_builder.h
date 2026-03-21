@@ -42,7 +42,7 @@
  * this header. */
 
 /*
- * Used to require json.h from json-parser but what was needed as been
+ * Used to require json.h from json-parser but what was needed has been
  * included in this header.
  * https://github.com/udp/json-parser
  */

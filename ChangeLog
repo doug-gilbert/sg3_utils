@@ -2,7 +2,8 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20231219] [svn: r1076]
+Changelog for pre-release sg3_utils-1.49 [20260321] [svn: r1090]
+  - resync with github 20260310 after pulls accepted
   - JSON: make output more consistent so most command
     responses have a *_paramter_data or similar sub-object
   - apply https://github.com/doug-gilbert/sg3_utils/pull/39
@@ -31,6 +32,8 @@ Changelog for pre-release sg3_utils-1.49 [20231219] [svn: r1076]
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
     and 44.diff
     - fix for github.com/doug-gilbert/sg3_utils/issues/46
+    - github pull requests: #68, 69 and 71 by Paul Adams
+    - github pull req: #72 fix udevadm invocation M. Wilck
   - start complying with T10 23-047r1 "Broadcom SNT Reference"
     document assuming T10 SNT drafts are coming
   - sg_lib: add sg_last_n_non_blank() for SNT FR field
@@ -144,6 +147,8 @@ Changelog for released sg3_utils-1.48 [20230801] [svn: r1042]
     - add logic to call Report timestamp on the enclosure
       and report what is found. If this is problematic the
       new --no-time option will turn off this feature
+  - sg_ses_microcode: increase max transfer length from 128
+    to 256 MiB [github pull req #70]
   - sg_turs: change nanosleep() to Sleep() in MinGW
     - see sg_lib below for two new exit status values
     - add --ascq= option and exit status 36 if match

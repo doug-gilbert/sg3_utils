@@ -4,7 +4,7 @@
 # (c) 2006--2022 Hannes Reinecke, GNU GPL v2 or later
 # $Id: rescan-scsi-bus.sh,v 1.57 2012/03/31 14:08:48 garloff Exp $
 
-VERSION="20260126"
+VERSION="20260321"
 SCAN_WILD_CARD=4294967295
 
 # Only use standard PATH

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Douglas Gilbert.
+ * Copyright (c) 2022-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -135,7 +135,7 @@ const size_t sg_lib_names_vpd_len =
 
 /* table from SPC-5 revision 16 [sorted numerically (from Annex E.9)] */
 /* Can also be obtained from : https://www.t10.org/lists/stds-num.txt
- * dated 20230814 . */
+ * dated 20260318 . */
 
 #ifdef SG_SCSI_STRINGS
 
@@ -327,6 +327,8 @@ const struct sg_lib_simple_value_name_t sg_lib_version_descriptor_arr[] = {
     {0x5a2, "SSC-5 BSR INCITS 503-2022"},
     {0x5ab, "SSC-5 BSR INCITS 503 revision 06"},
     {0x5af, "SSC-5 AM1 (no version claimed)"},
+    {0x5b0, "SSC-5 BSR INCITS 503 AM1 revision 00"},
+    {0x5b1, "SSC-5 BSR INCITS 503 AM1-2025"},
     {0x5c0, "SPC-5 (no version claimed)"},
     {0x5c2, "SPC-5 INCITS 502-2019"},
     {0x5cb, "SPC-5 BSR INCITS 502 revision 22"},
@@ -345,6 +347,7 @@ const struct sg_lib_simple_value_name_t sg_lib_version_descriptor_arr[] = {
     {0x628, "ZBC INCITS 536-2016"},
     {0x629, "ZBC AM1 INCITS 536-2016/AM1-2019"},
     {0x640, "ADC-4 (no version claimed)"},
+    {0x642, "ADC-4 INCITS 541-2023"},
     {0x64b, "ADC-4 BSR INCITS 541 revision 04"},
     {0x64c, "ADC-4 BSR INCITS 541 revision 05"},
     {0x660, "ZBC-2 (no version claimed)"},
@@ -356,7 +359,15 @@ const struct sg_lib_simple_value_name_t sg_lib_version_descriptor_arr[] = {
     {0x690, "SES-4 BSR INCITS 555 revision 05"},
     {0x6a0, "ZBC-3 (no version claimed)"},
     {0x6c0, "SBC-5 (no version claimed)"},
+    {0x6c2, "SBC-5 INCITS 571-2025"},
+    {0x6c8, "SBC-5 BSR INCITS 571 revision 07"},
+    {0x6c9, "SBC-5 BSR INCITS 571 revision 08"},
     {0x6e0, "SPC-6 (no version claimed)"},
+    {0x6e2, "SPC-6 INCITS 566-2025"},
+    {0x6e5, "SPC-6 SCSI/INCITS 566 revision 13"},
+    {0x6e8, "SPC-6 SCSI/INCITS 566 revision 12"},
+    {0x700, "SPC-7 (no version claimed)"},
+    {0x720, "SBC-6 (no version claimed)"},
     {0x820, "SSA-TL2 (no version claimed)"},
     {0x83b, "SSA-TL2 T10.1/1147-D revision 05b"},
     {0x83c, "SSA-TL2 INCITS 308-1998"},
@@ -529,6 +540,8 @@ const struct sg_lib_simple_value_name_t sg_lib_version_descriptor_arr[] = {
     {0xca2, "SAS-4.1 INCITS 567-2023"},
     {0xcaf, "SAS-4.1 BSR INCITS 567 revision 03"},
     {0xcb0, "SAS-4.1 BSR INCITS 567 revision 04"},
+    {0xcc0, "SAS-5 (no version claimed)"},
+    {0xccb, "SAS-5 BSR INCITS 561 revision 02"},
     {0xd20, "FC-PH (no version claimed)"},
     {0xd3b, "FC-PH INCITS 230-1994"},
     {0xd3c, "FC-PH INCITS 230-1994 with Amnd 1 INCITS 230/AM1-1996"},
@@ -692,6 +705,7 @@ const struct sg_lib_simple_value_name_t sg_lib_version_descriptor_arr[] = {
     {0x1f04, "SAT-4 T10/BSR INCITS 491 revision 6"},
     {0x1f0c, "SAT-4 INCITS 491-2018"},
     {0x1f20, "SAT-5 (no version claimed)"},
+    {0x1f22, "SAT-5 INCITS 557-2023"},
     {0x1f25, "SAT-5 BSR INCITS 577 revision 10"},
     {0x1f40, "SAT-6 (no version claimed)"},
     {0x1f60, "SNT (no version claimed)"},
@@ -749,7 +763,7 @@ const struct sg_lib_simple_value_name_t sg_lib_version_descriptor_arr[] = {
     {0xffff, NULL},     /* sentinel, leave at end */
 };
 
-#endif		/* SG_SCSI_STRINGS */
+#endif         /* SG_SCSI_STRINGS */
 
 /* Don't count sentinel when doing binary searches, etc */
 const size_t sg_lib_version_descriptor_len =

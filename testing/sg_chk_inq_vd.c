@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Douglas Gilbert.
+ * Copyright (c) 2023-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -17,25 +17,27 @@
 #include <errno.h>
 
 #include "sg_lib.h"
-#include "sg_lib_data.h"
+// #include "sg_lib_data.h"
+#include "sg_lib_names.h"
 #include "sg_pr2serr.h"
 
 /* A utility program for the Linux OS SCSI subsystem.
  *
  * This program takes a stds-num.txt file from www.t10.org and
  * checks it against the version descriptors held in a table
- * within the ../src/sg_inq_data.c file
+ * within the ../lib/sg_lib_names.c file
  * The online version of the version descriptor codes listed in
  * numerical order and in plain text is at:
  *   https://www.t10.org/lists/stds-num.txt
  */
 
-static const char * version_str = "1.01 20230821";
+static const char * version_str = "1.02 20260310";
 
 
 #define MAX_LINE_LEN 1024
 
-extern struct sg_lib_simple_value_name_t sg_version_descriptor_arr[];
+extern const struct sg_lib_simple_value_name_t
+                                sg_lib_version_descriptor_arr[];
 
 static struct option long_options[] = {
         {"ascii", 0, 0, 'a'},
@@ -60,7 +62,7 @@ static void usage()
             "    --verbose|-v       increase verbosity\n"
             "    --version|-V       print version string and exit\n\n"
             "Checks version descriptor codes in <version_descriptor_file> "
-            "against\na table in the sg3_utils src/sg_inq_data.c file. "
+            "against\na table in the sg3_utils lib/sg_lib_names.c file. "
             "Example:\n    sg_chk_inq_vd -a -b -v stds-num.txt\n"
            );
 
@@ -81,7 +83,7 @@ int main(int argc, char * argv[])
     char * cp;
     const char * ccp;
     const struct sg_lib_simple_value_name_t * svnp =
-                                        sg_version_descriptor_arr;
+                                        sg_lib_version_descriptor_arr;
     int ret = 1;
 
     memset(file_name, 0, sizeof file_name);

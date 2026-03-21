@@ -1,10 +1,16 @@
 /*
- * Copyright (c) 2023 Douglas Gilbert.
+ * Copyright (c) 2023-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
+ *
+ * sg_snt.c handles SCSI to NVME Translation (SNT)
+ * SNT has since become a T10 project:
+ *  SCSI / NVMe Translation (SNT) T10/BSR INCITS 584
+ * The intention is to converge this code to comply with
+ * that draft; the most recent draft is snt-r04.pdf . 
  */
 
 #include <stdio.h>

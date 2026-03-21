@@ -70,6 +70,9 @@ depend dep:
 clean:
 	/bin/rm -f *.o $(EXECS) $(EXTRAS) $(BSG_EXTRAS) json_writer core .depend
 
+distclean:
+	/bin/rm -f *.o $(EXECS) $(EXTRAS) $(BSG_EXTRAS) json_writer core .depend
+
 sg_sense_test: sg_sense_test.o $(LIBFILESOLD)
 	$(LD) -o $@ $(LDFLAGS) $^
 
@@ -86,8 +89,8 @@ sg_tst_ioctl: sg_tst_ioctl.o $(LIBFILESOLD)
 sg_chk_asc: sg_chk_asc.o ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_pr2serr.o
 	$(LD) -o $@ $(LDFLAGS) $^
 
-# building sg_chk_asc depends on a prior successful make in ../lib and ../src/sg_inq_data.o
-sg_chk_inq_vd: sg_chk_inq_vd.o ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_pr2serr.o ../src/sg_inq_data.o
+# building sg_chk_asc depends on a prior successful make in ../lib
+sg_chk_inq_vd: sg_chk_inq_vd.o ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_lib_names.o ../lib/sg_pr2serr.o
 	$(LD) -o $@ $(LDFLAGS) $^
 
 sg_tst_nvme: sg_tst_nvme.o $(LIBFILESNEW)

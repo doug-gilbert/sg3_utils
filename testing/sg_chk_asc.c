@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2023 Douglas Gilbert.
+ * Copyright (c) 2006-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -28,7 +28,7 @@
  * https://www.t10.org/lists/asc-num.txt
  */
 
-static const char * version_str = "1.11 20230821";
+static const char * version_str = "1.12 20260321";
 
 
 #define MAX_LINE_LEN 1024

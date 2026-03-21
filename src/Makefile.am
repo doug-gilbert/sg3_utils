@@ -234,3 +234,8 @@ EXTRA_DIST = \
 	sg_logs.h \
 	sg_vpd_common.h \
 	BSD_LICENSE
+
+distclean-local:
+	rm -rf \
+          .deps \
+          Makefile.in

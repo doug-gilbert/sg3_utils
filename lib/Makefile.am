@@ -120,3 +120,8 @@ libsgutils2_la_DEPENDENCIES = @GETOPT_O_FILES@
 EXTRA_DIST = \
 	sg_json_builder.h \
 	BSD_LICENSE
+
+distclean-local:
+	rm -rf \
+          .deps \
+          Makefile.in

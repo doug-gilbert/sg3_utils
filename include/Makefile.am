@@ -64,3 +64,6 @@ noinst_HEADERS = \
 	sg_pt_win32.h
 endif
 
+distclean-local:
+	rm -rf \
+          Makefile.in

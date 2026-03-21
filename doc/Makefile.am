@@ -45,3 +45,7 @@ endif
 EXTRA_DIST = \
 	sg_scan.8.linux \
 	sg_scan.8.win32
+
+distclean-local:
+	rm -rf \
+          Makefile.in
