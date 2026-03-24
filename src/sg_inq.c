@@ -1,5 +1,5 @@
 /* A utility program originally written for the Linux OS SCSI subsystem.
- * Copyright (C) 2000-2023 D. Gilbert
+ * Copyright (C) 2000-2026 D. Gilbert
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
@@ -55,7 +55,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.58 20231213";  /* spc6r11, sbc5r06 */
+static const char * version_str = "2.59 20260323";  /* spc6r11, sbc5r06 */
 
 #define MY_NAME "sg_inq"
 
@@ -4786,7 +4786,6 @@ main(int argc, char * argv[])
         if (ret)
             goto err_out;
     } else if (op->do_vpd) {
-pr2serr("do_decode=%d\n", !! op->do_decode);
         if (op->do_decode) {
             ret = vpd_decode(ptvp, op, jop, 0);
             if (ret)

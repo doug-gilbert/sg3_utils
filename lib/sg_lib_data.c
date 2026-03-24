@@ -19,7 +19,7 @@
 #include "sg_lib_data.h"
 
 
-const char * const sg_lib_version_str = "3.16 20260321";
+const char * const sg_lib_version_str = "3.16 20260323";
 /* spc6r11, sbc5r06, zbc3r03 */
 
 
@@ -124,7 +124,7 @@ const struct sg_lib_value_name_t sg_lib_normal_opcodes[] = {
     {0x38, PDT_OCRW, "Medium scan"},
     {0x39, PDT_ALL, "Compare"},               /* obsolete in SPC-4 r11 */
     {0x3a, PDT_ALL, "Copy and verify"},       /* obsolete in SPC-4 r11 */
-    {0x3b, PDT_ALL, "Write buffer"},
+    {0x3b, PDT_ALL, "Write buffer(10)"},  /* now there is Write buffer(16) */
     {0x3c, PDT_ALL, "Read buffer(10)"},
     {0x3d, PDT_OPTICAL, "Update block"},
     {0x3e, PDT_ALL, "Read long(10)"},         /* obsolete in SBC-4 r7 */
@@ -192,6 +192,7 @@ const struct sg_lib_value_name_t sg_lib_normal_opcodes[] = {
     {0x93, PDT_TAPE, "Erase(16)"},
     {0x94, PDT_DISK_ZBC, "ZBC out"},  /* new sbc4r04, has service actions */
     {0x95, PDT_DISK_ZBC, "ZBC in"},   /* new sbc4r04, has service actions */
+    {0x96, PDT_ALL, "Write buffer(16)"},      /* added spc7r02 */
     {0x9a, PDT_ALL, "Write stream(16)"},      /* added sbc4r07 */
     {0x9b, PDT_ALL, "Read buffer(16)"},       /* added spc5r02 */
     {0x9c, PDT_ALL, "Write atomic(16)"},
@@ -543,6 +544,8 @@ const struct sg_lib_value_name_t sg_lib_zoning_out_arr[] = {
     {0x2, PDT_DISK_ZBC, "Finish zone"},
     {0x3, PDT_DISK_ZBC, "Open zone"},
     {0x4, PDT_DISK_ZBC, "Reset write pointer"},
+    {0xa, PDT_DISK_ZBC, "Reset all write pointers prepare"},
+                                                     /* zbc3r04 */
     {0x10, PDT_DISK_ZBC, "Sequentialize zone"},      /* zbc2r01b */
     {0xffff, 0, NULL},
 };

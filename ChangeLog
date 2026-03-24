@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20260321] [svn: r1090]
+Changelog for pre-release sg3_utils-1.49 [20260323] [svn: r1091]
   - resync with github 20260310 after pulls accepted
   - JSON: make output more consistent so most command
     responses have a *_paramter_data or similar sub-object
@@ -24,6 +24,7 @@ Changelog for pre-release sg3_utils-1.49 [20260321] [svn: r1090]
     serial number parameters [0x40 and 0x41] per
     https://github.com/doug-gilbert/sg3_utils/issues/45
   - sg_get_elem_status: various improvements
+  - sg_get_lba_status: additional LBA accessibility values
   - sg_stream_ctl: add --hex, --inhex=, --json= and --raw
     options; additions in sbc5r05 (perm and relative_lifetime
     fields).
@@ -34,6 +35,7 @@ Changelog for pre-release sg3_utils-1.49 [20260321] [svn: r1090]
     - fix for github.com/doug-gilbert/sg3_utils/issues/46
     - github pull requests: #68, 69 and 71 by Paul Adams
     - github pull req: #72 fix udevadm invocation M. Wilck
+  - fix 'make distcheck' (again)
   - start complying with T10 23-047r1 "Broadcom SNT Reference"
     document assuming T10 SNT drafts are coming
   - sg_lib: add sg_last_n_non_blank() for SNT FR field

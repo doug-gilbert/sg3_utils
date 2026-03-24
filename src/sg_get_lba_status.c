@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2023 Douglas Gilbert.
+ * Copyright (c) 2009-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -36,7 +36,7 @@
  * device.
  */
 
-static const char * version_str = "1.43 20230619";      /* sbc5r04 */
+static const char * version_str = "1.44 20260323";      /* sbc6r01 */
 
 #define MY_NAME "sg_get_lba_status"
 
@@ -198,8 +198,8 @@ decode_lba_status_desc(const uint8_t * bp, uint64_t * slbap,
         *slbap = ull;
     if (blocksp)
         *blocksp = blocks;
-    if (lba_accessp)    /* addition in sbc5r04.pdf */
-        *lba_accessp = (bp[12] >> 4) & 0x7;
+    if (lba_accessp)    /* addition in sbc5r04 and sbc6r01 */
+        *lba_accessp = (bp[12] >> 4) & 0xf;
     if (add_statusp)
         *add_statusp = bp[13];
     return bp[12] & 0xf;        /* Provisioning status */
@@ -248,20 +248,40 @@ get_pr_status_str(int as, char * b, int blen)
     return b;
 }
 
+/* 'short_form' is author's summary, when 'short_form' is false words
+ * are from the T10 documents. */
 static char *
 get_lba_access_str(int la, char * b, int blen, bool short_form)
 {
+    static const char * lba_ext = "LBA extent ";
+    static const char * bec_inacc = " becoming inaccessible";
+
     switch (la) {
     case 0:
         sg_scnpr(b, blen, "LBA access%s not reported",
                  short_form ? "" : "ibility is");
         break;
     case 1:
-        sg_scnpr(b, blen, "LBA extent %s", short_form ? "inaccessible" :
+        sg_scnpr(b, blen, "%s%s", lba_ext, short_form ? "inaccessible" :
                  "is not able to be written and not able to be read");
         break;
     case 2:
-        sg_scnpr(b, blen, "LBA extent %sread-only", short_form ? "" : "is ");
+        sg_scnpr(b, blen, "%s%sread-only", lba_ext, short_form ? "" : "is ");
+        break;
+    case 3:
+        if (short_form)
+            sg_scnpr(b, blen, "%scan be read + written, risks%s", lba_ext,
+                     bec_inacc);
+        else
+            sg_scnpr(b, blen, "%sis able to be read and written, although "
+                     "it is at risk of%s", lba_ext, bec_inacc);
+        break;
+    case 4:
+        if (short_form)
+            sg_scnpr(b, blen, "%sread-only, risks%s", lba_ext, bec_inacc);
+        else
+            sg_scnpr(b, blen, "%sis read-only, although it is at risk of%s",
+                     lba_ext, bec_inacc);
         break;
     default:
         sg_scnpr(b, blen, "%sReserved [0x%x]", short_form ? "LBA access " :

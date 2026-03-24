@@ -42,6 +42,7 @@ const struct sg_lib_simple_value_name_t sg_lib_names_mode_arr[] = {
     {0x0a06, "Background operation control"},   /* SBC */
     {0x0af0, "Control data protection"},        /* SSC */
     {0x0af1, "PATA control"},                   /* SAT */
+    {0x0af8, "NVMe control"},                   /* SNT */
     {0x0b00, "Medium Types Supported (obsolete)"},   /* SSC */
     {0x0c00, "Notch and partition (obsolete)"}, /* SBC */
     {0x0d00, "Power condition (obsolete), CD device parameters"},
@@ -101,6 +102,7 @@ const struct sg_lib_simple_value_name_t sg_lib_names_vpd_arr[] = {
     {0x8b, "Device constituents"},              /* SSC */
     {0x8c, "CFA profile information"},          /* SPC */
     {0x8d, "Power consumption"},                /* SPC */
+    {0x8e, "NVMe information"},                 /* SNT */
     {0x8f, "Third party copy"},                 /* SPC */
     {0x90, "Protocol specific logical unit information"}, /* transport */
     {0x91, "Protocol specific port information"}, /* transport */
