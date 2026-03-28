@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Douglas Gilbert.
+ * Copyright (c) 2017-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -657,6 +657,7 @@ sg_ln_snt_rluns(struct sg_pt_linux_scsi * ptp, const uint8_t * cdbp,
         } else if (res)
             return res;
     }
+    sg_snt_zero_snt_result(&sg_snt_result);
     bp = (uint8_t *)(sg_uintptr_t)ptp->io_hdr.din_xferp;
     ptp->dev_stat.vb = vb;
     n = sg_snt_resp_rluns(&ptp->dev_stat, cdbp, ptp->nvme_id_ctlp,

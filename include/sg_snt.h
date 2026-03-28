@@ -2,7 +2,7 @@
 #define SG_SNT_H
 
 /*
- * Copyright (c) 2023 Douglas Gilbert.
+ * Copyright (c) 2023-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -71,6 +71,7 @@ int sg_make_vpd_devid_for_nvme(const uint8_t * nvme_id_ctl_p,
 /* Initialize dev_stat pointed to by dsp */
 void sg_snt_init_dev_stat(struct sg_snt_dev_state_t * dsp);
 
+void sg_snt_zero_snt_result(struct sg_snt_result_t * resp);
 void sg_snt_mk_sense_asc_ascq(struct sg_snt_result_t * resp, int sk,
                               int asc, int ascq);
 void sg_snt_mk_sense_invalid_fld(struct sg_snt_result_t * resp,

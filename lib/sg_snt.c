@@ -125,6 +125,17 @@ sg_get_opcode_translation(void)
 }
 
 void
+sg_snt_zero_snt_result(struct sg_snt_result_t * resp)
+{
+    resp->sstatus = SAM_STAT_GOOD;
+    resp->sk = 0;
+    resp->asc = 0;
+    resp->ascq = 0;
+    resp->in_byte = 0;
+    resp->in_bit = 0;
+}
+
+void
 sg_snt_mk_sense_asc_ascq(struct sg_snt_result_t * resp, int sk,
                          int asc, int ascq)
 {
