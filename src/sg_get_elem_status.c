@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Douglas Gilbert.
+ * Copyright (c) 2019-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -38,7 +38,7 @@
  * given SCSI device.
  */
 
-static const char * version_str = "1.25 20231019";      /* sbc5r05 */
+static const char * version_str = "1.26 20260402";      /* sbc6r02 */
 
 #define MY_NAME "sg_get_elem_status"
 
@@ -707,7 +707,17 @@ start_response:
             jo3p = sgj_new_unattached_object_r(jsp);
             sgj_js_nv_ihex(jsp, jo3p, "element_identifier",
                            (int64_t)a_ped.elem_id);
-            cp = (1 == a_ped.phys_elem_type) ? "storage" : "reserved";
+            switch (a_ped.phys_elem_type) {
+            case 1:
+                cp = "all-access storage";
+                break;
+            case 2:
+                cp = "fractional-access storage";
+                break;
+            default:
+                cp = "reserved";
+                break;
+            }
             sgj_js_nv_istr(jsp, jo3p, "physical_element_type",
                            a_ped.phys_elem_type, "meaning", cp);
             j = a_ped.phys_elem_health;

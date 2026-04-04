@@ -1,3 +1,4 @@
+
 libsgutils2_la_SOURCES = \
 	sg_lib.c \
 	sg_json.c \
@@ -12,6 +13,11 @@ libsgutils2_la_SOURCES = \
 	sg_pt_common.c \
 	sg_snt.c \
 	sg_json_builder.c
+
+if NEED_GETOPT_LONG
+libsgutils2_la_SOURCES += \
+	getopt_long.c
+endif
 
 if OS_LINUX
 if PT_DUMMY
@@ -53,6 +59,14 @@ if PT_DUMMY
 libsgutils2_la_SOURCES += sg_pt_dummy.c
 else
 libsgutils2_la_SOURCES += sg_pt_haiku.c
+endif
+endif
+
+if OS_AIX
+if PT_DUMMY
+libsgutils2_la_SOURCES += sg_pt_dummy.c
+else
+libsgutils2_la_SOURCES += sg_pt_dummy.c
 endif
 endif
 
@@ -114,8 +128,8 @@ lib_LTLIBRARIES = libsgutils2.la
 
 libsgutils2_la_LDFLAGS = -version-info 2:0:0 -no-undefined -release ${PACKAGE_VERSION}
 
-libsgutils2_la_LIBADD = @GETOPT_O_FILES@
-libsgutils2_la_DEPENDENCIES = @GETOPT_O_FILES@
+## libsgutils2_la_LIBADD = @GETOPT_O_FILES@
+## libsgutils2_la_DEPENDENCIES = @GETOPT_O_FILES@
 
 EXTRA_DIST = \
 	sg_json_builder.h \

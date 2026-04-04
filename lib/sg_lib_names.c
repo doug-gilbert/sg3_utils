@@ -19,6 +19,12 @@
 #include "sg_lib_data.h"
 #include "sg_lib_names.h"
 
+/*
+ * Note that this file (sg_lib_names.c) and sg_lib_data.c hold similar forms
+ * of information; namely const tables (arrays) derived from T10 drafts and
+ * standards. A version number for sg_lib is in sg_lib_data.c .
+ */
+
 /* List of SPC, then SBC, the ZBC mode page names. Tape and other mode pages
  * are squeezed into this list as long as they don't conflict.
  * The value is: (mode_page << 8) | mode_subpage

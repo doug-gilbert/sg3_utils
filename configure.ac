@@ -160,6 +160,10 @@ case "${host}" in
 		AC_DEFINE_UNQUOTED(SG_LIB_HAIKU, 1, [sg3_utils on Haiku])
                 AC_SUBST([os_cflags], [''])
                 AC_SUBST([os_libs], ['']) ;;
+        *-*-aix*)
+		AC_DEFINE_UNQUOTED(SG_LIB_AIX, 1, [sg3_utils on AIX])
+                AC_SUBST([os_cflags], [''])
+                AC_SUBST([os_libs], ['']) ;;
         *)
                 AC_DEFINE_UNQUOTED(SG_LIB_OTHER, 1, [sg3_utils on other])
 		isother=yes;;
@@ -176,7 +180,10 @@ AM_CONDITIONAL(OS_ANDROID, [echo $host_os | grep 'android' > /dev/null])
 AM_CONDITIONAL(OS_NETBSD, [echo $host_os | grep 'netbsd' > /dev/null])
 AM_CONDITIONAL(OS_OPENBSD, [echo $host_os | grep 'openbsd' > /dev/null])
 AM_CONDITIONAL(OS_HAIKU, [echo $host_os | grep '^haiku' > /dev/null])
+AM_CONDITIONAL(OS_AIX, [echo $host_os | grep '^aix' > /dev/null])
 AM_CONDITIONAL(OS_OTHER, [test "x$isother" = "xyes"])
+
+AM_CONDITIONAL(NEED_GETOPT_LONG, [echo $GETOPT_O_FILES | grep 'getopt_long' > /dev/null])
 
 AC_ARG_ENABLE([debug],
 	      [  --enable-debug          Turn on debugging],

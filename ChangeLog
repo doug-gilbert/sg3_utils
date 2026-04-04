@@ -2,7 +2,11 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20260328] [svn: r1092]
+Changelog for pre-release sg3_utils-1.49 [20260403] [svn: r1095]
+  - AIX partial support, needs getopt_long() and real pass
+    through code, has sg_dummy instead
+  - getopt_long directory contents -> lib directory
+  - sg_get_elem_status: in progress additions sbc6r02
   - resync with github 20260310 after pulls accepted
   - JSON: make output more consistent so most command
     responses have a *_paramter_data or similar sub-object

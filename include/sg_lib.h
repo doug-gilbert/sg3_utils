@@ -2,7 +2,7 @@
 #define SG_LIB_H
 
 /*
- * Copyright (c) 2004-2023 Douglas Gilbert.
+ * Copyright (c) 2004-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -522,7 +522,7 @@ bool sg_exit2str(int exit_status, bool longer, int b_len, char * b);
                                   *       [sk,asc,ascq: 0xe,*,*] */
 #define SG_LIB_FILE_ERROR 15    /* device or other file problem */
 #define SG_LIB_PROGRESS_NOT_READY 16 /* could be a long time ... */
-	/* [sk,asc,ascq: 0x2,0x4,<some>] (most 'in progress' variants */
+        /* [sk,asc,ascq: 0x2,0x4,<some>] (most 'in progress' variants */
 /* for 17 and 18, see below */
 #define SG_LIB_CAT_INVALID_PARAM 19 /* illegal req, invalid field in parameter
                                      * list [sk,asc,ascq: 0x5,0x26,0x0] */
@@ -842,6 +842,34 @@ int sg_set_text_mode(int fd);
 /* Set binary mode on fd. Does nothing in Unix. Returns negative number on
  * failure. */
 int sg_set_binary_mode(int fd);
+
+#ifdef NEED_GETOPT_LONG
+#define no_argument        0
+#define required_argument  1
+#define optional_argument  2
+
+extern char *optarg;
+extern int optind;
+extern int optopt;
+extern int opterr;
+
+struct option {
+        /* name of long option */
+        const char *name;
+        /*
+         * one of no_argument, required_argument, and optional_argument:
+         * whether option takes an argument
+         */
+        int has_arg;
+        /* if not NULL, set *flag to val when option found */
+        int *flag;
+        /* if flag not NULL, value to set *flag to; else return value */
+        int val;
+};
+
+int getopt_long(int, char * const *, const char *,
+                const struct option *, int *);
+#endif          /* NEED_GETOPT_LONG */
 
 #ifdef __cplusplus
 }

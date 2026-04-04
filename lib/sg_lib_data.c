@@ -18,9 +18,14 @@
 #include "sg_lib.h"
 #include "sg_lib_data.h"
 
+/*
+ * Note that this file (sg_lib_data.c) and sg_lib_names.c hold similar forms
+ * of information; namely const tables (arrays) derived from T10 drafts and
+ * standards. Note the version string below applies to the whole library.
+ */
 
-const char * const sg_lib_version_str = "3.16 20260323";
-/* spc6r11, sbc5r06, zbc3r03 */
+const char * const sg_lib_version_str = "3.17 20260401";
+/* spc6r11, sbc6r02, zbc3r03 */
 
 
 /* indexed by pdt; those that map to own index do not decay */
@@ -395,6 +400,7 @@ const struct sg_lib_value_name_t sg_lib_serv_out16_arr[] = {
     {0x0f, PDT_ALL, "Unbind"},
     {0x11, PDT_ALL, "Write long(16)"},
     {0x12, PDT_ALL, "Write scattered(16)"},   /* added sbc4r11 */
+    {0x13, PDT_ALL, "Coalescing copy"},       /* added sbc6r02 */
     {0x14, PDT_DISK_ZBC, "Reset write pointer"},
     {0x1f, PDT_ADC, "Notify data transfer device(16)"},
     {0xffff, 0, NULL},

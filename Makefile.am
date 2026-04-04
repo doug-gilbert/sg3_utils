@@ -66,10 +66,6 @@ EXTRA_DIST += \
 	examples/Makefile
 
 EXTRA_DIST += \
-	getopt_long/getopt.h \
-	getopt_long/getopt_long.c
-
-EXTRA_DIST += \
 	include/freebsd_nvme_ioctl.h
 
 EXTRA_DIST += \
