@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Douglas Gilbert.
+ * Copyright (c) 2022-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -325,6 +325,8 @@ sgj_start_r(const char * util_name, const char * ver_str, int argc,
     return jvp;
 }
 
+/* Serializes JSON in-memory tree and writes it to fp (usually stdout) .
+ * jsp and fp are assumed to be valid, non-NULL pointers. */ 
 void
 sgj_js2file_estr(sgj_state * jsp, sgj_opaque_p jop, int exit_status,
                  const char * estr, FILE * fp)
@@ -644,6 +646,13 @@ sgj_js_nv_s_len_chk(sgj_state * jsp, sgj_opaque_p jop, const char * sn_name,
         return sgj_js_nv_s_len(jsp, jop, sn_name, (const char *)value, vlen);
 }
 
+/* If sn_name is non-NULL, then pushes that name, integer(value) pair into
+ * JSON in-memory tree at position jop. If sn_name is NULL assume jop points
+ * to an array of integers and pushes value there. If jop is NULL then uses
+ * jsp->basep (usually the root of the in-memory tree) in its place. If jsp
+ * is NULL or jsp->pr_as_json is false then does nothing and returns NULL,
+ * otherwise returns pointer to newly created object in the JSON in-memory
+ * tree. */
 sgj_opaque_p
 sgj_js_nv_i(sgj_state * jsp, sgj_opaque_p jop, const char * sn_name,
             int64_t value)

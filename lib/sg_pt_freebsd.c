@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2023 Douglas Gilbert.
+ * Copyright (c) 2005-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_freebsd version 1.51 20231124 */
+/* sg_pt_freebsd version 1.52 20260408 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -154,7 +154,9 @@ get_fdc_cp(const struct sg_pt_freebsd_scsi * ptp)
 }
 
 #if __FreeBSD_version >= 1100000
-/* This works with /dev/nvme*, /dev/nvd* and /dev/nda* but not /dev/pass* */
+/* This works with /dev/nvme*, /dev/nvd* and /dev/nda* but not /dev/pass*
+ * As well returning the nsid, the char device name associated with fd is
+ * written to 'b' if it fits, return -ENOSPC if it doesn't fit. */
 static int
 nvme_get_nsid(int fd, uint32_t *nsid, char *b, int blen, int vb)
 {
@@ -169,15 +171,18 @@ nvme_get_nsid(int fd, uint32_t *nsid, char *b, int blen, int vb)
                   err);
         return -err;
     }
+    if (nsid != NULL)
+        *nsid = gnsid.nsid;
     if (n_cdev < blen) {
         strncpy(b, gnsid.cdev, n_cdev);
         b[n_cdev] = '\0';
     } else {
-        strncpy(b, gnsid.cdev, blen);
-        b[blen - 1] = '\0';
+        pr2ws("%s: 3rd argument too small (%d bytes), to hold nsid (%d "
+              "bytes)\n", __func__, blen, n_cdev);
+        return -ENOSPC;
+        /* strncpy(b, gnsid.cdev, blen); */
+        /* b[blen - 1] = '\0'; */
     }
-    if (nsid != NULL)
-        *nsid = gnsid.nsid;
     return 0;
 }
 #endif
@@ -246,7 +251,7 @@ scsi_pt_open_flags(const char * device_name, int oflags, int vb)
     struct freebsd_dev_channel *fdc_p = NULL;
     struct cam_device* cam_dev;
     struct stat a_stat;
-    char dev_nm[PATH_MAX];
+    char dev_nm[PATH_MAX + 8];
 
     if (vb > 6)
         pr2ws("%s: device_name=%s, oflags=0x%x\n", __func__, device_name,
@@ -283,8 +288,8 @@ scsi_pt_open_flags(const char * device_name, int oflags, int vb)
     if (cam_get_device(device_name, fdc_p->devname, DEV_IDLEN,
                        &(fdc_p->unitnum)) == -1) {
         if (vb > 3)
-            pr2ws("%s: cam_get_device(%s) fails, should work for SCSI and "
-                  "NVMe devices\n", __func__, device_name, errno);
+            pr2ws("%s: cam_get_device(%s) fails [%s], should work for SCSI "
+                  "and NVMe devices\n", __func__, device_name, cam_errbuf);
         ret = -EINVAL;
         goto err_out;
     } else if (vb > 6)
@@ -365,7 +370,7 @@ scsi_pt_open_flags(const char * device_name, int oflags, int vb)
             first_ch = b[0];
             basnam0_n = ('n' == first_ch);
             if (('/' != first_ch) && ('.' != first_ch))
-                snprintf(dev_nm, PATH_MAX, "%s%s", "/dev/", b);
+                snprintf(dev_nm, sizeof(dev_nm), "%s%s", "/dev/", b);
             else
                 strcpy(dev_nm, b);
         } else {
@@ -1426,12 +1431,13 @@ nvme_pt_low(struct sg_pt_freebsd_scsi * ptp, void * dxferp, uint32_t len,
                       "controller\n", __func__);
             if ((fdc_p->nsid > 0) && fdc_p->devname && *fdc_p->devname) {
                 int fd;
-                char dev_nm[PATH_MAX];
+                char dev_nm[PATH_MAX + 2];
 
                 if ((fdc_p->devname[0] == '/') || (fdc_p->devname[0] == '.'))
                     strncpy(dev_nm, fdc_p->devname, PATH_MAX);
                 else
-                    snprintf(dev_nm, PATH_MAX, "/dev/%s", fdc_p->devname);
+                    snprintf(dev_nm, sizeof(dev_nm), "/dev/%s",
+                             fdc_p->devname);
                 fd = open(dev_nm, O_RDWR);
                 if (fd < 0) {
                     if (vb > 1)

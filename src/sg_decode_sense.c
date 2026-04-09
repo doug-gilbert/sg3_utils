@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023 Douglas Gilbert.
+ * Copyright (c) 2010-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -31,7 +31,7 @@
 #include "sg_unaligned.h"
 
 
-static const char * version_str = "1.45 20231019";
+static const char * version_str = "1.46 20260406";
 
 #define MY_NAME "sg_decode_sense"
 
@@ -399,6 +399,7 @@ the_end:
     return 0;
 }
 
+/* called by --list_err or --exit-status=<num> ; JSON ignored */
 static void
 enumerate_err_codes(const struct opts_t *op)
 {

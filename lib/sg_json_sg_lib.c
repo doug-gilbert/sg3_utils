@@ -828,6 +828,8 @@ fini:
     return ret;
 }
 
+/* Converts exit_status into a string and hands them both to
+ * sgj_js2file_estr(). fp assumed to be valid (usually pointing to stdout. */
 void
 sgj_js2file(sgj_state * jsp, sgj_opaque_p jop, int exit_status, FILE * fp)
 {

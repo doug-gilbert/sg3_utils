@@ -36,7 +36,7 @@
  * device.
  */
 
-static const char * version_str = "1.44 20260323";      /* sbc6r01 */
+static const char * version_str = "1.45 20260406";      /* sbc6r01 */
 
 #define MY_NAME "sg_get_lba_status"
 
@@ -780,7 +780,8 @@ start_response:
                                get_prov_status_str(res, b, blen));
                 sgj_js_nv_istr(jsp, jo3p, add_stat_sn, add_status, NULL,
                                get_pr_status_str(add_status, b, blen));
-            } else {
+            }
+            if ((! jsp->pr_as_json) || jsp->pr_out_hr) {
                 char d[64];
 
                 n = sg_scnpr(b, blen, "[%d] LBA: 0x%" PRIx64, k + 1, d_lba);

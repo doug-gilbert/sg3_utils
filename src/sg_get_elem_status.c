@@ -29,7 +29,7 @@
 #include "sg_cmds_extra.h"
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
-#include "sg_json.h"
+#include "sg_json_sg_lib.h"
 
 /* A utility program originally written for the Linux OS SCSI subsystem.
  *
@@ -38,7 +38,7 @@
  * given SCSI device.
  */
 
-static const char * version_str = "1.26 20260402";      /* sbc6r02 */
+static const char * version_str = "1.27 20260408";      /* sbc6r02 */
 
 #define MY_NAME "sg_get_elem_status"
 
@@ -52,6 +52,8 @@ static const char * version_str = "1.26 20260402";      /* sbc6r02 */
 #define GPES_DESC_OFFSET 32     /* descriptors starts at this byte offset */
 #define GPES_DESC_LEN 32
 #define MIN_MAXLEN 16
+#define ALL_ACCESS_SE 1         /* only Storage Element before sbc6r02 */
+#define FRACTIONAL_ACCESS_SE 2  /* Storage Element introduced in sbc6r02 */
 
 #define SENSE_BUFF_LEN 64       /* Arbitrary, could be larger */
 #define DEF_PT_TIMEOUT  60      /* 60 seconds */
@@ -77,10 +79,14 @@ struct opts_t {
 
 struct gpes_desc_t {    /* info in returned physical status descriptor */
     bool restoration_allowed;   /* RALWD bit in sbc4r20a */
-    uint32_t elem_id;
-    uint8_t phys_elem_type;
+    uint32_t elem_id;           /* 0 is not a valid element identifier */
+    uint8_t phys_elem_type; /* 1: ALL_ACCESS_SE; 2: FRACTIONAL_ACCESS_SE */
     uint8_t phys_elem_health;
-    uint64_t assoc_cap;   /* number of LBs removed if depopulated */
+    uint64_t assoc_cap;   /* 1: number of LBs removed if depopulated */
+    uint32_t oth_elem_id; /* 2: */
+    bool dppothr;
+    bool wrt_or_rd;
+    uint64_t num_affect_zones;
 };
 
 static uint8_t gpesBuff[DEF_GPES_BUFF_LEN];
@@ -256,7 +262,19 @@ decode_elem_status_desc(const uint8_t * bp, struct gpes_desc_t * pedp)
     pedp->restoration_allowed = (bool)(bp[13] & 1);
     pedp->phys_elem_type = bp[14];
     pedp->phys_elem_health = bp[15];
-    pedp->assoc_cap = sg_get_unaligned_be64(bp + 16);
+    switch (pedp->phys_elem_type) {
+    case ALL_ACCESS_SE:
+        pedp->oth_elem_id = 0;
+        pedp->assoc_cap = sg_get_unaligned_be64(bp + 16);
+        break;
+    case FRACTIONAL_ACCESS_SE:
+        pedp->assoc_cap = 0;
+        pedp->oth_elem_id = sg_get_unaligned_be32(bp + 16);
+        pedp->dppothr = !!(0x2 & bp[16 + 4]);
+        pedp->wrt_or_rd = !!(0x1 & bp[16 + 4]); /* 0 -> write elem */
+        pedp->num_affect_zones = sg_get_unaligned_be64(bp + 16 + 8);
+        break;
+    }
 }
 
 static bool
@@ -282,9 +300,9 @@ fetch_health_str(uint8_t health, bool short_str, char * bp, int max_blen)
         add_val = true;
     } else if (health < 0xd0) {
         if (short_str)
-            cp = "outside mfr's spec limits";
+            cp = "OUTSIDE mfr's spec limits";
         else
-            cp = "outside manufacturer's specification limits";
+            cp = "OUTSIDE manufacturer's specification limits";
         add_val = true;
     } else if (health < 0xfb) {
         cp = "reserved";
@@ -374,8 +392,8 @@ main(int argc, char * argv[])
     sgj_opaque_p jo3p = NULL;
     sgj_opaque_p jap = NULL;
     sgj_state * jsp;
-    struct gpes_desc_t a_ped;
-    char b[80];
+    struct gpes_desc_t a_ped SG_C_CPP_ZERO_INIT;
+    char b[256];
     struct opts_t opts SG_C_CPP_ZERO_INIT;
     static const int blen = sizeof(b);
     static const char * gpes_pd_sn =
@@ -707,62 +725,96 @@ start_response:
             jo3p = sgj_new_unattached_object_r(jsp);
             sgj_js_nv_ihex(jsp, jo3p, "element_identifier",
                            (int64_t)a_ped.elem_id);
-            switch (a_ped.phys_elem_type) {
-            case 1:
-                cp = "all-access storage";
-                break;
-            case 2:
-                cp = "fractional-access storage";
-                break;
-            default:
-                cp = "reserved";
-                break;
-            }
+        }
+        switch (a_ped.phys_elem_type) {
+        case ALL_ACCESS_SE:
+            cp = "all-access storage";
+            break;
+        case FRACTIONAL_ACCESS_SE:
+            cp = "fractional-access storage";
+            break;
+        default:
+            cp = "reserved";
+            break;
+        }
+        j = a_ped.phys_elem_health;
+        fetch_health_str(j, false, b, blen);
+        if (jsp->pr_as_json) {
             sgj_js_nv_istr(jsp, jo3p, "physical_element_type",
                            a_ped.phys_elem_type, "meaning", cp);
-            j = a_ped.phys_elem_health;
-            fetch_health_str(j, false, b, blen);
             sgj_js_nv_istr(jsp, jo3p, "physical_element_health", j, NULL, b);
-            sgj_js_nv_ihex(jsp, jo3p, "associated_capacity",
-                           (int64_t)a_ped.assoc_cap);
-            sgj_js_nv_o(jsp, jap, NULL /* name */, jo3p);
-        } else if (op->do_brief > 1) {
-            sgj_pr_hr(jsp, "%u: %u,%u\n", a_ped.elem_id, a_ped.phys_elem_type,
-                      a_ped.phys_elem_health);
-        } else {
-            char b2[144];
-            static const int b2len = sizeof(b2);
+            if (ALL_ACCESS_SE == a_ped.phys_elem_type)
+                sgj_js_nv_ihex(jsp, jo3p, "associated_capacity",
+                               (int64_t)a_ped.assoc_cap);
+            else if (FRACTIONAL_ACCESS_SE == a_ped.phys_elem_type) {
+                sgj_js_nv_ihex(jsp, jo3p, "other_element_identifier",
+                               a_ped.oth_elem_id);
+                sgj_js_nv_i(jsp, jo3p, "dppothr", !! a_ped.dppothr);
+                sgj_js_nv_i(jsp, jo3p, "wrt_or_rd", !! a_ped.wrt_or_rd);
+                sgj_js_nv_ihex(jsp, jo3p, "number_of_affected_zones",
+                               (int64_t)a_ped.num_affect_zones);
 
-            if (op->do_brief > 0)       /* can only be 0 or 1 here */
-                m = sg_scnpr(b2, b2len, "[%d] id: 0x%x", k + 1,
-                             a_ped.elem_id);
-            else
-                m = sg_scnpr(b2, b2len, "[%d] identifier: 0x%06x", k + 1,
-                             a_ped.elem_id);
-            if (sg_all_ffs((const uint8_t *)&a_ped.assoc_cap, 8)) {
-                if (op->do_brief > 0)
-                    m += sg_scn3pr(b2, b2len, m, "  ");
-                else
-                    m += sg_scn3pr(b2, b2len, m,
-                                   "  associated capacity: not specified;  ");
-            } else
-                m += sg_scn3pr(b2, b2len, m, "  associated capacity: 0x%"
-                               PRIx64 ";  ", a_ped.assoc_cap);
-            m += sg_scn3pr(b2, b2len, m, "health: ");
-            j = a_ped.phys_elem_health;
-            if (fetch_health_str(j, (op->do_brief > 0), b, blen))
-                m += sg_scn3pr(b2, b2len, m, "%s <%d>", b, j);
-            else
-                m += sg_scn3pr(b2, b2len, m, "%s", b);
-            if (a_ped.restoration_allowed) {
-                if (op->do_brief > 0)
-                    sg_scn3pr(b2, b2len, m, " [RALWD]");
-                else
-                    sg_scn3pr(b2, b2len, m, " [restoration allowed [RALWD]]");
             }
-            sgj_pr_hr(jsp, "%s\n", b2);
+            /* next add this element to PE descriptor list */
+            sgj_js_nv_o(jsp, jap, NULL /* name */, jo3p);
         }
-    }
+        if ((! jsp->pr_as_json) || jsp->pr_out_hr) {
+            if (op->do_brief > 1) {
+                sgj_pr_hr(jsp, "%u: %u,%u\n", a_ped.elem_id,
+                          a_ped.phys_elem_type, a_ped.phys_elem_health);
+            } else {
+                char b2[256];
+                static const int b2len = sizeof(b2);
+
+                if (op->do_brief > 0)       /* can only be 0 or 1 here */
+                    m = sg_scnpr(b2, b2len, "[%d] id: 0x%x", k + 1,
+                                 a_ped.elem_id);
+                else
+                    m = sg_scnpr(b2, b2len, "[%d] identifier: 0x%06x", k + 1,
+                                 a_ped.elem_id);
+                if (ALL_ACCESS_SE == a_ped.phys_elem_type) {
+                    if (sg_all_ffs((const uint8_t *)&a_ped.assoc_cap, 8)) {
+                        if (op->do_brief > 0)
+                            m += sg_scn3pr(b2, b2len, m, "  ");
+                        else
+                            m += sg_scn3pr(b2, b2len, m, "  associated "
+                                           "capacity: not specified;  ");
+                    } else
+                        m += sg_scn3pr(b2, b2len, m, "  associated capacity: "
+                                       "0x%" PRIx64 ";  ", a_ped.assoc_cap);
+                } else if (FRACTIONAL_ACCESS_SE == a_ped.phys_elem_type) {
+                   if (op->do_brief > 0)
+                        m += sg_scn3pr(b2, b2len, m, "  fractional-access  "
+                                       "oth_elem_id: 0x%06x;  ",
+				       a_ped.oth_elem_id);
+                    else {
+                        m += sg_scn3pr(b2, b2len, m, "  fractional-access  "
+                                       "other_element_identifier: 0x%06x "
+                                       "dppothr=%d wrt_or_rd=%d",
+                                       a_ped.oth_elem_id, !! a_ped.dppothr,
+                                       !! a_ped.wrt_or_rd);
+                        m += sg_scn3pr(b2, b2len, m,
+                                       " number_of_affected_zones: %" PRId64
+                                       ";  ",
+                                       (int64_t)a_ped.num_affect_zones);
+                    }
+                }
+                m += sg_scn3pr(b2, b2len, m, "health: ");
+                if (fetch_health_str(j, (op->do_brief > 0), b, blen))
+                    m += sg_scn3pr(b2, b2len, m, "%s <%d>", b, j);
+                else
+                    m += sg_scn3pr(b2, b2len, m, "%s", b);
+                if (a_ped.restoration_allowed) {
+                    if (op->do_brief > 0)
+                        sg_scn3pr(b2, b2len, m, " [RALWD]");
+                    else
+                        sg_scn3pr(b2, b2len, m,
+                                  " [restoration allowed [RALWD]]");
+                }
+                sgj_pr_hr(jsp, "%s\n", b2);
+            }
+        }
+    }           /* end of for loop over element descriptors */
     goto fini;
 
 error:
@@ -808,15 +860,8 @@ fini:
             }
             /* '--js-file=-' will send JSON output to stdout */
         }
-        if (fp) {
-            const char * estr = NULL;
-
-            if (sg_exit2str(ret, jsp->verbose, blen, b)) {
-                if (strlen(b) > 0)
-                    estr = b;
-            }
-            sgj_js2file_estr(jsp, NULL, ret, estr, fp);
-        }
+        if (fp)
+            sgj_js2file(jsp, NULL, ret, fp);
         if (op->js_file && fp && (stdout != fp))
             fclose(fp);
         sgj_finish(jsp);

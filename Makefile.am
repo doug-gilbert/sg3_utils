@@ -8,6 +8,7 @@ SUBDIRS = \
 
 EXTRA_DIST = \
 	autogen.sh \
+	bootstrap \
 	COVERAGE \
 	CREDITS \
 	BSD_LICENSE \

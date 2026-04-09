@@ -2,7 +2,7 @@
 #define SG_JSON_H
 
 /*
- * Copyright (c) 2023 Douglas Gilbert.
+ * Copyright (c) 2023-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -20,6 +20,11 @@ extern "C" {
 
 /* JSON support functions and structures follow. The prefix "sgj_" is used
  * for sg3_utils JSON functions, types and values. */
+
+/* This header does not rely on the rest of sg_lib.h . There is an extension
+ * header called sg_json_sg_lib.h that defines some extra JSON support
+ * functions whose implementations do rely on the rest of sg_lib.h . */
+
 
 /* Following macro for sgj_pr_hr() which takes printf() like arguments */
 #if __USE_MINGW_ANSI_STDIO -0 == 1
@@ -56,7 +61,7 @@ typedef struct sgj_state_t {
     bool pr_hex;                /* 'h' (def: false) */
     bool pr_leadin;             /* 'l' (def: true) */
     bool pr_name_ex;        /* 'n' name_extra (information) (def: false) */
-    bool pr_out_hr;             /* 'o' (def: false) */
+    bool pr_out_hr;             /* 'o' (def: false), see out_hrp below */
     bool pr_packed;             /* 'k' (def: false) only when !pr_pretty */
     bool pr_pretty;             /* 'p' (def: true) */
     bool pr_string;             /* 's' (def: true) */
@@ -96,7 +101,7 @@ bool sgj_is_snake_name(const char * in_name);
 /* There are many variants of JSON supporting functions below and some
  * abbreviations are used to shorten their function names:
  *    sgj_  - prefix of all the functions related to (non-)JSON output
- *    hr    - human readable form (same meaning as "plain text")
+ *    hr    - Human Readable form (same meaning as "plain text")
  *    js    - JSON only output
  *    haj   - human readable and JSON output, if JSON output is selected
  *            then the normal output goes in 'plain_text_output' array
@@ -115,8 +120,8 @@ bool sgj_is_snake_name(const char * in_name);
  *    */
 
 /* If jsp in non-NULL and jsp->pr_as_json is true then this call is ignored
- * unless jsp->pr_out_hrp is true. Otherwise this function prints to stdout
- * like printf(fmt, ...); note that no LF is added. In the jsp->pr_out_hrp is
+ * unless jsp->pr_out_hr is true. Otherwise this function prints to stdout
+ * like printf(fmt, ...); note that no LF is added. In the jsp->pr_out_hr is
  * true case, nothing is printed to stdout but instead is placed into a JSON
  * array (jsp->out_hrp) after some preprocessing. That preprocessing involves
  * removing a leading LF from 'fmt' (if present) and up to two trailing LF
@@ -141,7 +146,7 @@ bool sgj_init_state(sgj_state * jsp, const char * j_optarg);
  * "name", and "version_date" object fields. If the jsp->pr_out_hr field is
  * true a named array called "plain_text_output" is added to the
  * "utility_invoked" object  (creating it in the case when jsp->pr_leadin is
- * false) and a pointer to that array object is placed in jsp->objectp . The
+ * false) and a pointer to that array object is placed in jsp->out_hrp . The
  * returned pointer is not usually needed but if it is NULL then a heap
  * allocation has failed. */
 sgj_opaque_p sgj_start_r(const char * util_name, const char * ver_str,
@@ -361,7 +366,8 @@ void sgj_hr_str_out(sgj_state * jsp, const char * sp, int slen);
  * or jsp->basep is NULL then this function does nothing. If jsp->exit_status
  * is true then a new JSON object named "exit_status" and the 'exit_status'
  * value rendered as a JSON integer is appended to jsp->basep. The in-core
- * JSON tree with jsp->basep as its root is streamed to 'fp'. */
+ * JSON tree with jsp->basep as its root is streamed to 'fp'. fp is
+ * assumed to be non-NULL. */
 void sgj_js2file_estr(sgj_state * jsp, sgj_opaque_p jop, int exit_status,
                       const char * estr, FILE * fp);
 
@@ -402,4 +408,4 @@ int sgj_conv2json_string(const uint8_t * cup, int ulen, char * op,
 }
 #endif
 
-#endif
+#endif          /* SG_JSON_H */

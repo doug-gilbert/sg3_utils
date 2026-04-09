@@ -415,6 +415,7 @@ const struct sg_lib_simple_value_name_t sg_lib_version_descriptor_arr[] = {
     {0x960, "iSCSI (no version claimed)"},
     {0x961, "iSCSI RFC 7143 iSCSIProtocolLevel=1"},
     {0x962, "iSCSI RFC 7144 iSCSIProtocolLevel=2"},
+    /* from 0x963 to 0x97f should not be used according to RFC 7144 */
     {0x963, "iSCSI RFC 7144 iSCSIProtocolLevel=3"},
     {0x964, "iSCSI RFC 7144 iSCSIProtocolLevel=4"},
     {0x965, "iSCSI RFC 7144 iSCSIProtocolLevel=5"},
