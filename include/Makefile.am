@@ -66,4 +66,5 @@ endif
 
 distclean-local:
 	rm -rf \
-          Makefile.in
+	  Makefile.in \
+	  getopt.h

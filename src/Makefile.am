@@ -36,6 +36,17 @@ bin_PROGRAMS += sg_scan
 sg_scan_SOURCES += sg_scan_win32.c
 endif
 
+if NEED_GETOPT_H
+# Ensure replacement getopt.h copied to include directory before anything
+# needs it
+BUILT_SOURCES = include/getopt.h
+
+# Don't need this: '$(AM_V_GEN) mkdir -p include'
+include/getopt.h: $(top_srcdir)/lib/getopt.h
+	$(AM_V_GEN) cp $(top_srcdir)/lib/getopt.h $(top_srcdir)/include/getopt.h
+
+endif
+
 # This is active if --enable-debug given to ./configure
 # removed -Wduplicated-branches because needs gcc-8
 if DEBUG

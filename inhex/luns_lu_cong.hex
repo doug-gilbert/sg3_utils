@@ -1,4 +1,13 @@
 
+# Beware: using this fake response to a REPORT LUNS command takes no
+# account of the SELECT REPORT field in the cdb. See the definition
+# of that command and field in spc7r05.pdf or later.
+# Also decoding the LUNs may depend of the knowledge of the LU_CONG
+# bit in the standard INQUIRY response.
+#
+# the author thinks this LUN data might match:
+#    sg_luns --select=0x10 --lu_cong --decode --inhex=luns_lu_cong.hex
+
 # report_luns_parameter_data
 00 00 00 10 00 00 00 00
 
