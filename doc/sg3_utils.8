@@ -1,4 +1,4 @@
-.TH SG3_UTILS "8" "March 2026" "sg3_utils\-1.49" SG3_UTILS
+.TH SG3_UTILS "8" "April 2026" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg3_utils \- a package of utilities for sending SCSI commands
 .SH SYNOPSIS
@@ -807,7 +807,7 @@ in sg3_utils can parse JSON as input.
 JSON output is outlined in its own manpage, see: sg3_utils_json(8).
 .PP
 Binary and especially hexadecimal output can have two roles: for viewing
-immediately (e.g. when debugging) or as a parsable output that can be decoded
+immediately (e.g. when debugging) or as a parseable output that can be decoded
 later. The latter action uses the \fI\-\-inhex=FN\fR option. For viewing
 hexadecimal output (e.g. from a SCSI command response) the \fI\-\-hex\fR
 option can be used once or twice. Both have output similar to:
@@ -922,8 +922,9 @@ does a pretty good job by sending log entries to another machine (on the
 same sub\-net)) using the UDP ("fire and forget") network protocol .
 .SH WEB SITE
 There is a web page discussing this package at
-https://sg.danny.cz/sg/sg3_utils.html . The device naming used by this
-package on various operating systems is discussed at:
+https://sg.danny.cz/sg/sg3_utils.html and also at
+https://doug-gilbert.github.io/sg3_utils.html . The device naming used by
+this package on various operating systems is discussed at:
 https://sg.danny.cz/sg/device_name.html . There is a git code mirror at
 https://github.com/hreinecke/sg3_utils . The principle code repository
 uses subversion and is on the author's equipment. The author keeps track
@@ -947,7 +948,7 @@ code, namely sg_lib.[hc], sg_cmds_basic.[hc] and sg_cmds_extra.[hc] are
 under a BSD\-2\-Clause license. There is NO warranty; not even for
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B sg3_utils_json,sg_decode_sense(sg3_utils), sdparm(sdparm), ddpt(ddpt),
+.B sg3_utils_json, sg_decode_sense(sg3_utils), sdparm(sdparm), ddpt(ddpt),
 .B lsscsi(lsscsi), dmesg(1), mt(1), hdparm(hdparm), hexdump(util\-linux)
 .br
 The format of this section is: <utility_name>(<package_containing_utility>)

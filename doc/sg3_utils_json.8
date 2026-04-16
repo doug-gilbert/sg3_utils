@@ -1,4 +1,4 @@
-.TH SG3_UTILS_JSON "8" "March 2026" "sg3_utils\-1.49" SG3_UTILS
+.TH SG3_UTILS_JSON "8" "April 2026" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg3_utils_json \- JSON output for some sg3_utils utilities
 .SH SYNOPSIS
@@ -296,7 +296,7 @@ real time information between hardware drivers and the user space. Utilities
 such as lsblk and lsscsi do data\-mining within sysfs. The vast majority of
 filenames in sysfs use "snake_case" but there are a few exceptions where ':'
 and even embedded spaces appear. Also of note is that Unix user commands,
-system commands and libraries have no emdedded spaces in their names
+system commands and libraries have no embedded spaces in their names
 and upper cases letters are extremely rare.
 .PP
 Another issue is case sensitivity: "CamelCase" and "camelcase" are confusing
@@ -310,7 +310,7 @@ match could become a nightmare.
 So choosing JSON object names as being made up of a string of characters
 restricted to lower case ASCII alphabetical characters, the digits and
 underscore (only 26+10+1 different characters allowed) is a compromise.
-It is a compromise that favours simpilicity of searching while restricting
+It is a compromise that favours simplicity of searching while restricting
 the freedom of object naming. It follows Unix (Linux) file naming
 conventions.
 .PP

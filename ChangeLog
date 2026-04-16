@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20260409] [svn: r1097]
+Changelog for pre-release sg3_utils-1.49 [20260415] [svn: r1098]
   - AIX partial support: needs getopt.h header which
     surprisingly is non-standard. Keep hidden version in
     lib directory and copy to include dir as needed

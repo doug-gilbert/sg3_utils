@@ -41,7 +41,7 @@
  *                   MA 02110-1301, USA.
  */
 
-/* sg_pt_linux_nvme version 1.21 20231123 */
+/* sg_pt_linux_nvme version 1.22 20260411 */
 
 /* This file contains a small "SPC-only" SNTL to support the SES pass-through
  * of SEND DIAGNOSTIC and RECEIVE DIAGNOSTIC RESULTS through NVME-MI

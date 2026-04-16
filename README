@@ -121,6 +121,8 @@ The sg3_utils package and some more complex utilities have html pages:
    sg3_utils: https://sg.danny.cz/sg/sg3_utils.html
    sg_ses:    https://sg.danny.cz/sg/sg_ses.html
    sg_dd:     https://sg.danny.cz/sg/sg_dd.html
+These pages are also found in the author's github space, for example:
+   https://doug-gilbert.github.io/sg3_utils.html
 
 A tarball (and zip) of all the manpages from the previous release are
 here:
@@ -144,4 +146,4 @@ is mirrored in git (using "git svn" tools) here:
 
 
 Douglas Gilbert
-10th March 2026
+11th April 2026

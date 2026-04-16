@@ -1,10 +1,8 @@
 #!/bin/sh
 
-# If this script fails on a Debian 4.0 ("etch") system then read
-# the debian/README.debian4 file.
-
-echo "./autogen.sh"
-./autogen.sh
+# Used to call "./autogen.sh" here
+echo "autoreconf -i"
+autoreconf -i
 
 echo "chmod +x debian/rules"
 chmod +x debian/rules
