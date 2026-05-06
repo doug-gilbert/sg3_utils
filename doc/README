@@ -42,7 +42,7 @@ Syntax checking
 Use 'mandoc -W style {man_page} > /dev/null'
 
 The: 'cannot parse date, using it verbatim: TH February 2019' warning
-is ignored.
+can be ignored.
 
 Douglas Gilbert
-2nd May 2026
+5th May 2026

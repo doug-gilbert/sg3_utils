@@ -13,33 +13,43 @@ These utilities can be divided into three groups:
      is sent. For example, "sg_inq" sends the SCSI INQUIRY command. Some
      utilities in this group send one of a selection of commands, typically
      those commands have a lot it common (e.g. sg_write_x).
-   - copy type utilities: sg_dd, sgp_dd and sgm_dd use the Unix dd command
-     functionality and command line syntax as a template. sg_dd may also be
-     used to verify that two storage devices (or part thereof) contain the
-     same user data, stopping at the first "miscompare". sg_xcopy sends the
-     SCSI EXTENDED COPY command which in some cases can do offloaded copies.
+   - copy type utilities: sg_dd, sgp_dd and sgm_dd implement the Unix dd
+     command functionality and command line syntax as a template. sg_dd
+     may also be used to verify that two storage devices (or part thereof)
+     contain the same user data, stopping at the first "miscompare".
+     sg_xcopy sends the SCSI EXTENDED COPY command which in some cases can
+     do offloaded copies.
 
 Platforms
 ---------
 These utilities were written on Linux and should work from Linux kernel
-(lk) 2.4 through to the current series 6. The third group ("copy type")
+(lk) 2.4 through to the current series 7. The third group ("copy type")
 are only implemented on Linux, but a separate portable package/utility
 called ddpt implements similar functionality. The first two groups are
-implemented (i.e. ported) to Android, FreeBSD, NetBSD, Solaris and
-Windows.  The Windows port uses either a Cygwin or MinGW (plus Msys)
-build environment (rather than Visual Studio).
+implemented (i.e. ported to) on AIX, Android, FreeBSD, Haiku, NetBSD,
+Solaris and Windows.  The Windows port uses either a Cygwin or MinGW
+(plus Msys) build environment (rather than Visual Studio).
+
+Note that there is no port to operating systems made by Apple (e.g. macOS
+and iOS) since they have a policy of no generic SCSI pass-through driver.
+The term "generic" in this case means independent of the actual SCSI HBA
+driver in use (e.g. a driver for BroadCom SAS adapter). In this case,
+and any other Operating System not explicitly supported, the sg_dummy.c
+file defines the missing low level functions that are OS dependent so that
+the package will compile, build and install. Certain actions are still
+possible in the absence of OS support see the inhex/README file.
 
 Library
 -------
 Many of these utilities share a lot of code (e.g. SCSI error messages)
 so a lot of repetition (potentially error prone) is saved by having a
-library called libsgutils or some variation on that name. Distributions
+library called libsgutils2 or some variation on that name. Distributions
 (especially of Linux) have differing policies on how a library (and a
 package) should be named. For that reason this package is sometimes
 known as "sg3-utils" (i.e. the underscore is turned into a hyphen).
-Various other packages use libsgutils. The library interface is not
+Various other packages use libsgutils2. The library interface is not
 altered from one package release, to the next, but the library interface
-may be expanded. If a utility from one release is used with a libsgutils
+may be expanded. If a utility from one release is used with a libsgutils2
 from an earlier release, then the runtime linking may fail. Typically
 package managers take care of these details so that runtime linking
 errors should be rare.
@@ -52,20 +62,20 @@ translate SCSI commands to ATA commands (called SAT: SCSI to ATA
 Translation). SAT includes an ATA PASS-THROUGH SCSI command and sg_sat_*
 utilities (there are four) are examples of using SAT. The SAS transport
 (Serial Attached SCSI) can convey ATA commands through a SCSI/SAS domain
-via its Serial ATA Tunnelled Protocol (STP).
+via its Serial ATA Tunnelled Protocol (STP). Similarly there is now a
+SCSI to NVMe Translation project at t10.org that should result in a
+standard that will be known as SNT.
 
-NVMe command sets (e.g. Admin, NVM and MI) are relatively new. There was an
-early paper on a SCSI to NVMe Translation Layer (SNTL) but it hasn't been
-standardized. The sg_inq utility will send (and decode the response of) a
-SCSI INQUIRY command if the underlying device is a SCSI device. If the
-underlying device is a NVMe controller or namespace, then sg_inq will send
-a NVMe Admin Identify command and decode the response. The sg_ses utility
-(for SCSI Enclosure Services) also checks whether its underlying device is
-SCSI or NVME. In the NVMe case, sg_ses translates the SCSI SEND DIAGNOSTIC
-and READ DIAGNOSTIC RESULTS commands to the NVMe Management Interface (MI)
-SES Send and SES Receive commands respectively. The output of the sg_ses
-utility should be similar, irrespective of whether the "SES" device is
-SCSI or NVMe.
+NVMe command sets (e.g. Admin, NVM and MI) are relatively new. The sg_inq
+utility will send (and decode the response of) a SCSI INQUIRY command if
+the underlying device is a SCSI device. If the underlying device is a NVMe
+controller or namespace, then sg_inq will send a NVMe Admin Identify command
+and decode the response. The sg_ses utility (for SCSI Enclosure Services)
+also checks whether its underlying device is SCSI or NVME. In the NVMe case,
+sg_ses translates the SCSI SEND DIAGNOSTIC and READ DIAGNOSTIC RESULTS
+commands to the NVMe Management Interface (MI) SES Send and SES Receive
+commands respectively. The output of the sg_ses utility should be similar,
+irrespective of whether the "SES" device is SCSI or NVMe.
 
 The sg_raw utility may send NVMe Admin or NVM commands (as well as SCSI
 commands). One difficulty with a command-line utility invoking NVME
@@ -89,19 +99,19 @@ representation is signed, 64 bit in size, and rendered in decimal, with a
 leading negative sign if needed. However storage metadata tends to use
 hexadecimal for large values (e.g. Logical Block Addresses (LBAs)). This
 issue is addressed with the 'h' argument (e.g. '--json=h') which changes
-decimal rendered numbers into a JSON subobject with two name-value pairs:
+decimal rendered numbers into a JSON sub-object with two name-value pairs:
 one name is 'i' whose value is the same decimal rendered integer, and the
-other named 'hex' whose value is a JSON string with that integer rendered
-in (unsigned) hexadecimal in that string.
+other is named 'hex' whose value is a JSON string with that integer
+rendered in (unsigned) hexadecimal in that string.
 
 To simplify name decoding in JSON, the "snake notation" convention is used.
 This restricts names to the 26 lower case, alphabetical characters (from
-English), the 10 digits and underscore. Further an underscore is never the
-first or last character of the name and is never repeated. So underscore
-can be used as a name separator (e.g. "device_id"). Other JSON producing
-utilities follow different naming conventions. One advantage of the "snake
-notation" is that it is compatible with various Unix pseudo file system
-naming conventions (e.g. procfs and sysfs in Linux).
+26 characters used by English), the 10 digits and underscore. Further an
+underscore is never the first or last character of the name and is never
+repeated. So underscore can be used as a name separator (e.g. "device_id").
+Other JSON producing utilities follow different naming conventions. One
+advantage of the "snake notation" is that it is compatible with various
+Unix pseudo file system naming conventions (e.g. procfs and sysfs in Linux).
 
 There is a manual page called "sg3_utils_json" that contains more
 information.
@@ -110,7 +120,7 @@ Documentation
 -------------
 Manual pages ("manpages") are the primary method of utility documentation.
 All utilities and scripts that are installed by this package have a
-manpage. There are utilities in the examples, testing and utils
+manpage. There are utilities in the examples, ttesting and utils
 directories that are not installed and do not have manpages. Nearly
 all utilities have runtime help, usually invoked with either the '-h'
 short option or the '--help' long option. There is also an overarching
@@ -140,10 +150,10 @@ file is the good reference.
 The author's primary source code repository uses subversion and is on
 the author's equipment (a RPi). One advantage of subversion is its
 revision numbers which are simply integers starting at 1 and ascending.
-For this package the current revision is 928 . The subversion repository
+For this package the current revision is 1103 . The subversion repository
 is mirrored in git (using "git svn" tools) here:
     https://github.com/doug-gilbert/sg3_utils
 
 
 Douglas Gilbert
-11th April 2026
+5th May 2026

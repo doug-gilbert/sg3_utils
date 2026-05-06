@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2023 Douglas Gilbert.
+ * Copyright (c) 2013-2026 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
 #include "sg_lib.h"
 #include "sg_pt.h"
 
-static const char * version_str = "1.07 20231016";
+static const char * version_str = "1.08 20260505";
 static const char * util_name = "sg_tst_context";
 
 /* This is a test program for checking that file handles keep their
@@ -69,7 +69,7 @@ static const char * util_name = "sg_tst_context";
  * object files in the lib directory can be built with:
  *   cd <sg3_utils> ; ./configure ; cd lib; make
  * Then:
- *   cd ../testing
+ *   cd ../ttesting
  *   make sg_tst_context
  *
  */

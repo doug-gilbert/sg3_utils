@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023 Douglas Gilbert.
+ * Copyright (c) 2014-2026 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,7 +89,7 @@
 #include "sg_pt.h"
 #include "sg_cmds.h"
 
-static const char * version_str = "1.43 20231016";
+static const char * version_str = "1.44 20260505";
 static const char * util_name = "sg_tst_async";
 
 /* This is a test program for checking the async usage of the Linux sg
@@ -110,7 +110,7 @@ static const char * util_name = "sg_tst_async";
  * which is assumed to be a sibling of this examples directory. Those
  * object files in the lib directory can be built with:
  *   cd <sg3_utils_package_root> ; ./configure ; cd lib; make
- *   cd ../testing
+ *   cd ../ttesting
  *   make sg_tst_async
  *
  * Currently this utility is Linux only and uses the sg driver. The bsg

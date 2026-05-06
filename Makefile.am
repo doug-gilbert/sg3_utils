@@ -128,34 +128,34 @@ EXTRA_DIST += \
 	suse/sg3_utils.spec
 
 EXTRA_DIST += \
-	testing/bsg_queue_tst.c \
-	testing/Makefile \
-	testing/Makefile.cyg \
-	testing/Makefile.freebsd \
-	testing/random_write_cp_verify.sh \
-	testing/README \
-	testing/sg_chk_asc.c \
-	testing/sgh_dd.cpp \
-	testing/sg_iovec_tst.cpp \
-	testing/sg_json_builder_test.c \
-	testing/sg_mrq_dd.cpp \
-	testing/sg_queue_tst.c \
-	testing/sg_scat_gath.cpp \
-	testing/sg_scat_gath.h \
-	testing/sgs_dd.c \
-	testing/sg_sense_test.c \
-	testing/sg_take_snap.c \
-	testing/sg_tst_async.cpp \
-	testing/sg_tst_bidi.c \
-	testing/sg_tst_context.cpp \
-	testing/sg_tst_excl2.cpp \
-	testing/sg_tst_excl3.cpp \
-	testing/sg_tst_excl.cpp \
-	testing/sg_tst_ioctl.c \
-	testing/sg_tst_json_builder.c \
-	testing/sg_tst_nvme.c \
-	testing/tst_sg_lib.c \
-	testing/uapi_sg.h
+	ttesting/bsg_queue_tst.c \
+	ttesting/Makefile \
+	ttesting/Makefile.cyg \
+	ttesting/Makefile.freebsd \
+	ttesting/random_write_cp_verify.sh \
+	ttesting/README \
+	ttesting/sg_chk_asc.c \
+	ttesting/sgh_dd.cpp \
+	ttesting/sg_iovec_tst.cpp \
+	ttesting/sg_json_builder_test.c \
+	ttesting/sg_mrq_dd.cpp \
+	ttesting/sg_queue_tst.c \
+	ttesting/sg_scat_gath.cpp \
+	ttesting/sg_scat_gath.h \
+	ttesting/sgs_dd.c \
+	ttesting/sg_sense_test.c \
+	ttesting/sg_take_snap.c \
+	ttesting/sg_tst_async.cpp \
+	ttesting/sg_tst_bidi.c \
+	ttesting/sg_tst_context.cpp \
+	ttesting/sg_tst_excl2.cpp \
+	ttesting/sg_tst_excl3.cpp \
+	ttesting/sg_tst_excl.cpp \
+	ttesting/sg_tst_ioctl.c \
+	ttesting/sg_tst_json_builder.c \
+	ttesting/sg_tst_nvme.c \
+	ttesting/tst_sg_lib.c \
+	ttesting/uapi_sg.h
 
 EXTRA_DIST += \
 	utils/hxascdmp.1 \

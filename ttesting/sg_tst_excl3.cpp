@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2022 Douglas Gilbert.
+ * Copyright (c) 2013-2026 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,35 +43,37 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #include "sg_lib.h"
 #include "sg_pt.h"
 #include "sg_unaligned.h"
 
-static const char * version_str = "1.11 20220425";
-static const char * util_name = "sg_tst_excl2";
+static const char * version_str = "1.12 20260505";
+static const char * util_name = "sg_tst_excl3";
 
 /* This is a test program for checking O_EXCL on open() works. It uses
  * multiple threads and can be run as multiple processes and attempts
  * to "break" O_EXCL. The strategy is to open a device O_EXCL|O_NONBLOCK
- * and do a double increment on a LB then close it. Prior to the first
- * increment, the value is checked for even or odd. Assuming the count
- * starts as an even (typically 0) then it should remain even. Odd instances
+ * and do a double increment on a LB then close it from a single thread.
+ * the remaining threads open that device O_NONBLOCK and do a read and
+ * note if the number is odd. Assuming the count starts as an even
+ * (typically 0) then it should remain even. Odd instances
  * are counted and reported at the end of the program, after all threads
  * have completed.
  *
  * This is C++ code with some things from C++11 (e.g. threads) and was
  * only just able to compile (when some things were reverted) with gcc/g++
  * version 4.7.3 found in Ubuntu 13.04 . C++11 "feature complete" support
- * was not available until g++ version 4.8.1 and that is only currently
- * found in Fedora 19 .
+ * was not available until g++ version 4.8.1 and that is found in Fedora
+ * 19 and Ubuntu 13.10 .
  *
  * The build uses various object files from the <sg3_utils>/lib directory
  * which is assumed to be a sibling of this examples directory. Those
  * object files in the lib directory can be built with:
  *   cd <sg3_utils> ; ./configure ; cd lib; make
  * Then:
- *   cd ../testing
- *   make sg_tst_excl2
+ *   cd ../ttesting
+ *   make sg_tst_excl3
  *
  * BEWARE: this utility modifies a logical block (default LBA 1000) on the
  * given device.
@@ -99,10 +101,10 @@ static unsigned int ebusy_count;
 static void
 usage(void)
 {
-    printf("Usage: %s [-b] [-f] [-h] [-l <lba>] [-n <n_per_thr>] "
-           "[-t <num_thrs>]\n"
-           "                    [-V] [-w <wait_ms>] [-x] "
-           "<disk_device>\n", util_name);
+    printf("Usage: %s [-b] [-f] [-h] [-l <lba>] [-n <n_per_thr>]\n"
+           "                    [-R] [-t <num_thrs>] [-V] [-w <wait_ms>] "
+           "[-x]\n"
+           "                    <disk_device>\n", util_name);
     printf("  where\n");
     printf("    -b                block on open (def: O_NONBLOCK)\n");
     printf("    -f                force: any SCSI disk (def: only "
@@ -113,6 +115,8 @@ usage(void)
            DEF_LBA);
     printf("    -n <n_per_thr>    number of loops per thread "
            "(def: %d)\n", DEF_NUM_PER_THREAD);
+    printf("    -R                all readers; so first thread (id=0) "
+           "just reads\n");
     printf("    -t <num_thrs>     number of threads (def: %d)\n",
            DEF_NUM_THREADS);
     printf("    -V                print version number then exit\n");
@@ -122,10 +126,12 @@ usage(void)
            DEF_WAIT_MS);
     printf("    -x                don't use O_EXCL on first thread "
            "(def: use\n"
-           "                      O_EXCL on all threads)\n\n");
-    printf("Test O_EXCL open flag with pass-through drivers. Each "
-           "open/close cycle with\nthe O_EXCL flag does a double increment "
-           "on lba (using its first 4 bytes).\n");
+           "                      O_EXCL on first thread)\n\n");
+    printf("Test O_EXCL open flag with pass-through drivers. First thread "
+           "(id=0) does\nopen/close cycle with the O_EXCL flag then does a "
+           "double increment on\nlba (using its first 4 bytes). Remaining "
+           "theads read (without\nO_EXCL flag on open) and check the "
+           "value is even.\n");
 }
 
 /* Assumed a lock (mutex) held when pt_err() is called */
@@ -187,8 +193,8 @@ pt_cat_no_good(int cat, struct sg_pt_base * ptp, const unsigned char * sbp)
  * Repeats so that happens twice. Then closes dev_name. If an error occurs
  * returns -1 else returns 0 if first int read is even otherwise returns 1. */
 static int
-do_rd_inc_wr_twice(const char * dev_name, unsigned int lba, int block,
-                   int excl, int wait_ms, unsigned int & ebusys)
+do_rd_inc_wr_twice(const char * dev_name, int read_only, unsigned int lba,
+                   int block, int excl, int wait_ms, unsigned int & ebusys)
 {
     int k, sg_fd, res, cat;
     int odd = 0;
@@ -263,8 +269,6 @@ do_rd_inc_wr_twice(const char * dev_name, unsigned int lba, int block,
         // Assuming u starts test as even (probably 0), expect it to stay even
         if (0 == k)
             odd = (1 == (u % 2));
-        ++u;
-        sg_put_unaligned_be32(u, lb);
 
         if (wait_ms > 0)       /* allow daylight for bad things ... */
             this_thread::sleep_for(milliseconds{wait_ms});
@@ -272,6 +276,11 @@ do_rd_inc_wr_twice(const char * dev_name, unsigned int lba, int block,
             this_thread::yield();       // thread yield
         else if (-2 == wait_ms)
             sleep(0);                   // process yield ??
+
+        if (read_only)
+            break;
+        ++u;
+        sg_put_unaligned_be32(u, lb);
 
         /* Prepare WRITE_16 command */
         clear_scsi_pt_obj(ptp);
@@ -305,7 +314,6 @@ err:
     scsi_pt_close_device(sg_fd);
     return odd;
 }
-
 
 
 #define INQ_REPLY_LEN 96
@@ -353,22 +361,14 @@ do_inquiry_prod_id(const char * dev_name, int block, int wait_ms,
     set_scsi_pt_data_in(ptp, inqBuff, INQ_REPLY_LEN);
     res = do_scsi_pt(ptp, sg_fd, 20 /* secs timeout */, 1);
     if (res) {
-        {
-            lock_guard<mutex> lg(console_mutex);
-
-            fprintf(stderr, "INQUIRY do_scsi_pt() submission error\n");
-            res = pt_err(res);
-        }
+        fprintf(stderr, "INQUIRY do_scsi_pt() submission error\n");
+        res = pt_err(res);
         goto err;
     }
     cat = get_scsi_pt_result_category(ptp);
     if (SCSI_PT_RESULT_GOOD != cat) {
-        {
-            lock_guard<mutex> lg(console_mutex);
-
-            fprintf(stderr, "INQUIRY do_scsi_pt() category problem\n");
-            res = pt_cat_no_good(cat, ptp, sense_buffer);
-        }
+        fprintf(stderr, "INQUIRY do_scsi_pt() category problem\n");
+        res = pt_cat_no_good(cat, ptp, sense_buffer);
         goto err;
     }
 
@@ -386,26 +386,27 @@ err:
     if (ptp)
         destruct_scsi_pt_obj(ptp);
     close(sg_fd);
-    return 0;
+    return res;
 }
 
 static void
 work_thread(const char * dev_name, unsigned int lba, int id, int block,
-            int excl, int num, int wait_ms)
+            int excl, bool all_readers, int num, int wait_ms)
 {
     unsigned int thr_odd_count = 0;
     unsigned int thr_ebusy_count = 0;
     int k, res;
+    int reader = ((id > 0) || (all_readers));
 
     {
         lock_guard<mutex> lg(console_mutex);
 
         cerr << "Enter work_thread id=" << id << " excl=" << excl << " block="
-             << block << endl;
+             << block << " reader=" << reader << endl;
     }
     for (k = 0; k < num; ++k) {
-        res = do_rd_inc_wr_twice(dev_name, lba, block, excl, wait_ms,
-                                 thr_ebusy_count);
+        res = do_rd_inc_wr_twice(dev_name, reader, lba, block, excl,
+                                 wait_ms, thr_ebusy_count);
         if (res < 0)
             break;
         if (res)
@@ -415,8 +416,8 @@ work_thread(const char * dev_name, unsigned int lba, int id, int block,
         lock_guard<mutex> lg(console_mutex);
 
         if (k < num)
-            cerr << "thread id=" << id << " FAILed at iteration: " << k <<
-                    '\n';
+            cerr << "thread id=" << id << " FAILed at iteration: " << k
+                 << '\n';
         else
             cerr << "thread id=" << id << " normal exit" << '\n';
     }
@@ -438,6 +439,7 @@ main(int argc, char * argv[])
     int force = 0;
     unsigned int lba = DEF_LBA;
     int num_per_thread = DEF_NUM_PER_THREAD;
+    bool all_readers = false;
     int num_threads = DEF_NUM_THREADS;
     int wait_ms = DEF_WAIT_MS;
     int exclude_o_excl = 0;
@@ -470,7 +472,9 @@ main(int argc, char * argv[])
                 num_threads = atoi(argv[k]);
             else
                 break;
-        } else if (0 == memcmp("-V", argv[k], 2)) {
+        } else if (0 == memcmp("-R", argv[k], 2))
+            all_readers = true;
+        else if (0 == memcmp("-V", argv[k], 2)) {
             printf("%s version: %s\n", util_name, version_str);
             return 0;
         } else if (0 == memcmp("-w", argv[k], 2)) {
@@ -523,10 +527,11 @@ main(int argc, char * argv[])
         vector<thread *> vt;
 
         for (k = 0; k < num_threads; ++k) {
-            int excl = ((0 == k) && exclude_o_excl) ? 0 : 1;
+            int excl = ((0 == k) && (! exclude_o_excl)) ? 1 : 0;
 
             thread * tp = new thread {work_thread, dev_name, lba, k, block,
-                                      excl, num_per_thread, wait_ms};
+                                      excl, all_readers, num_per_thread,
+                                      wait_ms};
             vt.push_back(tp);
         }
 

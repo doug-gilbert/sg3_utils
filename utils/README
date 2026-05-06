@@ -6,7 +6,7 @@ This directory contains these utilities:
     an ASCII interpretation to the right of each line. See its
     hxascdmp(1) man page.
   - sg_chk_asc and tst_sg_lib: are no longer here, they have been moved
-    to the 'testing' directory (a sibling of this directory).
+    to the 'ttesting' directory (a sibling of this directory).
 
 
 By default, the Makefile only builds the hxascdmp utility. The 'Makefile'
@@ -21,4 +21,4 @@ installing it, like this:
     man ./hxascdmp.1
 
 Douglas Gilbert
-4th May 2026
+5th May 2026

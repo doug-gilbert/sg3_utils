@@ -321,15 +321,15 @@ sg_reassign (called "reassign_addr.txt"). There are several scripts
 for 'sg_senddiag -pf -raw=-' that will put some SAS disk phys into
 a "compliant jitter tolerance pattern" (CJTPAT).
 
-The 'testing' subdirectory contains source and a Makefiles to test
+The 'ttesting' subdirectory contains source and a Makefiles to test
 kernel pass-through and associated drivers, mainly for Linux. There is
 both C code (with the extension ".c") and C++ code (with the extension
 ".cpp"). There is a "Makefile" to build the C + C++ code. The Makefile
 depends on some object files from the "lib" subdirectory. So a sequence
 like this may be required prior to invoking make: "cd <top_of_package> ;
-./configure ; cd lib ; make ; cd ../testing".
+./configure ; cd lib ; make ; cd ../ttesting".
 
-Here is a list in alphabetical order of utilities found in the 'testing'
+Here is a list in alphabetical order of utilities found in the 'ttesting'
 subdirectory:
   - bsg_queue_tst, sgh_dd (C++), sg_iovec_tst, sg_queue_tst, sg_sense_tst,
     sg_tst_async (C++), sg_tst_context (C++), sg_tst_excl (C++),
@@ -570,4 +570,4 @@ See https://sg.danny.cz/sg/tools.html
 
 
 Douglas Gilbert         dgilbert@interlog.com
-17th July 2023
+5th May 2026

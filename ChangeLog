@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20260504] [svn: r1104]
+Changelog for pre-release sg3_utils-1.49 [20260505] [svn: r1106]
   - AIX partial support: needs getopt.h header which
     surprisingly is non-standard. Keep hidden version in
     lib directory and copy to include dir as needed
@@ -56,9 +56,12 @@ Changelog for pre-release sg3_utils-1.49 [20260504] [svn: r1104]
   - lib/sgj_haj_*() functions: tweak hex_haj argument meaning
   - scripts/00-scsi-sg3_config.rules : apply
     https://github.com/doug-gilbert/sg3_utils/pull/42
-  - testing/sg_chk_inq_vd.c: test internal table against T10
+  - rename testing directory to ttesting to avoid clash with
+    cmake's CTEST that creates a Testing directory
+  - ttesting/sg_chk_inq_vd.c: test internal table against T10
     version descriptor file
   - check/clean against gcc-16 -fanalyzer; clang-22 --analyze
+  - debian build: modernize with dh sequencer [github PR# 73]
 
 Changelog for released sg3_utils-1.48 [20230801] [svn: r1042]
   - decoding utilities: add --json[=JO] and --js-file=JFN

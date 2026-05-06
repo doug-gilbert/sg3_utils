@@ -11,11 +11,11 @@ bs=512
 # in bytes. Large copies are done a segment at a time.
 bpt=64
 # Other suitable dd clones are sg_dd (in main sg3_utils src directory
-# and ddpt in a package of that name. sgh_dd is in the testing
+# and ddpt in a package of that name. sgh_dd is in the ttesting
 # directory of the sg3_utils package and needs to be made by hand
 # (e.g. 'cd sg3_utils_src ; ./bootstrap ; ./configure ; make ;
-#        cd testing ; make sgh_dd'
-## dd_clone="/home/dougg/scsi/sg3_utils/svn/testing/sgh_dd"
+#        cd ttesting ; make sgh_dd'
+## dd_clone="/home/dougg/scsi/sg3_utils/svn/ttesting/sgh_dd"
 dd_clone="sg_dd"
 ## dd_clone="ddpt"
 

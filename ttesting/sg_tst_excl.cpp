@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2022 Douglas Gilbert.
+ * Copyright (c) 2013-2026 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,7 +73,7 @@
 #include "sg_io_linux.h"
 #include "sg_unaligned.h"
 
-static const char * version_str = "1.14 20220425";
+static const char * version_str = "1.15 20260505";
 static const char * util_name = "sg_tst_excl";
 
 /* This is a test program for checking O_EXCL on open() works. It uses
@@ -96,7 +96,7 @@ static const char * util_name = "sg_tst_excl";
  * object files in the lib directory can be built with:
  *   cd <sg3_utils> ; ./configure ; cd lib; make
  * Then:
- *   cd ../testing
+ *   cd ../ttesting
  *   make sg_tst_excl
  *
  * Currently this utility is Linux only and assumes the SG_IO v3 interface
