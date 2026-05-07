@@ -330,42 +330,61 @@ decode_rdac_vpd_c0(uint8_t * buff, int len)
     int memsize;
     char name[65];
 
-    if (len < 3) {
+    if (len < 8) {
         pr2serr("Hardware Version VPD page length too short=%d\n", len);
         return;
     }
-    if (buff[4] != 'h' && buff[5] != 'w' && buff[6] != 'r') {
+    if (buff[4] != 'h' || buff[5] != 'w' || buff[6] != 'r') {
         pr2serr("Invalid page identifier %c%c%c%c, decoding not possible.\n",
                 buff[4], buff[5], buff[6], buff[7]);
         return;
     }
-    printf("  Number of channels: %x\n", buff[8]);
-    memsize = sg_get_unaligned_be16(buff + 10);
-    printf("  Processor Memory Size: %d\n", memsize);
-    memset(name, 0, 65);
-    memcpy(name, buff + 16, 64);
-    printf("  Board Name: %s\n", name);
-    memset(name, 0, 65);
-    memcpy(name, buff + 80, 16);
-    printf("  Board Part Number: %s\n", name);
-    memset(name, 0, 65);
-    memcpy(name, buff + 96, 12);
-    printf("  Schematic Number: %s\n", name);
-    memset(name, 0, 65);
-    memcpy(name, buff + 108, 4);
-    printf("  Schematic Revision Number: %s\n", name);
-    memset(name, 0, 65);
-    memcpy(name, buff + 112, 16);
-    printf("  Board Serial Number: %s\n", name);
-    memset(name, 0, 65);
-    memcpy(name, buff + 144, 8);
-    printf("  Date of Manufacture: %s\n", name);
-    memset(name, 0, 65);
-    memcpy(name, buff + 152, 2);
-    printf("  Board Revision: %s\n", name);
-    memset(name, 0, 65);
-    memcpy(name, buff + 154, 4);
-    printf("  Board Identifier: %s\n", name);
+    if (len > 8)
+        printf("  Number of channels: %x\n", buff[8]);
+    if (len > 11) {
+        memsize = sg_get_unaligned_be16(buff + 10);
+        printf("  Processor Memory Size: %d\n", memsize);
+    }
+    if (len >= 80) {
+        memset(name, 0, 65);
+        memcpy(name, buff + 16, 64);
+        printf("  Board Name: %s\n", name);
+    }
+    if (len >= 96) {
+        memset(name, 0, 65);
+        memcpy(name, buff + 80, 16);
+        printf("  Board Part Number: %s\n", name);
+    }
+    if (len >= 108) {
+        memset(name, 0, 65);
+        memcpy(name, buff + 96, 12);
+        printf("  Schematic Number: %s\n", name);
+    }
+    if (len >= 112) {
+        memset(name, 0, 65);
+        memcpy(name, buff + 108, 4);
+        printf("  Schematic Revision Number: %s\n", name);
+    }
+    if (len >= 128) {
+        memset(name, 0, 65);
+        memcpy(name, buff + 112, 16);
+        printf("  Board Serial Number: %s\n", name);
+    }
+    if (len >= 152) {
+        memset(name, 0, 65);
+        memcpy(name, buff + 144, 8);
+        printf("  Date of Manufacture: %s\n", name);
+    }
+    if (len >= 154) {
+        memset(name, 0, 65);
+        memcpy(name, buff + 152, 2);
+        printf("  Board Revision: %s\n", name);
+    }
+    if (len >= 158) {
+        memset(name, 0, 65);
+        memcpy(name, buff + 154, 4);
+        printf("  Board Identifier: %s\n", name);
+    }
 
     return;
 }
@@ -376,11 +395,11 @@ decode_rdac_vpd_c1(uint8_t * buff, int len)
     int i, n, v, r, m, p, d, y, num_part;
     char part[5];
 
-    if (len < 3) {
+    if (len < 14) {
         pr2serr("Firmware Version VPD page length too short=%d\n", len);
         return;
     }
-    if (buff[4] != 'f' && buff[5] != 'w' && buff[6] != 'r') {
+    if (buff[4] != 'f' || buff[5] != 'w' || buff[6] != 'r') {
         pr2serr("Invalid page identifier %c%c%c%c, decoding not possible.\n",
                 buff[4], buff[5], buff[6], buff[7]);
         return;
@@ -526,7 +545,7 @@ decode_rdac_vpd_c8(uint8_t * buff, int len)
     int label_len;
     char uuid[33];
     int uuid_len;
-    uint8_t port_id[128];
+    uint8_t port_id[224]; /* RFC 3720 iSCSI names can be up to 223 bytes */
     int n;
 
     if (len < 0xab) {
@@ -541,11 +560,14 @@ decode_rdac_vpd_c8(uint8_t * buff, int len)
     }
 
     uuid_len = buff[11];
+    if (uuid_len > 16)
+        uuid_len = 16;
 
     for (i = 0, c = uuid; i < uuid_len; i++) {
         sprintf(c,"%02x",buff[12 + i]);
         c += 2;
     }
+    *c = '\0';
 
     printf("  Volume Unique Identifier: %s\n", uuid);
 #ifndef SG_LIB_MINGW
@@ -559,20 +581,27 @@ decode_rdac_vpd_c8(uint8_t * buff, int len)
 #endif
     memset(label, 0, 61);
     label_len = buff[28];
+    if (label_len > (int)sizeof(label))
+        label_len = (int)sizeof(label);
     for(i = 0; i < (label_len - 1); ++i)
         *(label + i) = buff[29 + (2 * i) + 1];
     printf("  Volume User Label: %s\n", label);
 
     uuid_len = buff[89];
+    if (uuid_len > 16)
+        uuid_len = 16;
 
     for (i = 0, c = uuid; i < uuid_len; i++) {
         sprintf(c,"%02x",buff[90 + i]);
         c += 2;
     }
+    *c = '\0';
 
     printf("  Storage Array Unique Identifier: %s\n", uuid);
     memset(label, 0, 61);
     label_len = buff[106];
+    if (label_len > (int)sizeof(label))
+        label_len = (int)sizeof(label);
     for(i = 0; i < (label_len - 1); ++i)
         *(label + i) = buff[107 + (2 * i) + 1];
     printf("  Storage Array User Label: %s\n", label);
@@ -586,7 +615,7 @@ decode_rdac_vpd_c8(uint8_t * buff, int len)
 
     /* Initiator transport ID */
     if ( buff[10] & 0x01 ) {
-        memset(port_id, 0, 128);
+        memset(port_id, 0, sizeof(port_id));
         printf("  Transport Protocol: ");
         switch (buff[175] & 0x0F) {
         case TPROTO_FCP: /* FC */
@@ -602,7 +631,12 @@ decode_rdac_vpd_c8(uint8_t * buff, int len)
         case TPROTO_ISCSI: /* iSCSI */
             printf("iSCSI\n");
             n = sg_get_unaligned_be32(buff + 177);
+            if (n > (int)sizeof(port_id) - 1)
+                n = (int)sizeof(port_id) - 1;
+            if (n > len - 179)
+                n = len - 179;
             memcpy(port_id, &buff[179], n);
+            port_id[n] = '\0';
             n = 179 + n;
             break;
         case TPROTO_SAS: /* SAS */
@@ -616,7 +650,7 @@ decode_rdac_vpd_c8(uint8_t * buff, int len)
 
         printf("  Initiator Port Identifier: %s\n", port_id);
         if ( buff[10] & 0x02 ) {
-            memset(port_id, 0, 128);
+            memset(port_id, 0, sizeof(port_id));
             memcpy(port_id, &buff[n], 8);
             printf("  Supplemental Vendor ID: %s\n", port_id);
         }
