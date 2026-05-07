@@ -875,7 +875,7 @@ findremapped()
     # If udev events updated the disks already, but the multipath device isn't update
     # check for old devices to make sure we found remapped luns
     if [ -n "$mp_enable" ] && [ $remapped -eq 0 ]; then
-      findmultipath "$sddev" $id_serial
+      findmultipath "$sddev" "$id_serial"
       if [ $? -eq 1 ] ; then
         remapped=1
       fi
