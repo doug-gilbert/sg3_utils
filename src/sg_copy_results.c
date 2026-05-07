@@ -126,8 +126,14 @@ scsi_failed_segment_details(uint8_t *rcBuff, unsigned int rcBuffLen)
         return;
     }
     printf("Receive copy results (failed segment details):\n");
+    if (rcBuffLen < 60) {
+        pr2serr("  <<not enough buffer for sense data>>\n");
+        return;
+    }
     printf("    Extended copy command status: %d\n", rcBuff[56]);
     senseLen = sg_get_unaligned_be16(rcBuff + 58);
+    if (senseLen > (int)(rcBuffLen - 60))
+        senseLen = (int)(rcBuffLen - 60);
     sg_get_sense_str("    ", &rcBuff[60], senseLen, 0, 1024, senseBuff);
     printf("%s", senseBuff);
 }
