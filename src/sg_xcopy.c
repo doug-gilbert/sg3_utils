@@ -797,15 +797,15 @@ scsi_operating_parameter(struct xcopy_fp_t *xfp, int is_target)
                     1 << rcBuff[38]);
         if (rcBuff[39] > 30)
             pr2serr("    Held data granularity: 2**%u bytes\n",
-                    1 << rcBuff[39]);
+                    rcBuff[39]);
         else
             pr2serr("    Held data granularity: %u bytes\n", 1 << rcBuff[39]);
 
         pr2serr("    Implemented descriptor list:\n");
     }
-    xfp->min_bytes = 1 << rcBuff[37];
+    xfp->min_bytes = (rcBuff[37] < 32) ? 1U << rcBuff[37] : 0;
 
-    for (n = 0; n < rcBuff[43]; n++) {
+    for (n = 0; n < rcBuff[43] && (44 + n) < rcBuffLen; n++) {
         switch(rcBuff[44 + n]) {
         case 0x00: /* copy block to stream device */
             if (!is_target && (ftype & FT_BLOCK))
