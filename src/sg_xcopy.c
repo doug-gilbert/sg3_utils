@@ -1,7 +1,7 @@
 /* A utility program for copying files. Similar to 'dd' but using
  * the 'Extended Copy' command.
  *
- *  Copyright (c) 2011-2023 Hannes Reinecke, SUSE Labs
+ *  Copyright (c) 2011-2026 Hannes Reinecke, SUSE Labs
  *
  *  Largely taken from 'sg_dd', which has the
  *
@@ -74,7 +74,7 @@
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "0.77 20231015";
+static const char * version_str = "0.78 20260508";
 
 #define ME "sg_xcopy: "
 

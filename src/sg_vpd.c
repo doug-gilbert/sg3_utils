@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2023 Douglas Gilbert.
+ * Copyright (c) 2006-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -44,7 +44,7 @@
 
 */
 
-static const char * version_str = "2.02 20231204";  /* spc6r11 + sbc5r06 */
+static const char * version_str = "2.03 20260508";  /* spc6r11 + sbc5r06 */
 
 #define MY_NAME "sg_vpd"
 

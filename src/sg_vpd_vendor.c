@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2023 Douglas Gilbert.
+ * Copyright (c) 2006-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -1069,7 +1069,7 @@ decode_vpd_d2_hit(uint8_t * b, int blen)
    unsupported page */
 int
 svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
-		   sgj_opaque_p jop, int off)
+                   sgj_opaque_p jop, int off)
 {
     bool as_json;
     int len, pdt, pn, dhex;
@@ -1084,7 +1084,7 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
     as_json = jsp->pr_as_json;
     dhex = op->do_hex;
     if (dhex < 0)
-	dhex = -dhex;
+        dhex = -dhex;
     pn = op->vpd_pn;
 
     switch (pn) {       /* VPD codes that we support vendor pages for */
@@ -1137,9 +1137,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xc0:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_SEAGATE == op->vend_prod_num)
                 decode_firm_vpd_c0_sea(rp, len);
@@ -1163,9 +1163,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xc1:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_SEAGATE == op->vend_prod_num)
                 decode_date_code_vpd_c1_sea(rp, len);
@@ -1180,9 +1180,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xc2:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_RDAC == op->vend_prod_num) {
                 if (as_json)
@@ -1196,9 +1196,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xc3:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_SEAGATE == op->vend_prod_num)
                 decode_dev_beh_vpd_c3_sea(rp, len);
@@ -1211,9 +1211,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xc4:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_RDAC == op->vend_prod_num)
                 decode_rdac_vpd_c4(rp, len);
@@ -1224,9 +1224,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xc5:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_HP_LTO == op->vend_prod_num)
                 decode_hp_lto_vpd_cx(rp, len, pn);
@@ -1235,9 +1235,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xc8:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_RDAC == op->vend_prod_num)
                 decode_rdac_vpd_c8(rp, len);
@@ -1246,9 +1246,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xc9:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_RDAC == op->vend_prod_num) {
                 if (as_json)
@@ -1260,9 +1260,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xca:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_RDAC == op->vend_prod_num)
                 decode_rdac_vpd_ca(rp, len);
@@ -1271,9 +1271,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xd0:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_RDAC == op->vend_prod_num)
                 decode_rdac_vpd_d0(rp, len);
@@ -1282,9 +1282,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xd1:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_WDC_HITACHI == op->vend_prod_num)
                 decode_vpd_d1_hit(rp, len);
@@ -1293,9 +1293,9 @@ svpd_decode_vendor(struct sg_pt_base * ptvp, struct opts_t * op,
             break;
         case 0xd2:
             if (dhex > 0) {
-		if (dhex > 2)
-		    named_hhh_output(NULL, rp, len, op);
-		else
+                if (dhex > 2)
+                    named_hhh_output(NULL, rp, len, op);
+                else
                     hex2stdout(rp, len, no_ascii_4hex(op));
             } else if (VPD_VP_WDC_HITACHI == op->vend_prod_num)
                 decode_vpd_d2_hit(rp, len);

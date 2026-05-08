@@ -124,7 +124,7 @@
 #define _GNU_SOURCE 1
 #endif
 
-static const char * version_str = "2.47 [20260430]";
+static const char * version_str = "2.48 [20260508]";
 
 #include <stdio.h>
 #include <string.h>
