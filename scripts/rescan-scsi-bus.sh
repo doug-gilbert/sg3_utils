@@ -1362,9 +1362,9 @@ if [ -w /sys/module/scsi_mod/parameters/default_dev_flags ] && [ $scan_flags != 
     unset OLD_SCANFLAGS
   fi
 fi
-DMSETUP=$(version -s dmsetup)
+DMSETUP=$(command -v dmsetup)
 [ -z "$DMSETUP" ] && flush= && mp_enable=
-MULTIPATH=$(version -s multipath)
+MULTIPATH=$(command -v multipath)
 [ -z "$MULTIPATH" ] && flush= && mp_enable=
 
 echo -n "Scanning SCSI subsystem for new devices"
