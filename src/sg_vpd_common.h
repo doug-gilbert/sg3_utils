@@ -2,7 +2,7 @@
 #define SG_VPD_COMMON_H
 
 /*
- * Copyright (c) 2022-2023 Douglas Gilbert.
+ * Copyright (c) 2022-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -45,6 +45,7 @@ extern "C" {
 #define VPD_DEVICE_CONSTITUENTS 0x8b
 #define VPD_CFA_PROFILE_INFO 0x8c
 #define VPD_POWER_CONSUMPTION  0x8d
+#define VPD_NVME_INFO 0x8e              /* SNT */
 #define VPD_3PARTY_COPY 0x8f            /* 3PC, XCOPY, SPC-5, SBC-4 */
 #define VPD_PROTO_LU 0x90
 #define VPD_PROTO_PORT 0x91
@@ -115,7 +116,8 @@ extern "C" {
 #define VPD_V_HIT_PG_D2 0xd2
 
 #ifndef SG_NVME_VPD_NICR
-#define SG_NVME_VPD_NICR 0xde   /* NVME Identify Controller Response */
+/* NVME Identify Controller Response (sg3_utils pre SNT) */
+#define SG_NVME_VPD_NICR 0xde
 #endif
 
 #define DEF_ALLOC_LEN 252
@@ -209,7 +211,9 @@ void decode_power_condition(const uint8_t * buff, int len, struct opts_t * op,
 int filter_json_dev_ids(uint8_t * buff, int len, int m_assoc,
                         struct opts_t * op, sgj_opaque_p jap);
 void decode_ata_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
-                        sgj_opaque_p jop);
+                         sgj_opaque_p jop);
+void decode_nvme_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
+                          sgj_opaque_p jop);
 void decode_feature_sets_vpd(const uint8_t * buff, int len, struct opts_t * op,
                              sgj_opaque_p jap);
 void decode_dev_constit_vpd(const uint8_t * buff, int len,
@@ -261,8 +265,8 @@ decode_tapealert_supported_vpd(const uint8_t * buff, int len,
  * series of standards. It is currently given a identifier in the vendor
  * VPD space: 0xde . If T10 accepts this idea then maybe it could be
  * given a VPD identifier of 0x99 (0x10 more than the ATA Info VPD page). */
-void decode_snt_nvme_info_vpd(uint8_t * buff, int len, struct opts_t * op,
-                              sgj_opaque_p jop);
+void decode_nicr_vpd(uint8_t * buff, int len, struct opts_t * op,
+                     sgj_opaque_p jop);
 
 /* Share some vendor specific VPD pages as well */
 void
@@ -312,6 +316,7 @@ extern const char * eid_vpdp;
 extern const char * mpp_vpdp;
 extern const char * sp_vpdp;
 extern const char * ai_vpdp;
+extern const char * nvmei_vpdp;
 extern const char * pc_vpdp;
 extern const char * dc_vpdp;
 extern const char * cpi_vpdp;

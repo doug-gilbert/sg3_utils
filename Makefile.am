@@ -12,7 +12,7 @@ EXTRA_DIST = \
 	COVERAGE \
 	CREDITS \
 	BSD_LICENSE \
-	build_debian.sh \
+	debian_build.sh \
 	README.details \
 	README.freebsd \
 	README.iscsi \

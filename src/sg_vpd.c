@@ -44,7 +44,7 @@
 
 */
 
-static const char * version_str = "2.03 20260508";  /* spc6r11 + sbc5r06 */
+static const char * version_str = "2.05 20260521";  /* spc7r05 + sbc6r02 */
 
 #define MY_NAME "sg_vpd"
 
@@ -155,6 +155,7 @@ static const struct svpd_values_name_t standard_vpd_pg[] = {
     {VPD_MODE_PG_POLICY, 0, -1, "mpp", "Mode page policy"},
     {SG_NVME_VPD_NICR, 0, -1, "nicr",
      "NVMe Identify Controller Response (sg3_utils for SNT)"},
+    {VPD_NVME_INFO, 0, -1, "nvmei", "NVMe information (SNT)"},
     {VPD_OSD_INFO, 0, 0x11, "oi", "OSD information"},
     {VPD_POWER_CONDITION, 0, -1, "pc", "Power condition"},/* "po" in sg_inq */
     {VPD_POWER_CONSUMPTION, 0, -1, "psm", "Power consumption"},
@@ -1706,6 +1707,27 @@ svpd_decode_t10(struct sg_pt_base * ptvp, struct opts_t * op,
             return 0;
         }
         break;
+    case VPD_NVME_INFO:    /* 0x8e ["nvmei"] */
+        np = psm_vpdp;
+        if (allow_name)
+            sgj_pr_hr(jsp, "%s%s\n", pre, np);
+        res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
+        if (0 == res) {
+            if (! allow_name && allow_if_found)
+                sgj_pr_hr(jsp,  "%s%s\n", pre, np);
+            if (op->do_raw)
+                dStrRaw(rp, len);
+            else {
+                if (vb || long_notquiet)
+                    sgj_pr_hr(jsp, "   [PQual=%d  Peripheral device type: "
+                              "%s]\n", pqual, pdt_str);
+                if (as_json)
+                    jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
+                decode_nvme_info_vpd(rp, len, op, jo2p);
+            }
+            return 0;
+        }
+        break;
     case VPD_3PARTY_COPY:   /* 0x8f */
         np = tpc_vpdp;       /* ["tpc"] */
         if (allow_name)
@@ -2302,7 +2324,7 @@ svpd_decode_t10(struct sg_pt_base * ptvp, struct opts_t * op,
                               "%s]\n", pqual, pdt_str);
                 if (as_json)
                     jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
-                decode_snt_nvme_info_vpd(rp, len, op, jo2p);
+                decode_nicr_vpd(rp, len, op, jo2p);
             }
         }
         break;

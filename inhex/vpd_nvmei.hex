@@ -1,0 +1,24 @@
+#
+# The VPD responses in this file are simulated for the NVMe Information
+# VPD page (using the ATA Information VPD page as a template).
+# Possible invocation:
+#        sg_vpd -p nvmei /dev/sg3 -HHHH
+
+# NVMe information VPD page (208 bytes long)
+00 8e 00 c0 00 00 00 00  6c 69 6e 75 78 20 20 20
+53 4e 54 20 73 63 73 69  5f 64 65 62 75 67 20 20
+31 32 33 34 31 32 33 34  35 36 37 38 39 30 20 20
+20 20 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00  00 00 00 00 53 4e 00 00
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+46 52 20 20 00 00 00 00  01 00 02 01 03 00 0a 01
+54 53 38 33 30 30 33 31  34 12 00 0f 11 22 33 44
+
+# offet 128:
+55 66 77 88 00 ff ee dd  cc bb aa 99 88 77 66 55
+44 33 22 11 00 00 11 11  22 22 33 33 44 44 55 55
+66 66 77 77 01 23 02 34  03 45 04 56 09 00 00 00
+00 00 00 00 04 00 00 00  03 00 00 00 02 00 00 00
+
+# offet 192:
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00

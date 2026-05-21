@@ -55,7 +55,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.59 20260323";  /* spc6r11, sbc5r06 */
+static const char * version_str = "2.61 20260521";  /* spc7r05, sbc6r02 */
 
 #define MY_NAME "sg_inq"
 
@@ -170,7 +170,8 @@ static const struct svpd_values_name_t t10_vpd_pg[] = {
     {VPD_MAN_NET_ADDR, 0, -1, "mna", "Management network addresses"},
     {VPD_MODE_PG_POLICY, 0, -1, "mpp", "Mode page policy"},
     {SG_NVME_VPD_NICR, 0, -1, "nicr",
-     "NVMe Identify Controller Response (sg3_utils for SNT)"},
+     "NVMe Identify Controller Response (sg3_utils before SNT)"},
+    {VPD_NVME_INFO, 0, -1, "nvmei", "NVMe Informationn (SNT)"},
     {VPD_POWER_CONDITION, 0, -1, "po", "Power condition"},/* "pc" in sg_vpd */
     {VPD_POWER_CONSUMPTION, 0, -1, "psm", "Power consumption"},
     {VPD_PROTO_LU, 0, -1, "pslu", "Protocol-specific logical unit "
@@ -248,6 +249,8 @@ static const struct option long_options[] = {
     {"vpd", no_argument, 0, 'e'},
     {0, 0, 0, 0},
 };
+
+static const char * vpd_inq = "VPD INQUIRY";
 
 
 static void
@@ -2784,9 +2787,9 @@ vpd_mainly_hex(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     rp = rsp_buff + off;
     if ((! op->do_raw) && (dhex < 3)) {
         if (dhex > 0)
-            printf("VPD INQUIRY, page code=0x%.2x:\n", op->vpd_pn);
+            printf("%s, page code=0x%.2x:\n", vpd_inq, op->vpd_pn);
         else
-            sgj_pr_hr(jsp, "VPD INQUIRY, page code=0x%.2x:\n", op->vpd_pn);
+            sgj_pr_hr(jsp, "%s, page code=0x%.2x:\n", vpd_inq, op->vpd_pn);
     }
     if (NULL == ptvp) {
         len = sg_get_unaligned_be16(rp + 2) + 4;
@@ -2900,7 +2903,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_SUPPORTED_VPDS:            /* 0x0  ["sv"] */
         np = svp_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -2920,7 +2923,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_UNIT_SERIAL_NUM:           /* 0x80  ["sn"] */
         np = usn_vpdp;
         if (! op->do_raw && ! op->do_export && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -2967,7 +2970,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_DEVICE_ID:         /* 0x83  ["di"] */
         np = "Device Identification VPD page";
         if (! op->do_raw && ! op->do_export && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -2989,7 +2992,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_SOFTW_INF_ID:      /* 0x84  ["sii"] */
         np = "Software interface identification VPD page";
         if (! op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3007,7 +3010,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_MAN_NET_ADDR:    /* 0x85 ["mna"] */
         np = mna_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3028,7 +3031,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_EXT_INQ:           /* 0x86  ["ei"] */
         np = eid_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s page\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3062,7 +3065,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_MODE_PG_POLICY:            /*  0x87  ["mpp"] */
         np = mpp_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3080,7 +3083,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_SCSI_PORTS:        /* 0x88  ["sp"] */
         np = sp_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3098,7 +3101,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_ATA_INFO:          /* 0x89  ["ai"] */
         np = ai_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3122,7 +3125,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_POWER_CONDITION:   /* 0x8a   ["pc"] */
         np = pc_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3137,7 +3140,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_DEVICE_CONSTITUENTS:       /* 0x8b  ["dc"] */
         np = dc_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3173,7 +3176,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_POWER_CONSUMPTION:   /* 0x8d   ["psm"] */
         np = psm_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3188,10 +3191,25 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
             decode_power_consumption(rp, len, op, jap);
         }
         break;
+    case VPD_NVME_INFO:   /* 0x8e   ["nvmei"] */
+        np = nvmei_vpdp;
+        if (!op->do_raw && (dhex < 3))
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
+        res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
+        if (res)
+            break;
+        if (op->do_raw)
+            dStrRaw((const char *)rp, len);
+        else {
+            if (as_json)
+                jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
+            decode_nvme_info_vpd(rp, len, op, jo2p);
+        }
+        break;
     case VPD_3PARTY_COPY:       /* 0x8f  ["tpc"] */
         np = tpc_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3209,7 +3227,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_PROTO_LU:          /* 0x90  ["pslu"] */
         np = pslu_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3227,7 +3245,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_PROTO_PORT:        /* 0x91  ["pspo"] */
         np = pspo_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3245,7 +3263,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
     case VPD_SCSI_FEATURE_SETS:         /* 0x92  ["sfs"] */
         np = sfs_vpdp;
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s\n", np);
+            sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res)
             break;
@@ -3298,7 +3316,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s\n", vpd_inq, np);
             }
             if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3307,7 +3325,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
             else if (sad || oi)
                 decode_b0_vpd(rp, len, op, jop);
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb0\n");
+            pr2serr("%s: page=0xb0\n", vpd_inq);
         break;
     case 0xb1:  /* VPD pages in B0h to BFh range depend on pdt */
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3339,14 +3357,14 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 break;
             default:
                 np = NULL;
-                printf("VPD INQUIRY: page=0x%x, pdt=0x%x\n", 0xb1, pdt);
+                printf("%s: page=0x%x, pdt=0x%x\n", vpd_inq,  0xb1, pdt);
                 break;
             }
             if (dhex < 3) {
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3355,7 +3373,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
             else
                 decode_b1_vpd(rp, len, op, jo2p);
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb1\n");
+            pr2serr("%s: page=0xb1\n", vpd_inq);
         break;
     case 0xb2:  /* VPD pages in B0h to BFh range depend on pdt */
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3387,7 +3405,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3398,7 +3416,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
             else
                 return vpd_mainly_hex(ptvp, op, jo2p, off);
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb2\n");
+            pr2serr("%s: page=0xb2\n", vpd_inq);
         break;
     case 0xb3:
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3428,7 +3446,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3438,7 +3456,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 decode_b3_vpd(rp, len, op, jo2p);
             return 0;
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb3\n");
+            pr2serr("%s: page=0xb3\n", vpd_inq);
         break;
     case 0xb4:
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3470,7 +3488,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3488,7 +3506,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 return vpd_mainly_hex(ptvp, op, jo2p, off);
             return 0;
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb4\n");
+            pr2serr("%s: page=0xb4\n", vpd_inq);
         break;
     case 0xb5:
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3520,7 +3538,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3535,7 +3553,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 return vpd_mainly_hex(ptvp, op, jo2p, off);
             return 0;
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb5\n");
+            pr2serr("%s: page=0xb5\n", vpd_inq);
         break;
     case 0xb6:
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3561,7 +3579,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3571,7 +3589,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 return vpd_mainly_hex(ptvp, op, jo2p, off);
             return 0;
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb6\n");
+            pr2serr("%s: page=0xb6\n", vpd_inq);
         break;
     case 0xb7:
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3597,7 +3615,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3607,7 +3625,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 return vpd_mainly_hex(ptvp, op, jo2p, off);
             return 0;
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb7\n");
+            pr2serr("%s: page=0xb7\n", vpd_inq);
         break;
     case 0xb8:
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3633,7 +3651,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json) {
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3646,7 +3664,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 return vpd_mainly_hex(ptvp, op, jo2p, off);
             return 0;
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb8\n");
+            pr2serr("%s: page=0xb8\n", vpd_inq);
         break;
     case 0xb9:
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3672,7 +3690,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json) {
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3685,7 +3703,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 return vpd_mainly_hex(ptvp, op, jo2p, off);
             return 0;
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xb9\n");
+            pr2serr("%s: page=0xb9\n", vpd_inq);
         break;
     case 0xba:
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
@@ -3711,7 +3729,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 if (NULL == np)
                     sgj_pr_hr(jsp, "%s=0x%x, pdt=0x%x:\n", vpd_pg_s, pn, pdt);
                 else
-                    sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+                    sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             }
             if (as_json) {
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
@@ -3724,14 +3742,14 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 return vpd_mainly_hex(ptvp, op, jo2p, off);
             return 0;
         } else if (! op->do_raw)
-            pr2serr("VPD INQUIRY: page=0xba\n");
+            pr2serr("%s: page=0xba\n", vpd_inq);
         break;
     /* Vendor specific VPD pages (>= 0xc0) */
     case VPD_UPR_EMC:   /* 0xc0 */
         np = "Unit path report VPD page";
         ep = "(EMC)";
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+            sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
         res = vpd_fetch_page(ptvp, rp, pn, -1, qt, vb, &len);
         if (res)
             break;
@@ -3747,7 +3765,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
         np = "Software Version VPD page";
         ep = "(RDAC)";
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+            sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
         res = vpd_fetch_page(ptvp, rp, pn, -1, qt, vb, &len);
         if (res)
             break;
@@ -3763,7 +3781,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
         np = "Volume access control VPD page";
         ep = "(RDAC)";
         if (!op->do_raw && (dhex < 3))
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+            sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
         res = vpd_fetch_page(ptvp, rp, pn, -1, qt, vb, &len);
         if (res)
             break;
@@ -3781,7 +3799,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
         ep = "(sg3_utils)";
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
         if (res) {
-            sgj_pr_hr(jsp, "VPD INQUIRY: %s %s\n", np, ep);
+            sgj_pr_hr(jsp, "%s: %s %s\n", vpd_inq, np, ep);
             break;
         }
         if (op->do_raw) {
@@ -3790,7 +3808,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
         } else {
             if (as_json)
                 jo2p = sg_vpd_js_hdr(jsp, jop, np, rp);
-            decode_snt_nvme_info_vpd(rp, len, op, jo2p);
+            decode_nicr_vpd(rp, len, op, jo2p);
         }
         break;
     default:
@@ -3801,7 +3819,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
         if ((pn > 0) && (pn < 0x80)) {
             np = "ASCII information VPD page";
             if (!op->do_raw && (dhex < 3))
-                sgj_pr_hr(jsp, "VPD INQUIRY: %s, FRU code=0x%x\n", np, pn);
+                sgj_pr_hr(jsp, "%s: %s, FRU code=0x%x\n", vpd_inq, np, pn);
             res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);
             if (res)
                 goto out;

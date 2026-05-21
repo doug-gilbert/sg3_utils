@@ -2,7 +2,8 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20260508] [svn: r1112]
+Changelog for pre-release sg3_utils-1.49 [20260521] [svn: r1114]
+  Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
     and 44.diff
@@ -20,8 +21,12 @@ Changelog for pre-release sg3_utils-1.49 [20260508] [svn: r1112]
     minutes as well as its raw form: seconds
     - add RSCS field to Block limits ext. vpage [sbc5r5]
     - translation of NVMe FR field uses sg_last_n_non_blank()
+    - add NVMe Information VPD page
+    - clean up ATA Information VPD page
   - sg_lib: add sg_last_n_non_blank() for SNT FR field
     - sg_json.c fixes from lsscsi project pull #15
+    - sg_json.[hc] void sgj_haj_vs_hex_bytes_nex() for
+      outputing IDs as ASCII hex strings
   - sg_logs: correct tape Device statisitics lpage [0x14]
     serial number parameters [0x40 and 0x41] per
     https://github.com/doug-gilbert/sg3_utils/issues/45
@@ -39,6 +44,8 @@ Changelog for pre-release sg3_utils-1.49 [20260508] [svn: r1112]
     - add --mfile=MF option for decoding mask in the MF file
     - fix introduced Makefile.am bug, plus only for Linux
   - sg_xcopy: part of github PR #74
+
+  General changes:
   - fix 'make distcheck' (again)
   - start complying with T10 23-047r1 "Broadcom SNT Reference"
     document assuming T10 SNT drafts are coming
@@ -50,6 +57,7 @@ Changelog for pre-release sg3_utils-1.49 [20260508] [svn: r1112]
   - lib/sgj_haj_*() functions: tweak hex_haj argument meaning
   - scripts/00-scsi-sg3_config.rules : apply
     https://github.com/doug-gilbert/sg3_utils/pull/42
+  - rename build_debian.sh script to debian_build.sh
   - rename testing directory to ttesting to avoid clash with
     cmake's CTEST that creates a Testing directory
   - ttesting/sg_chk_inq_vd.c: test internal table against T10

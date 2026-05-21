@@ -228,7 +228,7 @@ option may be useful: 'rpmbuild --target=i386 -ba sg3_utils.spec' or
 in the main directory targets Red Hat systems, an alternative "spec" file
 for Suse systems has been placed under the 'suse' directory.
 
-The 'build_debian.sh' script should build several "deb" packages and place
+The 'debian_build.sh' script should build several "deb" packages and place
 them in the parent directory. In debian based systems doing
 a 'apt-get install build-essential' is one way to get most of build
 environment needed if it has not already been loaded. There are now some
@@ -570,4 +570,4 @@ See https://sg.danny.cz/sg/tools.html
 
 
 Douglas Gilbert         dgilbert@interlog.com
-5th May 2026
+19th May 2026

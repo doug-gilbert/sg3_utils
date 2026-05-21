@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2023 Douglas Gilbert.
+ * Copyright (c) 2006-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -56,6 +56,7 @@ const char * eid_vpdp = "Extended inquiry data VPD page";
 const char * mpp_vpdp = "Mode page policy VPD page";
 const char * sp_vpdp = "SCSI ports VPD page";
 const char * ai_vpdp = "ATA information VPD page";
+const char * nvmei_vpdp = "NVMe information VPD page";
 const char * pc_vpdp = "Power condition VPD page";
 const char * dc_vpdp = "Device constituents VPD page";
 const char * cpi_vpdp = "CFA profile information VPD page";
@@ -102,6 +103,7 @@ static char rsv_s[] = "Reserved";
 static const char * const vs_s = "Vendor specific";
 static const char * const null_s = "";
 static const char * const mn_s = "meaning";
+static const char * const inhex_s = "in hex";
 
 /* Supported vendor specific VPD pages */
 /* Arrange in alphabetical order by acronym */
@@ -912,17 +914,15 @@ decode_ata_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
                     sgj_opaque_p jop)
 {
     bool do_long_nq = op->do_long && (! op->do_quiet);
-    int num, is_be, cc, n;
+    int num, is_be, cc;
     sgj_state * jsp = &op->json_st;
+    sgj_opaque_p jo2p = NULL;
     const char * cp;
     const char * ata_transp;
     char b[512];
     char d[80];
     static const int blen = sizeof(b);
     static const int dlen = sizeof(d);
-    static const char * sat_vip = "SAT Vendor identification";
-    static const char * sat_pip = "SAT Product identification";
-    static const char * sat_prlp = "SAT Product revision level";
 
     if (len < 36) {
         pr2serr("%s length too short=%d\n", ai_vpdp, len);
@@ -937,26 +937,29 @@ decode_ata_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
     }
     memcpy(b, buff + 8, 8);
     b[8] = '\0';
-    sgj_pr_hr(jsp, "  %s: %s\n", sat_vip, b);
+    sgj_haj_vs(jsp, jop, 2, "SAT Vendor identification",
+               SGJ_SEP_COLON_1_SPACE, b);
     memcpy(b, buff + 16, 16);
     b[16] = '\0';
-    sgj_pr_hr(jsp, "  %s: %s\n", sat_pip, b);
+    sgj_haj_vs(jsp, jop, 2, "SAT Product identification",
+               SGJ_SEP_COLON_1_SPACE, b);
     memcpy(b, buff + 32, 4);
     b[4] = '\0';
-    sgj_pr_hr(jsp, "  %s: %s\n", sat_prlp, b);
+    sgj_haj_vs(jsp, jop, 2, "SAT Product revision level",
+               SGJ_SEP_COLON_1_SPACE, b);
+    sgj_haj_vs_hex_bytes_nex(jsp, jop, 2, "ATA device signature",
+                             SGJ_SEP_COLON_1_SPACE, buff + 36, 20, inhex_s);
+    ata_transp = (0x34 == buff[36]) ? "SATA" : "PATA";
+    sgj_haj_vs(jsp, jop, 4, "Indicates transport", SGJ_SEP_COLON_1_SPACE,
+               ata_transp);
     if (len < 56)
         return;
-    ata_transp = (0x34 == buff[36]) ? "SATA" : "PATA";
-    if (do_long_nq) {
-        sgj_pr_hr(jsp, "  Device signature [%s] (in hex):\n", ata_transp);
-        if (! jsp->pr_as_json)
-            hex2stdout(buff + 36, 20, 0);
-    } else
-        sgj_pr_hr(jsp, "  Device signature indicates %s transport\n",
-                  ata_transp);
+    sgj_haj_vs_hex_bytes_nex(jsp, jop, 2, "Command code (hex)",
+                             SGJ_SEP_COLON_1_SPACE_RM_PARENS, buff + 56, 1,
+                     "ATA command code (in hex) that got this response");
+
     cc = buff[56];      /* 0xec for IDENTIFY DEVICE and 0xa1 for IDENTIFY
                          * PACKET DEVICE (obsolete) */
-    n = sg_scnpr(b, blen, "  Command code: 0x%x\n", cc);
     if (len < 60)
         return;
     if (0xec == cc)
@@ -967,43 +970,127 @@ decode_ata_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
         cp = NULL;
     is_be = sg_is_big_endian();
     if (cp) {
-        n += sg_scn3pr(b, blen, n, "  ATA command IDENTIFY %sDEVICE "
-                      "response summary:\n", cp);
+        snprintf(d, dlen, "ATA command IDENTIFY %sDEVICE response summary",
+                 cp);
+        sgj_pr_hr(jsp, "  %s:\n", d);
+        if (jsp->pr_as_json) {
+            jo2p = sgj_new_unattached_object_r(jsp);
+            sgj_convert2snake(d, b, blen);
+            sgj_js_nv_o(jsp, jop, b, jo2p);
+        }
+
         num = sg_ata_get_chars((const unsigned short *)(buff + 60), 27, 20,
                                is_be, d);
         d[num] = '\0';
-        n += sg_scn3pr(b, blen, n, "    model: %s\n", d);
+        sgj_haj_vs(jsp, jo2p, 4, "Model", SGJ_SEP_COLON_1_SPACE, d);
         num = sg_ata_get_chars((const unsigned short *)(buff + 60), 10, 10,
                                is_be, d);
         d[num] = '\0';
-        n += sg_scn3pr(b, blen, n, "    serial number: %s\n", d);
+        sgj_haj_vs(jsp, jo2p, 4, "Serial number", SGJ_SEP_COLON_1_SPACE, d);
         num = sg_ata_get_chars((const unsigned short *)(buff + 60), 23, 4,
                                is_be, d);
         d[num] = '\0';
-        sg_scn3pr(b, blen, n, "    firmware revision: %s\n", d);
-        sgj_pr_hr(jsp, "%s", b);
+        sgj_haj_vs(jsp, jo2p, 4, "Firmware revision", SGJ_SEP_COLON_1_SPACE,
+                   d);
         if (do_long_nq)
             sgj_pr_hr(jsp, "  ATA command IDENTIFY %sDEVICE response in "
                       "hex:\n", cp);
     } else if (do_long_nq)
         sgj_pr_hr(jsp, "  ATA command 0x%x got following response:\n",
                   (unsigned int)cc);
-    if (jsp->pr_as_json) {
-        sgj_convert2snake(sat_vip, d, dlen);
-        sgj_js_nv_s_len(jsp, jop, d, (const char *)(buff + 8), 8);
-        sgj_convert2snake(sat_pip, d, dlen);
-        sgj_js_nv_s_len(jsp, jop, d, (const char *)(buff + 16), 16);
-        sgj_convert2snake(sat_prlp, d, dlen);
-        sgj_js_nv_s_len(jsp, jop, d, (const char *)(buff + 32), 4);
-        sgj_js_nv_hex_bytes(jsp, jop, "ata_device_signature", buff + 36, 20);
-        sgj_js_nv_ihex(jsp, jop, "command_code", buff[56]);
-        sgj_js_nv_s(jsp, jop, "ata_identify_device_data_example",
-                    "sg_vpd -p ai -HHH /dev/sdc | hdparm --Istdin");
-    }
     if (len < 572)
         return;
     if (do_long_nq)
         dWordHex((const unsigned short *)(buff + 60), 256, 0, is_be);
+}
+
+/* VPD_NVME_INFO    0x8e ["nvmei"] */
+void
+decode_nvme_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
+                     sgj_opaque_p jop)
+{
+    // bool do_long_nq = op->do_long && (! op->do_quiet);
+    bool bv;
+    sgj_state * jsp = &op->json_st;
+    char b[512];
+    static const char * snt_vip = "SNT Vendor identification";
+    static const char * snt_pip = "SNT Product identification";
+    static const char * snt_prlp = "SNT Product revision level";
+
+    if (len < 36) {
+        pr2serr("%s length too short=%d\n", ai_vpdp, len);
+        return;
+    }
+    if (op->do_hex > 0) {
+        if (op->do_hex > 2)
+            named_hhh_output(ai_vpdp, buff, len, op);
+        else
+            hex2stdout(buff, len, no_ascii_4hex(op));
+        return;
+    }
+    memcpy(b, buff + 8, 8);
+    b[8] = '\0';
+    sgj_haj_vs(jsp, jop, 2, snt_vip, SGJ_SEP_COLON_1_SPACE, b);
+    memcpy(b, buff + 16, 16);
+    b[16] = '\0';
+    sgj_haj_vs(jsp, jop, 2, snt_pip, SGJ_SEP_COLON_1_SPACE, b);
+    memcpy(b, buff + 32, 4);
+    b[4] = '\0';
+    sgj_haj_vs(jsp, jop, 2, snt_prlp, SGJ_SEP_COLON_1_SPACE, b);
+    if (len < 56)
+        return;
+    memcpy(b, buff + 36, 40);
+    b[40] = '\0';
+    sgj_haj_vs(jsp, jop, 2, "Model number", SGJ_SEP_COLON_1_SPACE, b);
+    memcpy(b, buff + 76, 20);
+    b[20] = '\0';
+    sgj_haj_vs(jsp, jop, 2, "Serial number", SGJ_SEP_COLON_1_SPACE, b);
+    memcpy(b, buff + 96, 8);
+    b[8] = '\0';
+    sgj_haj_vs(jsp, jop, 2, "Firmware revision", SGJ_SEP_COLON_1_SPACE, b);
+    sgj_haj_vi(jsp, jop, 2, "PCI vendor ID", SGJ_SEP_COLON_1_SPACE,
+               sg_get_unaligned_be16(buff + 104), true);
+    sgj_haj_vi(jsp, jop, 2, "PCI subsystem vendor ID", SGJ_SEP_COLON_1_SPACE,
+               sg_get_unaligned_be16(buff + 106), true);
+    sgj_haj_vi(jsp, jop, 2, "PCI device ID", SGJ_SEP_COLON_1_SPACE,
+               sg_get_unaligned_be16(buff + 108), true);
+    sgj_haj_vi(jsp, jop, 2, "PCI subsystem device ID", SGJ_SEP_COLON_1_SPACE,
+               sg_get_unaligned_be16(buff + 110), true);
+    memcpy(b, buff + 112, 8);
+    b[8] = '\0';
+    sgj_haj_vs(jsp, jop, 2, "PCI device serial number",
+               SGJ_SEP_COLON_1_SPACE, b);
+    sgj_haj_vi(jsp, jop, 2, "Controller ID", SGJ_SEP_COLON_1_SPACE,
+               sg_get_unaligned_be16(buff + 120), true);
+    sgj_haj_vi(jsp, jop, 2, "Form factor", SGJ_SEP_COLON_1_SPACE,
+               (unsigned int)*(buff + 122), true);
+    bv = *(buff + 123) & 0x1;
+    sgj_haj_vb(jsp, jop, 2, "EUI64 valid", SGJ_SEP_COLON_1_SPACE, bv);
+    bv = *(buff + 123) & 0x2;
+    sgj_haj_vb(jsp, jop, 2, "NGUID valid", SGJ_SEP_COLON_1_SPACE, bv);
+    bv = *(buff + 123) & 0x4;
+    sgj_haj_vb(jsp, jop, 2, "NUUID valid", SGJ_SEP_COLON_1_SPACE, bv);
+    bv = *(buff + 123) & 0x8;
+    sgj_haj_vb(jsp, jop, 2, "VSID valid", SGJ_SEP_COLON_1_SPACE, bv);
+    sgj_haj_vs_hex_bytes_nex(jsp, jop, 2, "EUI64", SGJ_SEP_COLON_1_SPACE,
+                             buff + 124, 8, NULL);
+    sgj_haj_vs_hex_bytes_nex(jsp, jop, 2, "NGUID", SGJ_SEP_COLON_1_SPACE,
+                             buff + 132, 16, inhex_s);
+    sgj_haj_vs_hex_bytes_nex(jsp, jop, 2, "NUUID", SGJ_SEP_COLON_1_SPACE,
+                             buff + 148, 16, inhex_s);
+    sgj_haj_vs_hex_bytes_nex(jsp, jop, 2, "VSID", SGJ_SEP_COLON_1_SPACE,
+                             buff + 164, 8, inhex_s);
+    sgj_haj_vs_hex_bytes_nex(jsp, jop, 2, "FWUP", SGJ_SEP_COLON_1_SPACE,
+                             buff + 172, 1, inhex_s);
+    sgj_haj_vi(jsp, jop, 2, "NVME base version", SGJ_SEP_COLON_1_SPACE,
+               sg_get_unaligned_le32(buff + 180), true);
+    sgj_haj_vi(jsp, jop, 2, "NVM command set version", SGJ_SEP_COLON_1_SPACE,
+               sg_get_unaligned_le32(buff + 184), true);
+    sgj_haj_vi(jsp, jop, 2, "ZNS command set version", SGJ_SEP_COLON_1_SPACE,
+               sg_get_unaligned_le32(buff + 188), true);
+#if 0
+xxxxx
+#endif
 }
 
 /* VPD_SCSI_FEATURE_SETS  0x92  ["sfs"] */
@@ -3757,8 +3844,7 @@ decode_rdac_vpd_c9(uint8_t * buff, int len, struct opts_t * op,
  * given a VPD identifier of 0x99 (0x10 more than the ATA Info VPD page).
  * SG_NVME_VPD_NICR [0xde]. Proposed SNT NVME Info VPD page. */
 void
-decode_snt_nvme_info_vpd(uint8_t * buff, int len, struct opts_t * op,
-                      sgj_opaque_p jop)
+decode_nicr_vpd(uint8_t * buff, int len, struct opts_t * op, sgj_opaque_p jop)
 {
     int n;
     sgj_state * jsp = &op->json_st;

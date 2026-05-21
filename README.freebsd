@@ -124,7 +124,7 @@ to more recent versions.
 kFreeBSD
 ========
 sg3_utils can be built into a Debian package for kFreeBSD using the
-./build_debian.sh script in the top level directory. This has been tested
+./debian_build.sh script in the top level directory. This has been tested
 with Debian 6.0 release.
 
 Details
@@ -161,4 +161,4 @@ utilities.
 
 
 Douglas Gilbert
-1st May 2021
+19th May 2026
