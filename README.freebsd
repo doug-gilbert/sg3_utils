@@ -73,15 +73,123 @@ section 8). An overview of sg3_utils can be found at:
 https://sg.danny.cz/sg/sg3_utils.html .
 A copy of the "sg3_utils.html" file is in the "doc" subdirectory.
 
+This package on FreeBSD can be built with either GNU Autotools or
+cmake.
 
+Autotool build
+==============
 The executables and library can be built from the source code in
-the tarball and installed with the familiar
-"./configure ; make ; make install" sequence. If this fails try
-running the "./autogen.sh" script prior to that sequence. There
-are generic instruction on configure and friend in the INSTALL file.
+the tarball and installed with the familiar sequence:
+
+    # cd <top-level-directory-of-source-package>
+    # ./autogen.sh
+    # ./configure
+    # make
+    # make install
+
+The last step requires root permission. After the make (fourth step in
+the above sequence), the executables will be in the src sub-directory
+and the library (shared object) in the lib sub-directory.
+The object files, executables, and library can be removed with:
+
+    # cd <top-level-directory-of-source-package>
+    # make clean
+
+All those plus the artifacts of the build system can be removed with
+'make distclean'. Package options can be viewed with the third step
+of the above sequence changed to './configure --help' .
+
+There are generic instructions on configure and friends in the INSTALL file.
+There is a brief overview of this package in the README file. There is a
+more detailed description in the README.details file.
 
 Some man pages have examples which use Linux device names which
 hopefully will not confuse the FreeBSD users.
+
+The above build sequence does an "in-tree" build which is so-called because
+it scatters artifacts of the build in the same directories as the
+original source files (and build instructions). An "out-of-tree"
+build can be done as follows:
+
+    # cd <top-level-directory-of-source-package>
+    # ./autogen.sh
+    # mkdir build
+    # cd build
+    # ../configure
+    # make
+    # make install
+
+Notice the "double dot" prefixing 'configure' to execute the configure script
+in the _parent_ of the build directory. Now all executables, compressed
+manpages, library and other (obscure) build artifacts are under the build
+sub-directory and can all be removed with:
+
+    # cd <top-level-directory-of-source-package>
+    # rm -rf build
+
+cmake build
+===========
+cmake is a relatively newer build system than autotools (circa 2000 compared
+1991 for the first autoconf release). At this time autotools are still the
+backbone of Unix based application builds, especially for C and C++ with
+few new features being added, but the tools remain stable and well
+maintained. cmake seems to be moving much faster (and maybe breaking
+things). cmake now has the ability to package projects for FreeBSD (as well
+as Linux deb and rpm formats). The steps of a cmake build sequence are
+similar to those of Autotools shown in the above section. Here is a simple
+"in-tree" build:
+
+    # cd <top-level-directory-of-source-package>
+    # cmake .
+    # cmake --build .
+    # make install
+
+The last step requires root permission. After the 'cmake --build . '
+(third step in the above sequence), the executables will be in the src
+sub-directory and the library (shared object) in the lib sub-directory.
+The object files, executables, and library can be removed with:
+
+    # cd <top-level-directory-of-source-package>
+    # make clean
+
+Cmake does not have the equivalent of 'make distclean' so the author
+wrote a small script to do the same thing, visiting all sub-directories
+containing build artifacts:
+
+    # cd <top-level-directory-of-source-package>
+    # ./cmake_del_artifacts.sh
+
+An "out-of-tree" cmake build and package can be done as follows:
+
+    # cd <top-level-directory-of-source-package>
+    # cmake -S . -B build
+    # cd build
+    # cmake --build .
+    # cpack .
+
+That should generate a FreeBSD ".pkg" file in the build sub-directory.
+All the artifacts (including the ".pkg" file) can be removed in the
+same way as an autotools "out-of-tree" build:
+
+    # cd <top-level-directory-of-source-package>
+    # rm -rf build
+
+The "artifact" sub-directory doesn't need to be called "build", that
+is just a useful convention. For example:
+
+    # cd <top-level-directory-of-source-package>
+    # cmake -S . -B build-static DBUILD_SHARED_LIBS=OFF
+    # cd build-static
+    # cmake --build .
+    # ....
+
+That will build (larger) executables that don't depend on any runtime
+libraries being available.
+To list the available package options:
+
+    # cd <top-level-directory-of-source-package>
+    # cmake -LH .
+
 
 Device naming
 =============
@@ -104,7 +212,7 @@ has for CAM devices. In FreeBSD release 12 the nda driver was
 introduced with names like /dev/nda0 and /dev/nda0n<m>. The difference
 is that nda is CAM compatible. From the point of view of this package,
 the nda driver is preferred as CAM supports NVMe command timeouts and
-the error processing is more mature. 
+the error processing is more mature.
 
 FreeBSD installation
 ====================
@@ -155,10 +263,9 @@ DFLTPHYS(65536). Still a problem in FreeBSD 8.1 . Due to CAM overhead the
 largest power of 2 that can fit through with one command is 32768 bytes (32
 KB).
 
-FreeBSD 9.0 is the most recent version of FreeBSD tested with these
+FreeBSD 15.0 is the most recent version of FreeBSD tested with these
 utilities.
 
 
-
 Douglas Gilbert
-19th May 2026
+24th May 2026

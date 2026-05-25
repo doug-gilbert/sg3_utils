@@ -2,7 +2,7 @@
 #define SG_PT_LINUX_MISSING_H
 
 /*
- * Copyright (c) 2023 Douglas Gilbert.
+ * Copyright (c) 2023-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -14,9 +14,11 @@
 #include <stdbool.h>
 
 
-/* This header is for internal use by the sg3_utils library (libsgutils)
- * and is Linux specific. Best not to include it directly in code that
- * is meant to be OS independent.
+/* This header is for older, Linux only utilities such as sg_dd . It
+ * is easier to call low-level Linux only functions than to recode in
+ * a more general way. In the case of sg_dd there is a more general
+ * utility called ddpt (in a package of the same name) that offers
+ * similar features without dependence of Linux only functions.
  * This header is only used with Linux if linux/types.h and linux/major.h
  * are not available. This is the case with MUSL libc for example. */
 

@@ -169,7 +169,7 @@ permute_args(int panonopt_start, int panonopt_end, int opt_end,
 static int
 getopt_internal(int nargc, char * const *nargv, const char *options)
 {
-	char *oli;				/* option letter list index */
+	const char *oli;			/* option letter list index */
 	int optchar;
 
 	assert(nargv != NULL);
@@ -245,7 +245,7 @@ start:
 		}
 	}
 	if ((optchar = (int)*place++) == (int)':' ||
-	    (oli = strchr(options + (IGNORE_FIRST ? 1 : 0), optchar)) == NULL) {
+	    (oli = (const char *)strchr(options + (IGNORE_FIRST ? 1 : 0), optchar)) == NULL) {
 		/* option letter unknown or ':' */
 		if (!*place)
 			++optind;

@@ -31,7 +31,6 @@ EXTRA_DIST += \
 	debian/docs \
 	debian/libsgutils2-2.install \
 	debian/libsgutils2-dev.install \
-	debian/README.debian4 \
 	debian/rules \
 	debian/sg3-utils.examples \
 	debian/sg3-utils.install
@@ -175,11 +174,13 @@ distclean-local:
           build-stamp \
           compile \
           configure \
+          configure~ \
           config.guess \
           config.guess.cdbs-orig \
           config.sub.cdbs-orig \
           config.sub \
           config.h.in \
+          config.h.in~ \
           config.h \
           config.log \
           config.status \

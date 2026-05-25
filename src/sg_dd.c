@@ -1,7 +1,7 @@
 /* A utility program for copying files. Specialised for "files" that
  * represent devices that understand the SCSI command set.
  *
- * Copyright (C) 1999 - 2023 D. Gilbert and P. Allworth
+ * Copyright (C) 1999 - 2026 D. Gilbert and P. Allworth
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
@@ -78,7 +78,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"              /* used to get to SNTL for NVMe devices */
 
-static const char * version_str = "6.50 20231206";
+static const char * version_str = "6.51 20260523";
 
 static const char * my_name = "sg_dd: ";
 
@@ -1698,10 +1698,19 @@ open_if(struct opts_t * op)
             if (vb)
                 pr2serr("        open input, flags=0x%x\n", flags);
             if (op->skip > 0) {
+#ifdef HAVE_LSEEK64
                 off64_t offset = op->skip;
+#else
+                off_t offset = op->skip;
+#endif
 
                 offset *= op->blk_sz;   /* could exceed 32 bits here! */
-                if (lseek64(infd, offset, SEEK_SET) < 0) {
+#ifdef HAVE_LSEEK64
+                if (lseek64(infd, offset, SEEK_SET) < 0)
+#else
+                if (lseek(infd, offset, SEEK_SET) < 0)
+#endif
+                {
                     snprintf(ebuff, EBUFF_SZ, "%scouldn't skip to required "
                              "position on %s", my_name, inf);
                     perror(ebuff);
@@ -1889,10 +1898,19 @@ open_of(struct opts_t * op)
 #endif
         }
         if (op->seek > 0) {
+#ifdef HAVE_LSEEK64
             off64_t offset = op->seek;
+#else
+            off_t offset = op->seek;
+#endif
 
             offset *= op->blk_sz;       /* could exceed 32 bits here! */
-            if (lseek64(outfd, offset, SEEK_SET) < 0) {
+#ifdef HAVE_LSEEK64
+            if (lseek64(outfd, offset, SEEK_SET) < 0)
+#else
+            if (lseek(outfd, offset, SEEK_SET) < 0)
+#endif
+            {
                 snprintf(ebuff, EBUFF_SZ, "%scouldn't seek to required "
                          "position on %s", my_name, outf);
                 perror(ebuff);
@@ -2880,14 +2898,23 @@ main(int argc, char * argv[])
             } else if (FT_DEV_NULL & ofp->file_type)
                 ;
             else {
+#ifdef HAVE_LSEEK64
                 off64_t offset = (off64_t)blocks * bs;
                 off64_t off_res;
+#else
+                off_t offset = (off_t)blocks * bs;
+                off_t off_res;
+#endif
 
                 if (op->verbose > 2)
                     pr2serr("sparse bypassing write: seek=%" PRId64 ", rel "
                             "offset=%" PRId64 "\n", (op->seek * bs),
                             (int64_t)offset);
+#ifdef HAVE_LSEEK64
                 off_res = lseek64(op->outfd, offset, SEEK_CUR);
+#else
+                off_res = lseek(op->outfd, offset, SEEK_CUR);
+#endif
                 if (off_res < 0) {
                     pr2serr("sparse tried to bypass write: seek=%" PRId64
                             ", rel offset=%" PRId64 " but ...\n",

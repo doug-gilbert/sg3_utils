@@ -116,6 +116,11 @@ Unix pseudo file system naming conventions (e.g. procfs and sysfs in Linux).
 There is a manual page called "sg3_utils_json" that contains more
 information.
 
+Build
+-----
+Build instructions can be found in the README.details file. There are two
+build systems supported: GNU Autotools and cmake .
+
 Documentation
 -------------
 Manual pages ("manpages") are the primary method of utility documentation.
@@ -156,4 +161,4 @@ is mirrored in git (using "git svn" tools) here:
 
 
 Douglas Gilbert
-5th May 2026
+23rd May 2026

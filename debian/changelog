@@ -1,8 +1,8 @@
-sg3-utils (1.48-9.20260521) unstable; urgency=low
+sg3-utils (1.48-9.20260523) unstable; urgency=low
 
   * New upstream version
 
- -- Douglas Gilbert <dgilbert@interlog.com>  Thu, 21 May 2026 11:00:00 -0400
+ -- Douglas Gilbert <dgilbert@interlog.com>  Sun, 24 May 2026 13:00:00 -0400
 
 sg3-utils (1.48-0.1) unstable; urgency=low
 

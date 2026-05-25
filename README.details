@@ -190,8 +190,8 @@ open(). Nearly 20 years ago Microsoft indicated (promised ?) that it
 would move in the direction of POSIX compliance, but very little ever
 happened. "Talk is cheap, there should be a tax on it."
 
-Building
-========
+Building with Autotools
+=======================
 This package is designed to be built with the command sequence:
     "./autogen.sh ; ./configure ; make ; make install"
 The "./autogen.sh" script may require autoconf and automake to be
@@ -242,10 +242,83 @@ musl libc
 =========
 Changes have been made so this package will build with the MUSL libc
 replacing the "standard" libc (GNU and/or clang?) in Linux. In the Ubuntu
-distribution these packages were installed: musl-dev, musl-tools and musl.
-Then the ./configure line is changed to 'CC=musl-gcc ./configure'. MUSL
-depends a lot less on Linux specific header files (e.g. <linux/major.h> )
-so a new minimal substitute header has been added: sg_pt_linux_missing.h .
+distribution the following packages were installed: musl-dev, musl-tools
+and musl. Then the ./configure line is changed to
+    CC=musl-gcc ./configure
+or
+    CC=musl-gcc cmake -S . -B build
+
+MUSL depends a lot less on Linux specific header files (e.g.
+<linux/major.h> ) so a minimal replacement header has been added:
+include/sg_pt_linux_missing.h .
+
+Building with cmake
+==================
+The author is experimenting with cmake with a goal to support _both_
+cmake and autotools. This is a relatively simple project with one
+a feq source files (some C++ the rest C). It requires a C++20 or
+better compiler. There is also a manpage in nroff format. The
+sequence of commands to build and install is:
+    cmake .
+    cmake --build .
+    cmake --install .
+
+The last cmake invocation needs root permissions. 'make clean' does
+the same thing as it does in autotools. There is no 'make distclean'
+so the above sequence leaves a lot of garbage "on the floor".
+The ./cmake_del_artifacts.sh.sh script cleans up most of that.
+To build static executable(s) instead of 'cmake .' use
+    cmake . -DBUILD_SHARED_LIBS=OFF
+
+The following places the executable in the /usr/bin directory, the man
+pages in the /usr/share/man/man8 directory, and other documentation in
+the /usr/share/doc/ddpt directory.
+ $ sudo cmake  --install . --prefix=/usr
+
+Rather than the last step (i.e. 'cmake --install . ') this invocation:
+    cpack .
+
+will build a "deb" and a "rpm" package and place them in the current
+directory. Root permissions are not required. The package that is
+appropriate for the machine's Linux distribution can be installed with:
+    dpkg -i <package>.deb
+or
+    rpm -iv <package>.rpm
+and that will require root permissions.
+
+There is no uninstall but after a successful install there is a
+install_manifest.txt file that can be used to remove the files
+installed like this:
+    xargs rm < install_manifest.txt
+
+Options can be requested like this in the first step of a cmake build:
+    # cmake . -DENABLE_DEBUG=ON
+
+[The available options can be viewed with 'cmake -LH .' . for this
+ package it can be seen that ENABLE_DEBUG is default OFF .]
+
+
+A _cleaner_ build approach, is to use an "out-of-tree" build. This is
+particularly useful with cmake because it generates so many intermediate
+files (sometimes called artifacts). In this case the first invocation of
+cmake in the sequence below generates a 'build' sub-directory below the
+top level source directory, it then moves to the 'build' sub-directory.
+Now cmake will put all its generated files under that sub-directory:
+    # cd <src_top_level_dir>
+    #
+    # cmake -S . -B build
+    # cd build
+    # cmake --build .
+    #
+    # cpack .
+
+The individual executables will be in the <src_top_level_dir>/build/src
+directory. The deb and rpm packages should be in the
+<src_top_level_dir>/build directory. There is no need to call the
+<src_top_level_dir>/cmake_del_artifacts.sh script. Once the packages
+and/or indivudual executable have been copied out of the build
+sub-directory, all of cmake's artifact files can be removed with:
+    rm -rf <src_top_level_dir>/build/
 
 Warning
 =======
@@ -570,4 +643,4 @@ See https://sg.danny.cz/sg/tools.html
 
 
 Douglas Gilbert         dgilbert@interlog.com
-19th May 2026
+23rd May 2026

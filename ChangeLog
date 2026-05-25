@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20260521] [svn: r1114]
+Changelog for pre-release sg3_utils-1.49 [20260524] [svn: r1115]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -47,6 +47,9 @@ Changelog for pre-release sg3_utils-1.49 [20260521] [svn: r1114]
 
   General changes:
   - fix 'make distcheck' (again)
+  - add cmake build system (alongside autotools) with cpack
+    for deb and rpm packages; ctest not wired yet
+  - fixes so musl-gcc builds clean
   - start complying with T10 23-047r1 "Broadcom SNT Reference"
     document assuming T10 SNT drafts are coming
   - rearrange SNT and NVMe headers and associated source

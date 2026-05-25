@@ -1,6 +1,6 @@
 /*
  *  A utility program for the Linux OS SCSI generic ("sg") device driver.
- *    Copyright (C) 2001 - 2023 D. Gilbert
+ *    Copyright (C) 2001 - 2026 D. Gilbert
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
@@ -63,7 +63,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.41 20231015";
+static const char * version_str = "1.42 20260523";
 
 #define DEF_BLOCK_SIZE 512
 #define DEF_BLOCKS_PER_TRANSFER 128
@@ -702,10 +702,19 @@ main(int argc, char * argv[])
         if (verbose)
             pr2serr("Opened %s for Unix reads with flags=0x%x\n", inf, flags);
         if (skip > 0) {
+#ifdef HAVE_LSEEK64
             off64_t offset = skip;
+#else
+            off_t offset = skip;
+#endif
 
             offset *= bs;       /* could exceed 32 bits here! */
-            if (lseek64(infd, offset, SEEK_SET) < 0) {
+#ifdef HAVE_LSEEK64
+            if (lseek64(infd, offset, SEEK_SET) < 0)
+#else
+            if (lseek(infd, offset, SEEK_SET) < 0)
+#endif
+            {
                 err = errno;
                 snprintf(ebuff,  EBUFF_SZ,
                     ME "couldn't skip to required position on %s", inf);
@@ -814,10 +823,19 @@ main(int argc, char * argv[])
             }
         } else {
             if (iters > 0) { /* subsequent iteration reset skip position */
+#ifdef HAVE_LSEEK64
                 off64_t offset = skip;
+#else
+                off_t offset = skip;
+#endif
 
                 offset *= bs;       /* could exceed 32 bits here! */
-                if (lseek64(infd, offset, SEEK_SET) < 0) {
+#ifdef HAVE_LSEEK64
+                if (lseek64(infd, offset, SEEK_SET) < 0)
+#else
+                if (lseek(infd, offset, SEEK_SET) < 0)
+#endif
+                {
                     perror(ME "could not reset skip position");
                     break;
                 }

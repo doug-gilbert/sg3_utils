@@ -199,7 +199,7 @@ AC_ARG_ENABLE([debug],
 AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
 
 AC_ARG_ENABLE([pt_dummy],
-	      [  --enable-pt_dummy       pass-through codes compiles, does nothing],
+	      [  --enable-pt_dummy       pass-through code compiles, does nothing],
 	      [case "${enableval}" in
 		  yes) pt_dummy=true ;;
 		  no)  pt_dummy=false ;;

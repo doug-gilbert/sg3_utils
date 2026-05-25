@@ -76,7 +76,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.29 20260429";
+static const char * version_str = "1.30 20260523";
 
 static const char * my_name = "sgm_dd: ";
 
@@ -1320,10 +1320,19 @@ main(int argc, char * argv[])
                 return sg_convert_errno(err);
             }
             else if (skip > 0) {
+#ifdef HAVE_LSEEK64
                 off64_t offset = skip;
+#else
+                off_t offset = skip;
+#endif
 
                 offset *= blk_sz;       /* could exceed 32 bits here! */
-                if (lseek64(infd, offset, SEEK_SET) < 0) {
+#ifdef HAVE_LSEEK64
+                if (lseek64(infd, offset, SEEK_SET) < 0)
+#else
+                if (lseek(infd, offset, SEEK_SET) < 0)
+#endif
+                {
                     err = errno;
                     snprintf(ebuff, EBUFF_SZ, "%scouldn't skip to "
                              "required position on %s", my_name, inf);
@@ -1433,10 +1442,19 @@ main(int argc, char * argv[])
                 }
             }
             if (seek > 0) {
+#ifdef HAVE_LSEEK64
                 off64_t offset = seek;
+#else
+                off_t offset = seek;
+#endif
 
                 offset *= blk_sz;       /* could exceed 32 bits here! */
-                if (lseek64(outfd, offset, SEEK_SET) < 0) {
+#ifdef HAVE_LSEEK64
+                if (lseek64(outfd, offset, SEEK_SET) < 0)
+#else
+                if (lseek(outfd, offset, SEEK_SET) < 0)
+#endif
+                {
                     err = errno;
                     snprintf(ebuff, EBUFF_SZ, "%scouldn't seek to "
                              "required position on %s", my_name, outf);
