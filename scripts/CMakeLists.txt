@@ -1,6 +1,7 @@
 
 MESSAGE( STATUS ">> Entering scripts/CMakeLists.txt" )
 
-install(FILES rescan-scsi-bus.sh
+install(FILES ${CMAKE_SOURCE_DIR}/scripts/rescan-scsi-bus.sh
         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
-        DESTINATION "${CMAKE_INSTALL_BINDIR}")
+        DESTINATION "${CMAKE_INSTALL_BINDIR}"
+	COMPONENT utilities)
