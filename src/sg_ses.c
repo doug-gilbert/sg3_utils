@@ -1023,6 +1023,11 @@ usage(int help_num)
         other_usage(true);
         pr2serr("   corresponding shorter form:\n");
         other_usage(false);
+        pr2serr("\nFirst usage above is for fetching pages or fields from "
+            "a SCSI enclosure.\nThe second usage is for changing a page or "
+            "field in an enclosure. For\nmore information use '--help' (or "
+            "'-h'). Use '-hhhh' for examples.\n"
+            );
     } else if (1 == help_num) {
         pr2serr("Usage for general access:\n");
         gen_usage(true);
@@ -1038,6 +1043,8 @@ usage(int help_num)
             "only\n"
             "    --get=STR|-G STR    get value of field by acronym or "
             "position\n"
+            "    --help|-h           print out usage message, use multiple "
+            "times for more\n"
             "    --index=IIA|-I IIA    individual index ('-1' for overall) "
             "or element\n"
             "                          type abbreviation (e.g. 'arr'). A "
