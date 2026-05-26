@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20260525] [svn: r1116]
+Changelog for pre-release sg3_utils-1.49 [20260525] [svn: r1117]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -44,6 +44,7 @@ Changelog for pre-release sg3_utils-1.49 [20260525] [svn: r1116]
     - add --mfile=MF option for decoding mask in the MF file
     - fix introduced Makefile.am bug, plus only for Linux
   - sg_xcopy: part of github PR #74
+  - utils/hxascdmp: sprint -> snprintf [github PR #78]
 
   General changes:
   - fix 'make distcheck' (again)

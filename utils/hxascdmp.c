@@ -24,7 +24,7 @@
 
 static int bytes_per_line = DEF_BYTES_PER_LINE;
 
-static const char * version_str = "1.12 20260504";
+static const char * version_str = "1.13 20260525";
 
 #define CHARS_PER_HEX_BYTE 3
 #define BINARY_START_COL 6
@@ -34,7 +34,7 @@ static const char * version_str = "1.12 20260504";
 #ifdef SG_LIB_MINGW
 /* Non Unix OSes distinguish between text and binary files.
    Set text mode on fd. Does nothing in Unix. Returns negative number on
-   failure. */
+   failure. Note under CygWin and Visual Studio it's _setmode() . */
 int
 sg_set_text_mode(int fd)
 {
@@ -232,7 +232,7 @@ dStrHex(const char* str, int len, long start, int noAddr)
     memset(buff, ' ', line_length);
     buff[line_length] = '\0';
     if (0 == noAddr) {
-        k = sprintf(buff + 1, "%.2lx", a);
+        k = snprintf(buff + 1, sizeof(buff) - 1, "%.2lx", a);
         buff[k + 1] = ' ';
     }
 
@@ -245,7 +245,7 @@ dStrHex(const char* str, int len, long start, int noAddr)
             a += bytes_per_line;
             memset(buff,' ', line_length);
             if (0 == noAddr) {
-                k = sprintf(buff + 1, "%.2lx", a);
+                k = snprintf(buff + 1, sizeof(buff) - 1, "%.2lx", a);
                 buff[k + 1] = ' ';
             }
         }
@@ -253,7 +253,8 @@ dStrHex(const char* str, int len, long start, int noAddr)
         bpos += (nl && noAddr) ?  0 : CHARS_PER_HEX_BYTE;
         if ((bytes_per_line > 4) && ((j % bytes_per_line) == midline_space))
             bpos++;
-        sprintf(&buff[bpos], "%.2x", (int)(unsigned char)c);
+        snprintf(&buff[bpos], sizeof(buff) - bpos, "%.2x",
+                 (int)(unsigned char)c);
         buff[bpos + 2] = ' ';
         if ((c < ' ') || (c >= 0x7f))
             c='.';
@@ -288,7 +289,7 @@ dStrHexOnly(const char* str, int len, long start, int noAddr)
     memset(buff, ' ', line_length);
     buff[line_length] = '\0';
     if (0 == noAddr) {
-        k = sprintf(buff + 1, "%.2lx", a);
+        k = snprintf(buff + 1, sizeof(buff) - 1, "%.2lx", a);
         buff[k + 1] = ' ';
     }
 
@@ -300,7 +301,7 @@ dStrHexOnly(const char* str, int len, long start, int noAddr)
             a += bytes_per_line;
             memset(buff,' ', line_length);
             if (0 == noAddr) {
-                k = sprintf(buff + 1, "%.2lx", a);
+                k = snprintf(buff + 1, sizeof(buff) - 1, "%.2lx", a);
                 buff[k + 1] = ' ';
             }
         }
@@ -308,7 +309,8 @@ dStrHexOnly(const char* str, int len, long start, int noAddr)
         bpos += (nl && noAddr) ? 0 : CHARS_PER_HEX_BYTE;
         if ((bytes_per_line > 4) && ((j % bytes_per_line) == midline_space))
             bpos++;
-        sprintf(&buff[bpos], "%.2x", (int)(unsigned char)c);
+        snprintf(&buff[bpos], sizeof(buff) - bpos, "%.2x",
+                 (int)(unsigned char)c);
         buff[bpos + 2] = ' ';
     }
     if (bpos > bpstart)
