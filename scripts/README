@@ -7,7 +7,8 @@ more utilities from the sg3_utils package. They assume the sg3_utils
 package utilities are on the PATH of the user.
 
 rescan-scsi-bus.sh is written by Kurt Garloff (formerly from Suse Labs)
-with patches from Hannes Reinecke (Suse) and Redhat.
+with patches from Hannes Reinecke (Suse) and Redhat. There have also
+been patches from Paul Evans and Xose Vazquez Perez.
 
 scsi_logging_level is written by Andreas Herrmann <aherrman at de dot ibm
 dot com>. It sets the logging level of the SCSI subsystem in the Linux
@@ -52,4 +53,4 @@ the sdparm package in its scripts directory.
 /dev/disk/by-id/wwn-0x5001501234567890-part1.
 
 Douglas Gilbert
-4th October 2021
+26th May 2026

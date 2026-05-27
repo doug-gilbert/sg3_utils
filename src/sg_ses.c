@@ -41,7 +41,7 @@
  * commands tailored for SES (enclosure) devices.
  */
 
-static const char * version_str = "2.87 20260430";    /* ses4r04 */
+static const char * version_str = "2.88 20260526";    /* ses4r05 */
 
 #define MY_NAME "sg_ses"
 

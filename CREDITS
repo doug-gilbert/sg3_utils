@@ -128,6 +128,9 @@ Nitin U. Yewale < nyewale at redhat dot com> sent patch via github:
 Pat LaVarre <p.lavarre at ieee dot org> pointed out danger of negative bpt
         values in sg_dd (and friends); also problems when reading /dev/null
 
+Paul Evans <pevans at redhat dot com> multiple fixes for rescan-scsi-bus.sh
+        and sg_ses [20260526]
+
 Peter Allworth <linsol at zeta dot org dot au> original dd clone design used
         by sg3_utils's dd variants (e.g. sg_dd).
 
@@ -159,8 +162,8 @@ Trent Piepho <xyzzy at speakeasy dot org> print out some "sense key specific"
         data and "-6" switch for sg_modes
 
 Xose Vazquez Perez <xose dot vazquez at gmail dot com>
-        documentation corrections [20200117]
+        documentation corrections [20200117] rescan-scsi-bus.sh [20260526]
 
 
 Douglas Gilbert
-10th January 2023
+26 May 2026

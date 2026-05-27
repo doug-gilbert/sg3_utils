@@ -1,13 +1,14 @@
-#! /bin/bash
-###############################################################################
-# Conveniently create and set scsi logging level, show SCSI_LOG fields in human
-# readable form.
+#!/bin/bash
 #
-# (C) Copyright IBM Corp. 2006
+# scsi_logging_level - Conveniently create and set scsi logging level,
+#                      show SCSI_LOG fields in human readable form
+#
+# Copyright IBM Corp. 2006, 2017
+#
+# You can redistribute it and/or modify it under the terms of the MIT license.
 #
 # Modified by D. Gilbert to replace the use of sysctl [20080218]
-# Lat change: D. Gilbert 20150219
-###############################################################################
+# Last change: D. Gilbert 20260526 add MIT license
 
 
 REVISION="1.0"

@@ -4,7 +4,7 @@
 # (c) 2006--2022 Hannes Reinecke, GNU GPL v2 or later
 # $Id: rescan-scsi-bus.sh,v 1.57 2012/03/31 14:08:48 garloff Exp $
 
-VERSION="20260508"
+VERSION="20260526"
 SCAN_WILD_CARD=4294967295
 
 # Only use standard PATH
@@ -296,7 +296,8 @@ testonline ()
   RC=$?
 
   # Handle in progress of becoming ready and unit attention
-  while [ $RC = 2 -o $RC = 6 ] && [ $ctr -lt $timeout ] ; do
+  # In bash || and && have the same precedence so following while evaluated left to right
+  while [ $RC = 2 ] || [ $RC = 6 ] && [ $ctr -lt $timeout ] ; do
     # Check immediately for removable devices; TEST UNIT READY obviously will
     # fail for a removable device with no medium
     RMB=$(is_removable)
@@ -489,7 +490,7 @@ udevadm_settle()
     # Loop for up to 60 seconds if sd devices still are settling..
     # This allows us to continue if udev events are stuck on multipaths in recovery mode
     while [ $tmo -gt 0 ] ; do
-      if ! "$UDEVADM" settle --timeout=1 | grep -E -q sd[a-z]+ ; then
+      if ! "$UDEVADM" settle --timeout=1 | grep -E -q 'sd[a-z]+' ; then
         break;
       fi
       let tmo=$tmo-1
@@ -550,7 +551,7 @@ dolunscan()
   fi
 
   : f "$remove" s $SCSISTR
-  if [ "$remove" ] && [ "$SCSISTR" -o "$remappedlun0" = "1" ] ; then
+  if [ "$remove" ] && ( [ "$SCSISTR" ] || [ "$remappedlun0" = "1" ] ) ; then
     if [ $RC != 0 ] || [ ! -z "$forceremove" ] || [ -n "$remappedlun0" ] ; then
       if [ "$remappedlun0" != "1" ] ; then
         echo -en "\r\e[A\e[A\e[A${red}REM: "
@@ -816,7 +817,8 @@ getallmultipathinfo()
       echo "softlink /dev/mapper/${mp} not available."
       continue
     fi
-    local ret=$(readlink /dev/mapper/$mp 2>/dev/null)
+    local ret=
+    ret=$(readlink /dev/mapper/$mp 2>/dev/null)
     if [[ $? -ne 0 || -z "$ret" ]]; then
       echo "readlink /dev/mapper/$mp failed. check multipath status."
       continue
@@ -1143,13 +1145,13 @@ findresized()
   if [ -n "$mp_enable" ] && [ -n "$mpaths" ] ; then
     i=0
     for m in $mpaths ; do
-      mpathsizes[$i]="$($MULTIPATH -l "$m" | grep -E -o [0-9]+.[0-9]+[KMGT])"
+      mpathsizes[$i]="$($MULTIPATH -l "$m" | grep -E -o '[0-9]+.[0-9]+[KMGT]')"
       let i=$i+1
     done
     resizempaths
     i=0
     for m in $mpaths ; do
-      mpathsize="$($MULTIPATH -l "$m" | grep -E -o [0-9\.]+[KMGT])"
+      mpathsize="$($MULTIPATH -l "$m" | grep -E -o '[0-9\.]+[KMGT]')"
       echo "$m ${mpathsizes[$i]} => $mpathsize"
       let i=$i+1
     done

@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 
-Changelog for pre-release sg3_utils-1.49 [20260525] [svn: r1117]
+Changelog for pre-release sg3_utils-1.49 [20260526] [svn: r1119]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -10,6 +10,8 @@ Changelog for pre-release sg3_utils-1.49 [20260525] [svn: r1117]
     - fix for github.com/doug-gilbert/sg3_utils/issues/46
     - github PR numbers: 68, 69, 71 and 74 by Paul Evans
     - github pull req: #72 fix udevadm invocation M. Wilck
+    - github issue: #76 fix shellcheck warnings Xose Vazquez Perez
+  - scsi_logging_level: add MIT license Xose Vazquez Perez
   - scsi-rescan.8 manpage added, links to rescan-scsi-bus.8
   - sg_copy_results: part of github PR #74
   - sg_dd: add grpnum=GN operand and --nocopy option
@@ -31,6 +33,7 @@ Changelog for pre-release sg3_utils-1.49 [20260525] [svn: r1117]
     serial number parameters [0x40 and 0x41] per
     https://github.com/doug-gilbert/sg3_utils/issues/45
   - sg_requests: improve buffer truncation
+  - sg_ses: restore some help text, github PR #79 Paul Evans
   - sg_stream_ctl: add --hex, --inhex=, --json= and --raw
     options; additions in sbc5r05 (perm and relative_lifetime
     fields).
