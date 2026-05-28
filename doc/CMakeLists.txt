@@ -95,7 +95,7 @@ foreach(util ${SG3_UTILS})
 
     file(ARCHIVE_CREATE
          OUTPUT ${CMAKE_BINARY_DIR}/doc/${util}.8.gz
-         PATHS doc/${util}.8
+         PATHS ${CMAKE_SOURCE_DIR}/doc/${util}.8
          FORMAT raw
          COMPRESSION GZip
     )
@@ -109,7 +109,7 @@ endforeach()
 if (OS_LINUX)
     file(ARCHIVE_CREATE
          OUTPUT ${CMAKE_BINARY_DIR}/doc/sg_scan.8.gz
-         PATHS doc/sg_scan.8.linux
+         PATHS ${CMAKE_SOURCE_DIR}/doc/sg_scan.8.linux
          FORMAT raw
          COMPRESSION GZip
     )
@@ -122,7 +122,7 @@ endif (OS_LINUX)
 if (SG_LIB_WIN32)
     file(ARCHIVE_CREATE
          OUTPUT ${CMAKE_BINARY_DIR}/doc/sg_scan.8.gz
-         PATHS doc/sg_scan.8.win32
+         PATHS ${CMAKE_SOURCE_DIR}/doc/sg_scan.8.win32
          FORMAT raw
          COMPRESSION GZip
     )

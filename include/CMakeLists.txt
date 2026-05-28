@@ -25,7 +25,7 @@ install(
 	sg_pt_linux_missing.h
 	sg_unaligned.h
     DESTINATION
-        ${CMAKE_INSTALL_INCLUDEDIR}
+        ${CMAKE_INSTALL_INCLUDEDIR}/scsi
     COMPONENT development
 )
 
