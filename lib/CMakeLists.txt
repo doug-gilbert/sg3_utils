@@ -82,7 +82,7 @@ endif ( ENABLE_DEBUG )
 target_include_directories(sgutils2
     PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/include>
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_include_directories(sgutils2 PRIVATE ${CMAKE_BINARY_DIR})
@@ -91,8 +91,9 @@ target_include_directories(sgutils2 PRIVATE ${CMAKE_BINARY_DIR})
 # target_compile_features(sgutils2 PUBLIC c_std_99)
 
 set_target_properties(sgutils2 PROPERTIES
-	VERSION ${PROJECT_VERSION}
-	SOVERSION 1
+	OUTPUT_NAME "sgutils2-${PROJECT_VERSION}"
+	VERSION 2.0.0
+	SOVERSION 2
 )
 
 #
@@ -104,8 +105,19 @@ install(TARGETS sgutils2
 
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         COMPONENT runtime
+        NAMELINK_SKIP
+)
 
-    NAMELINK_COMPONENT development
+# Match the autotools -release convention: the development symlink is the
+# plain libsgutils2.so name (without the release version embedded).
+# Create the directory first so this works when CPack stages components
+# into separate trees.
+install(CODE "file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_LIBDIR}\")
+file(CREATE_LINK
+    \"libsgutils2-${PROJECT_VERSION}.so.2\"
+    \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_LIBDIR}/libsgutils2.so\"
+    SYMBOLIC)"
+    COMPONENT development
 )
 
 write_basic_package_version_file(

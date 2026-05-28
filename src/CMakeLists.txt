@@ -181,3 +181,16 @@ elseif (SG_LIB_WIN32)
     endif (NOT PT_DUMMY)
 endif (SG_LIB_LINUX)
 
+# Per-utility link dependencies matching autotools (src/Makefile.am):
+#   sgp_dd needs pthread, sg_seek and sg_turs need rt (for clock_gettime)
+if (SG_LIB_LINUX AND NOT PT_DUMMY)
+    if (Threads_FOUND)
+        target_link_libraries(sgp_dd PRIVATE Threads::Threads)
+    endif ()
+endif ()
+
+if (NEED_RT_LIB)
+    target_link_libraries(sg_seek PRIVATE rt)
+    target_link_libraries(sg_turs PRIVATE rt)
+endif ()
+

@@ -47,6 +47,7 @@
 #cmakedefine HAVE_LINUX_BSG_H 1
 #cmakedefine HAVE_LINUX_KDEV_T_H 1
 #cmakedefine HAVE_LINUX_NVME_IOCTL_H 1
+#cmakedefine HAVE_NVME 1
 #cmakedefine HAVE_SYS_TYPES_H 1
 #cmakedefine IGNORE_NVME 1
 #cmakedefine IGNORE_LINUX_SGV4 1
