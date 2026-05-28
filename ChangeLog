@@ -1,8 +1,9 @@
 Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
+References to github are to https://github.com/doug-gilbert/sg3_utils
 
-Changelog for pre-release sg3_utils-1.49 [20260528] [svn: r1120]
+Changelog for pre-release sg3_utils-1.49 [20260528] [svn: r1121]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -53,6 +54,8 @@ Changelog for pre-release sg3_utils-1.49 [20260528] [svn: r1120]
   - fix 'make distcheck' (again)
   - add cmake build system (alongside autotools) with cpack
     for deb and rpm packages; ctest not wired yet
+    - github PR #80 by Alan Somers which is associated
+      with cpack FreeBSD settings
     - github PR #82 by Paul Evans to get cmake output to be
       equivalent (in parity) with what Autotools produces
   - fixes so musl-gcc builds clean

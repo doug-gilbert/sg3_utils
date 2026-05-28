@@ -312,10 +312,11 @@ set(CPACK_RPM_COMPONENT_INSTALL YES)
 # FreeBSD
 #
 
-set(CPACK_FREEBSD_PACKAGE_LICENSE "BSD-2-clause")
+set(CPACK_FREEBSD_PACKAGE_LICENSE "BSD2CLAUSE")
 set(CPACK_FREEBSD_PACKAGE_ORIGIN "github.com/doug-gilbert/sg3_utils")
 set(CPACK_FREEBSD_PACKAGE_MAINTAINER "dgilbert@interlog.com")
 set(CPACK_FREEBSD_PACKAGE_WWW "https://doug-gilbert.github.io/sg3_utils.html")
+set(CPACK_FREEBSD_PACKAGE_CATEGORIES "sysutils")
 
 if ( SG_LIB_LINUX )
     set(CPACK_GENERATOR "")
