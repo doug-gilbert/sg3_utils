@@ -37,7 +37,7 @@ option ( DISABLE_LINUXBSG "option ignored, this is placeholder" OFF)
 # those options use './configure --help'). Part of the work of configure is
 # to use config.h.in to create config.h . The next step is to compile the
 # code and that code looks for that config.h file. With cmake the goal is to
-# also generate a config.h file which is functional equivalent to what
+# also generate a config.h file which is functionally equivalent to what
 # Autotools generates, given the same environment and command line options
 # (if any). To achieve this for cmake, a _permanent_ config.h.in.cmake file
 # has been added to the project for this cmake line (in CMakeLists.txt):
@@ -52,13 +52,12 @@ option ( DISABLE_LINUXBSG "option ignored, this is placeholder" OFF)
 #
 # So config.h.in.cmake is a "magic" file associated with this cmake
 # implementation. The other cmake related files are a small hierarchy of
-# CMakeList.txt files. The main CMakeList.txt is in the top-level directory
-# of this package. The other magic file is lib/cmake/sgutils2Config.cmake.in
-# whose purpose remains a mystery.
+# CMakeLists.txt files. The main CMakeLists.txt is in the top-level directory
+# of this package.
 #
 # For both autotools and cmake in-tree builds, config.h is placed in the top
-# level source directory. For out-of-tree builds the config.h is placed in
-# the top level build directory (e.g. <top_level_src>/build/config.h ).
+# level source directory. For out-of-tree builds config.h is placed in the
+# top level build directory (e.g. <top_level_src>/build/config.h ).
 
 set(FEATURE_COMMENT "//")
 
@@ -112,7 +111,6 @@ CHECK_INCLUDE_FILE( "stdatomic.h" HAVE_STDATOMIC_H )
 CHECK_INCLUDE_FILE( "linux/bsg.h" HAVE_LINUX_BSG_H )
 CHECK_INCLUDE_FILE( "linux/nvme_ioctl.h" HAVE_LINUX_NVME_IOCTL_H )
 CHECK_INCLUDE_FILE( "sys/types.h" HAVE_SYS_TYPES_H )
-CHECK_INCLUDE_FILE( "getopt.h" HAVE_GETOPT_H )
 
 include(CheckFunctionExists)
 
@@ -127,9 +125,11 @@ check_function_exists(lseek64 HAVE_LSEEK64)
 check_function_exists(srand48_r HAVE_SRAND48_R)
 check_function_exists(pthread_cancel HAVE_PTHREAD_CANCEL)
 check_function_exists(pthread_kill HAVE_PTHREAD_KILL)
-check_function_exists(getopt_long HAVE_GETOPT_LONG)
 check_function_exists(setmode HAVE_SETMODE)
 
+# Locate platform's thread support, and set complier linker flags. See
+# /usr/share/doc/cmake-data/html/module/FindThreads.html when
+# cmake-doc package is installed.
 find_package(Threads)
 
 include(CheckLibraryExists)

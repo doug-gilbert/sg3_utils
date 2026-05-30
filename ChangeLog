@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-Changelog for pre-release sg3_utils-1.49 [20260528] [svn: r1121]
+Changelog for pre-release sg3_utils-1.49 [20260530] [svn: r1122]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2000-2023 D. Gilbert
+ * Copyright (C) 2000-2026 D. Gilbert
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
@@ -9,10 +9,11 @@
  */
 
 /*
- * This program sends a user specified number of TEST UNIT READY ("tur")
- * commands to the given sg device. Since TUR is a simple command involing
- * no data transfer (and no REQUEST SENSE command iff the unit is ready)
- * then this can be used for timing per SCSI command overheads.
+ * This program sends a user specified number (default 1) of
+ * TEST UNIT READY ("tur") commands to the given sg device. Since TUR is a
+ * simple command with no associated data transfer then this can be used
+ * for timing per SCSI command overheads. If the device is not ready, then
+ * the sense data transfer (data-in) slows down the command.
  */
 
 #include <unistd.h>
@@ -45,7 +46,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "3.57 20231015";
+static const char * version_str = "3.58 20260528";
 
 static const char * my_name = "sg_turs: ";
 
@@ -111,7 +112,7 @@ usage()
            "    --ascq=ASC[,ASQ] |    check sense from TUR for match on "
            "ASC[,ASQ]\n"
            "        -a ASC[,ASQ]      exit status 36 if sense code match\n"
-           "    --delay=MS|-d MS    delay MS miiliseconds before sending "
+           "    --delay=MS|-d MS    delay MS milliseconds before sending "
            "each tur\n"
            "    --help|-h        print usage message then exit\n"
            "    --low|-l         use low level (sg_pt) interface for "
@@ -242,7 +243,7 @@ new_parse_cmd_line(struct opts_t * op, int argc, char * argv[])
         case 'T':
             n = sg_get_num(optarg);
             if (n < 0) {
-                pr2serr("bad argument to '--timwout='\n");
+                pr2serr("bad argument to '--timeout='\n");
                 usage();
                 return SG_LIB_SYNTAX_ERROR;
             }
@@ -789,9 +790,12 @@ main(int argc, char * argv[])
                 printf("Recorded 0 or less elapsed microseconds ??\n");
         }
         if (((op->do_number > 1) || (resp->num_errs > 0)) &&
-            (! resp->reported))
-            printf("Completed %d Test Unit Ready commands with %d errors\n",
-                   op->do_number, resp->num_errs);
+            (! resp->reported)) {
+            const char * plural = (op->do_number > 1) ? "s" : "";
+
+            printf("Completed %d Test Unit Ready command%s with %d error%s\n",
+                   op->do_number, plural, resp->num_errs, plural);
+        }
         if (1 == op->do_number)
             ret = resp->ret;
     }

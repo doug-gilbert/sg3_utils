@@ -1,4 +1,4 @@
-.TH SG_MODES "8" "May 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SG_MODES "8" "May 2026" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_modes \- reads mode pages with SCSI MODE SENSE command
 .SH SYNOPSIS
@@ -90,7 +90,7 @@ is given then print out the mode (sub)page name or number (in hex) if the
 name is not known.
 .br
 The sdparm utility which lists mode and VPD pages also has a \fB\-\-examine\fR
-option will similar functionility.
+option will similar functionality.
 .TP
 \fB\-f\fR, \fB\-\-flexible\fR
 Some devices, bridges and/or drivers attempt crude translations between
@@ -113,13 +113,13 @@ number) bracketed in hex.
 .br
 When this option is given twice, then each line of hex output has an ASCII
 rendering of that hex place at the end of each line. When this option is
-given three times, then the hexadimal address, shown at the start of each
+given three times, then the hexadecimal address, shown at the start of each
 hexadecimal line is dropped, there is no ASCII rendering of hex, and all
-test lines are removed. This leaves simple hex that is parsable that
+test lines are removed. This leaves simple hex that is parse\-able that
 represents the MODE SENSE command response. The component parts of that
 response are put on separate line.
 .br
-When the option is given four or more times (recommended for a parsable
+When the option is given four or more times (recommended for a parse\-able
 form), the ASCII informational lines are back, but they all start
 with "#" which a parser needs to ignore.
 The output is sent to stdout while any error messages or warning are
@@ -377,12 +377,12 @@ Written by Douglas Gilbert
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2000\-2023 Douglas Gilbert
+Copyright \(co 2000\-2026 Douglas Gilbert
 .br
 This software is distributed under the GPL version 2. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B sdparm(8), sg_wr_mode(8), sginfo(8),
+.B sdparm,sdparm_json(sdparm), sg_wr_mode(8), sginfo(8),
 .B sgmode(scsirastools), scsiinfo(net), scu(net),
 .B seatools(seagate)
 .PP

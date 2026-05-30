@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2000-2023 D. Gilbert
+ *  Copyright (C) 2000-2026 D. Gilbert
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
@@ -10,7 +10,9 @@
  *  This program outputs information provided by a SCSI MODE SENSE command.
  *  Does 10 byte MODE SENSE commands by default, Trent Piepho added a "-6"
  *  switch for force 6 byte mode sense commands.
- *  This utility cannot modify mode pages. See the sdparm utility for that.
+ *  This utility cannot modify mode pages nor produce JSON output for mode
+ *  pages that are read and displayed. See the sdparm utility for those
+ *  capabilities.
  */
 
 #include <unistd.h>
@@ -32,7 +34,7 @@
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "1.80 20231015";
+static const char * version_str = "1.81 20260530";
 
 #define MY_NAME "sg_modes"
 
@@ -1395,10 +1397,7 @@ main(int argc, char * argv[])
                 printf("    peripheral device type: %s\n",
                        sg_get_pdt_str(op->pg_code, sizeof(pdt_name),
                                       pdt_name));
-                if (op->subpg_code_given)
-                    list_page_codes(-1, op);
-                else
-                    list_page_codes(-1, op);
+                list_page_codes(-1, op);
             }
             return 0;
         }

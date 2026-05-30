@@ -320,6 +320,15 @@ and/or indivudual executable have been copied out of the build
 sub-directory, all of cmake's artifact files can be removed with:
     rm -rf <src_top_level_dir>/build/
 
+To build a single exceutable (rather than the whole package):
+    # cd <src_top_level_dir>
+    #
+    # cmake -S . -B build
+    # cd build
+    # cmake --build . --target sg_inq
+
+The executable should then be at <src_top_level_dir>/build/src/sg_inq .
+
 Warning
 =======
 Many devices use SCSI command sets over transport protocols not normally
@@ -643,4 +652,4 @@ See https://sg.danny.cz/sg/tools.html
 
 
 Douglas Gilbert         dgilbert@interlog.com
-23rd May 2026
+30th May 2026

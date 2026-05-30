@@ -56,6 +56,15 @@ set ( sgutils2_lib_common
 	sg_snt.c
 )
 
+# For testing it can be useful to compile C code with a C++ compiler. That
+# can be done with the following; plus adding CXX to project() line:
+#        project(<project_name> VERSION x.y.z LANGUAGES C CXX)
+## set_source_files_properties(
+##     ${sgutils2_lib_common}
+##     ${sgutils2_lib_hal}
+##     PROPERTIES LANGUAGE CXX
+## )
+
 if ( BUILD_SHARED_LIBS )
     MESSAGE( STATUS ">> Build shared library(s) (default)" )
     add_library(sgutils2 SHARED ${sgutils2_lib_common} ${sgutils2_lib_hal} )
