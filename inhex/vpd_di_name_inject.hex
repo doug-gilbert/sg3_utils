@@ -1,0 +1,18 @@
+#
+# VPD page 0x83 with a SCSI name string (designator type 8) testing
+# udev udev-conforming character encoding.
+#
+# Used to test that sg_inq --export conforms as expected.
+#
+# Identifier: iqn.2026-05.sg3\nX_SG3_PROBE=1
+#
+# An example invocation:
+#    sg_inq --export --inhex=vpd_di_name_inject.hex --raw
+
+00 83 00 24
+
+# SCSI name string designator (type 8, code set 3 UTF-8, association 0 LUN)
+# descriptor header: code_set=3, assoc=0, desig_type=8, length=0x1d
+03 08 00 1d
+69 71 6e 2e 32 30 32 36  2d 30 35 2e 73 67 33 0a
+58 5f 53 47 33 5f 50 52  4f 42 45 3d 31 00 00 00
