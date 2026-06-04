@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2006-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,7 +42,7 @@
 
 */
 
-static const char * version_str = "2.05 20260521";  /* spc7r05 + sbc6r02 */
+static const char * version_str = "2.07 20260604";  /* spc7r05 + sbc6r02 */
 
 #define MY_NAME "sg_vpd"
 
@@ -77,9 +75,9 @@ static int svpd_decode_t10(struct sg_pt_base * ptvp, struct opts_t * op,
                            sgj_opaque_p jop, int subvalue, int off,
                            const char * prefix);
 
-static int filter_dev_ids(const char * print_if_found, int num_leading,
-                          uint8_t * buff, int len, int m_assoc,
-                          struct opts_t * op, sgj_opaque_p jop);
+static int filter_desig_descs(const char * print_if_found, int num_leading,
+                          const uint8_t * buff, int len, bool pr_assoc,
+                          int m_assoc, struct opts_t * op, sgj_opaque_p jop);
 
 static const int rsp_buff_sz = MX_ALLOC_LEN + 2;
 
@@ -92,6 +90,7 @@ static const struct option long_options[] = {
     {"desc", no_argument, 0, 'd'},
     {"enumerate", no_argument, 0, 'e'},
     {"examine", no_argument, 0, 'E'},
+    {"export", no_argument, 0, 'Z'},  /* error message says to try sg_inq */
     {"force", no_argument, 0, 'f'},
     {"help", no_argument, 0, 'h'},
     {"hex", no_argument, 0, 'H'},
@@ -480,31 +479,31 @@ device_id_vpd_variants(uint8_t * buff, int len, int subvalue,
     uint8_t * b;
 
     if (len < 4) {
-        pr2serr("%s %s=%d\n", di_vpdp,  lts_s, len);
+        pr2serr("%s %s %s=%d\n", dev_id_s, vpd_pg_s,  lts_s, len);
         return;
     }
     blen = len - 4;
     b = buff + 4;
     m_a = -1;
     if (0 == subvalue) {
-        filter_dev_ids(sg_get_desig_assoc_str(VPD_ASSOC_LU), 0, b, blen,
-                       VPD_ASSOC_LU, op, jap);
-        filter_dev_ids(sg_get_desig_assoc_str(VPD_ASSOC_TPORT), 0, b, blen,
-                       VPD_ASSOC_TPORT, op, jap);
-        filter_dev_ids(sg_get_desig_assoc_str(VPD_ASSOC_TDEVICE), 0, b, blen,
-                       VPD_ASSOC_TDEVICE, op, jap);
+        filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_LU), 0, b, blen,
+                           false, VPD_ASSOC_LU, op, jap);
+        filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TPORT), 0, b,
+                           blen, false, VPD_ASSOC_TPORT, op, jap);
+        filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TDEVICE), 0, b,
+                           blen, false, VPD_ASSOC_TDEVICE, op, jap);
     } else if (VPD_DI_SEL_AS_IS == subvalue)
-        filter_dev_ids(NULL, 0, b, blen, m_a, op, jap);
+        filter_desig_descs(NULL, 0, b, blen, true, m_a, op, jap);
     else {
         if (VPD_DI_SEL_LU & subvalue)
-            filter_dev_ids(sg_get_desig_assoc_str(VPD_ASSOC_LU), 0, b, blen,
-                           VPD_ASSOC_LU, op, jap);
+            filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_LU), 0, b,
+                               blen, false, VPD_ASSOC_LU, op, jap);
         if (VPD_DI_SEL_TPORT & subvalue)
-            filter_dev_ids(sg_get_desig_assoc_str(VPD_ASSOC_TPORT), 0, b,
-                           blen, VPD_ASSOC_TPORT, op, jap);
+            filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TPORT), 0, b,
+                               blen, false, VPD_ASSOC_TPORT, op, jap);
         if (VPD_DI_SEL_TARGET & subvalue)
-            filter_dev_ids(sg_get_desig_assoc_str(VPD_ASSOC_TDEVICE), 0,
-                           b, blen, VPD_ASSOC_TDEVICE, op, jap);
+            filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TDEVICE), 0,
+                               b, blen, false, VPD_ASSOC_TDEVICE, op, jap);
     }
 }
 
@@ -654,8 +653,8 @@ decode_scsi_ports_vpd_4vpd(uint8_t * buff, int len, struct opts_t * op,
                     ja2p = sgj_named_subarray_r(jsp, jo3p,
                                         "designation_descriptor_list");
                 }
-                filter_dev_ids("", 2 /* leading spaces */, bp + bump + 4,
-                               tpd_len, VPD_ASSOC_TPORT, op, ja2p);
+                filter_desig_descs("", 2 /* leading spaces */, bp + bump + 4,
+                               tpd_len, true, VPD_ASSOC_TPORT, op, ja2p);
             }
         }
         bump += tpd_len + 4;
@@ -667,7 +666,7 @@ decode_scsi_ports_vpd_4vpd(uint8_t * buff, int len, struct opts_t * op,
    selected by association, designator type and/or code set. Not used
    for JSON output. */
 static int
-filter_dev_ids_quiet(uint8_t * buff, int len, int m_assoc)
+filter_desig_descs_quiet(const uint8_t * buff, int len, int m_assoc)
 {
     int k, m, p_id, c_set, piv, desig_type, i_len, naa, off, u;
     int assoc, is_sas, rtp;
@@ -862,84 +861,20 @@ filter_dev_ids_quiet(uint8_t * buff, int len, int m_assoc)
 }
 
 /* Prints outs designation descriptors (dd_s) selected by association,
-   designator type and/or code set. VPD_DEVICE_ID and VPD_SCSI_PORTS */
+   designator type and/or code set. For VPD_DEVICE_ID and VPD_SCSI_PORTS */
 static int
-filter_dev_ids(const char * print_if_found, int num_leading, uint8_t * buff,
-               int len, int m_assoc, struct opts_t * op, sgj_opaque_p jap)
+filter_desig_descs(const char * print_if_found, int num_leading,
+                   const uint8_t * buff, int len, bool pr_assoc,
+                   int m_assoc, struct opts_t * op, sgj_opaque_p jap)
 {
-    bool printed, sgj_out_hr;
-    int assoc, off, u, i_len;
-    const uint8_t * bp;
     sgj_state * jsp = &op->json_st;
-    char b[1024];
-    char sp[82];
-    static const int blen = sizeof(b);
 
+    sgj_pr_hr(jsp, "%*s  %s:\n", num_leading, "", print_if_found);
     if (op->do_quiet && (! jsp->pr_as_json))
-        return filter_dev_ids_quiet(buff, len, m_assoc);
-    sgj_out_hr = false;
-    if (jsp->pr_as_json) {
-        int ret = filter_json_dev_ids(buff, len, m_assoc, op, jap);
+        return filter_desig_descs_quiet(buff, len, m_assoc);
 
-        if (ret || (! jsp->pr_out_hr))
-            return ret;
-        sgj_out_hr = true;
-    }
-    if (num_leading > (int)(sizeof(sp) - 2))
-        num_leading = sizeof(sp) - 2;
-    if (num_leading > 0)
-        snprintf(sp, sizeof(sp), "%*c", num_leading, ' ');
-    else
-        sp[0] = '\0';
-    if (buff[2] != 0) { /* all valid dd_s should have 0 in this byte */
-        if (op->verbose)
-            pr2serr("%s: designation descriptors byte 2 should be 0\n"
-                    "perhaps this is a standard inquiry response, ignore\n",
-                    __func__);
-        return 0;
-    }
-    off = -1;
-    printed = false;
-    while ((u = sg_vpd_dev_id_iter(buff, len, &off, m_assoc, -1, -1)) == 0) {
-        bp = buff + off;
-        i_len = bp[3];
-        if ((off + i_len + 4) > len) {
-            pr2serr("    %s error: designator length longer than\n"
-                    "     remaining response length=%d\n", vpd_pg_s,
-                    (len - off));
-            return SG_LIB_CAT_MALFORMED;
-        }
-        assoc = ((bp[1] >> 4) & 0x3);
-        if (print_if_found && (! printed)) {
-            printed = true;
-            if (strlen(print_if_found) > 0) {
-                snprintf(b, blen, "  %s:", print_if_found);
-                if (sgj_out_hr)
-                    sgj_hr_str_out(jsp, b, strlen(b));
-                else
-                    printf("%s\n", b);
-            }
-        }
-        if (NULL == print_if_found) {
-            snprintf(b, blen, "  %s%s:", sp, sg_get_desig_assoc_str(assoc));
-            if (sgj_out_hr)
-                sgj_hr_str_out(jsp, b, strlen(b));
-            else
-                printf("%s\n", b);
-        }
-        sg_get_designation_descriptor_str(sp, bp, i_len + 4, false,
-                                          op->do_long, blen, b);
-        if (sgj_out_hr)
-            sgj_hr_str_out(jsp, b, strlen(b));
-        else
-            printf("%s", b);
-    }
-    if (-2 == u) {
-        pr2serr("%s error: short designator around offset %d\n", vpd_pg_s,
-                 off);
-        return SG_LIB_CAT_MALFORMED;
-    }
-    return 0;
+    return filter_process_desig_descs(buff, len, num_leading, pr_assoc,
+                                      m_assoc, op, jap);
 }
 
 /* VPD_BLOCK_LIMITS sbc */
@@ -2338,7 +2273,7 @@ static int
 svpd_decode_all(struct sg_pt_base * ptvp, struct opts_t * op,
                 sgj_opaque_p jop)
 {
-    int k, res, rlen, n, pn;
+    int k, res, rlen, n, pn, subvalue;
     int max_pn = 255;
     int any_err = 0;
     sgj_state * jsp = &op->json_st;
@@ -2445,7 +2380,10 @@ svpd_decode_all(struct sg_pt_base * ptvp, struct opts_t * op,
                     sgj_pr_hr(jsp, "[0x%x] ", pn);
             }
 
-            res = svpd_decode_t10(NULL, op, jop, 0, off, NULL);
+            subvalue = 0;
+            if ((pn == op->orig_vpd_pn) && (op->vend_prod_num > 0))
+                subvalue = op->vend_prod_num;
+            res = svpd_decode_t10(NULL, op, jop, subvalue, off, NULL);
             if (SG_LIB_CAT_OTHER == res) {
                 res = svpd_decode_vendor(NULL, op, jop, off);
                 if (SG_LIB_CAT_OTHER == res)
@@ -2612,7 +2550,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "^adDeEfhHiI:j::J:lm:M:p:qQ:rvV",
+        c = getopt_long(argc, argv, "^adDeEfhHiI:j::J:lm:M:p:qQ:rvVZ",
                         long_options, &option_index);
         if (c == -1)
             break;
@@ -2729,6 +2667,11 @@ main(int argc, char * argv[])
             ++op->verbose;
             break;
         case 'V':
+            op->version_given = true;
+            break;
+        case 'Z':
+            pr2serr("--export NOT support by sg_vpd, try sg_inq instead\n");
+           /* treat like --version for quick exit */
             op->version_given = true;
             break;
         default:
@@ -2848,7 +2791,11 @@ main(int argc, char * argv[])
             goto err_out;
         }
         jop = sgj_start_r(MY_NAME, version_str, argc, argv, jsp);
+        if ((op->verbose > 0) && (0 == jsp->verbose))
+            jsp->verbose = op->verbose;
     }
+    if (op->do_long > 0)
+        jsp->z_counter = op->do_long;
     as_json = jsp->pr_as_json;
 
     if (op->page_str) {
@@ -2871,6 +2818,7 @@ main(int argc, char * argv[])
                 }
             }
             op->vpd_pn = vnp->value;
+            op->orig_vpd_pn = op->vpd_pn;
             subvalue = vnp->subvalue;
             op->vend_prod_num = subvalue;
         } else {
@@ -2889,6 +2837,7 @@ main(int argc, char * argv[])
                 ret = SG_LIB_SYNTAX_ERROR;
                 goto fini;
             }
+            op->orig_vpd_pn = op->vpd_pn;
             if (cp) {
                 if (isdigit((uint8_t)*(cp + 1)))
                     op->vend_prod_num = sg_get_num_nomult(cp + 1);
@@ -3036,6 +2985,7 @@ main(int argc, char * argv[])
     }
     if (op->do_ident) {
         op->vpd_pn = VPD_DEVICE_ID;
+        op->orig_vpd_pn = op->vpd_pn;
         if (op->do_ident > 1) {
             if (! op->do_long)
                 op->do_quiet = true;

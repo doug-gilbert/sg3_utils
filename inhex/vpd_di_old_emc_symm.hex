@@ -1,0 +1,34 @@
+#
+# This VPD page is from an old EMC (now Dell) Symmetrix storage array that
+# would be at least 20 years old and was sold in large numbers. Its Device
+# Identification page [0x83] pre-dated the current T10 format of that VPD
+# page. A 16 byte NAA 6 identifier belonging to OUI 06048 (EMC) followed
+# immediately after the 4 byte VPD page header [T10 term: "a designator"].
+# What is missing is the 4 byte Designation descriptor's header prior to
+# the designator. Luckily the OUI that EMC used was 06048 which places
+# '04' in byte 2 of that header which is "reserved" according to T10. And
+# reserved means 00 so it will fail a sanity check. sg_inq has a check for
+# this specific Device Identification VPD page and decodes it with the
+# above in mind. sg_vpd also decodes VPD pages but in a more general way and
+# flags the page (shown below in hex) as an error.
+#
+# To test:
+#         sg_inq -I inhex/vpd_di_old_emc_symm.hex
+# or
+#         sg_vpd -I inhex/vpd_di_old_emc_symm.hex
+
+00 83 00 10
+60 06 04 80 00 12 34 56
+78 9A BC DE F0 12 34 56
+
+# A later model (DMX ?) corrected this as follows:
+
+# 00 83 00 14
+# 01 03 00 10
+# 60 06 04 80 00 01 90 10
+# 31 89 53 30 30 34 38 34
+
+# Notice the four extra bytes (second line), the first two decoded mean
+# PIV=0, ASSOC=0 (addressed LU), DESIGNATOR_TYPE=3 (NAA). The last 16
+# bytes are NAA-6, OUI=06048 (EMC), followed by a system unique (to EMC)
+# identifier.

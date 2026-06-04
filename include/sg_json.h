@@ -4,8 +4,6 @@
 /*
  * Copyright (c) 2023-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -129,13 +127,15 @@ bool sgj_is_snake_name(const char * name_s);
  *
  *    */
 
-/* If jsp in non-NULL and jsp->pr_as_json is true then this call is ignored
- * unless jsp->pr_out_hr is true. Otherwise this function prints to stdout
- * like printf(fmt, ...); note that no LF is added. In the jsp->pr_out_hr is
- * true case, nothing is printed to stdout but instead is placed into a JSON
- * array (jsp->out_hrp) after some preprocessing. That preprocessing involves
- * removing a leading LF from 'fmt' (if present) and up to two trailing LF
- * characters. */
+/* If jsp is valid (i.e. non-NULL) and jsp->pr_as_json is true and
+ * jsp->pr_out_hr is false then this call is ignored (as no human readable
+ * output is required). Otherwise this function prints to stdout or to
+ * the JSON array (jsp->out_hrp), just like printf(fmt, ...); note that no
+ * LF is added. If jsp is valid, jsp->pr_as_json is true, and the
+ * jsp->pr_out_hr is true; then nothing is printed to stdout but instead is
+ * placed into a JSON array (jsp->out_hrp) after some preprocessing. That
+ * preprocessing involves removing a leading LF from 'fmt' (if present)
+ * and up to two trailing LF characters. */
 void sgj_pr_hr(sgj_state * jsp, const char * fmt, ...) __printf(2, 3);
 
 /* Initializes the state object pointed to by jsp based on the argument
@@ -329,6 +329,9 @@ void sgj_js_nv_hex_bytes(sgj_state * jsp, sgj_opaque_p jop,
 void sgj_haj_vs(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
                 const char * name, enum sgj_separator_t sep,
                 const char * val_s);
+void sgj_haj_vs_len(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
+                    const char * name, enum sgj_separator_t sep,
+                    const char * val_s, int val_len);
 
 /* Similar to sgj_haj_vs()'s description with 'JSON string object'
  * replaced by 'JSON integer object'. hex_haj when set will cause val_i
@@ -367,6 +370,10 @@ sgj_opaque_p sgj_haj_subo_r(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
 void sgj_haj_vb(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
                 const char * name, enum sgj_separator_t sep, bool val_b);
 
+/* Extension of sgj_haj_vs where the value starts at byte_arr and is
+ * num_bytes long. The value is rendered as an ASCII string of bytes
+ * in hexadecimal (two digits per byte) and each byte separated by a
+ * space. The name extra field (nex_s) is ignored if NULL. */
 void sgj_haj_vs_hex_bytes_nex(sgj_state * jsp, sgj_opaque_p jop,
                               int leadin_sp, const char * name,
                               enum sgj_separator_t sep,

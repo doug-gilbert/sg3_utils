@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2006-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -46,11 +44,11 @@ const char * product_rev_lev_hr = "Product_revision_level";
 const char * product_rev_lev_sn = "product_revision_level";
 const char * pdt_sn = "peripheral_device_type";
 const char * vpd_pg_s = "VPD page";
+const char * const dev_id_s = "Device identification";
 const char * lts_s = "length too short";
 
 const char * svp_vpdp = "Supported VPD pages VPD page";
 const char * usn_vpdp = "Unit serial number VPD page";
-const char * di_vpdp = "Device identification VPD page";
 const char * mna_vpdp = "Management network addresses VPD page";
 const char * eid_vpdp = "Extended inquiry data VPD page";
 const char * mpp_vpdp = "Mode page policy VPD page";
@@ -335,6 +333,10 @@ vpd_fetch_page(struct sg_pt_base * ptvp, uint8_t * rp, int page, int mxlen,
     }
 }
 
+/* JSON only output of VPD page header. 'name' is converted to snake
+ * notation if required. Needs first two byte of header (it should be at
+ * least 4 bytes long, the last 2 bytes for following length). Returns
+ * a pointer to a new named sub-object (of jop). */
 sgj_opaque_p
 sg_vpd_js_hdr(sgj_state * jsp, sgj_opaque_p jop, const char * name,
               const uint8_t * vpd_hdrp)
@@ -878,9 +880,12 @@ decode_power_condition(const uint8_t * buff, int len, struct opts_t * op,
                    true, "unit: millisecond");
 }
 
+/* Filter list (array) of designation descriptors by association. All matches
+ * are processed to produce output (human readable and/or JSON). */
 int
-filter_json_dev_ids(uint8_t * buff, int len, int m_assoc, struct opts_t * op,
-                    sgj_opaque_p jap)
+filter_process_desig_descs(const uint8_t * buff, int len, int leadin_sp,
+                           bool pr_assoc, int m_assoc, struct opts_t * op,
+                           sgj_opaque_p jap)
 {
     int u, off, i_len;
     sgj_opaque_p jo2p;
@@ -892,12 +897,15 @@ filter_json_dev_ids(uint8_t * buff, int len, int m_assoc, struct opts_t * op,
         bp = buff + off;
         i_len = bp[3];
         if ((off + i_len + 4) > len) {
-            pr2serr("    %s error: designator length longer than remaining\n"
-                    "     response length=%d\n", vpd_pg_s, (len - off));
+            pr2serr("    %s error: designator length [%d] longer than "
+                    "remaining\n" "     response length=%d\n", vpd_pg_s,
+                    i_len, (len - off));
             return SG_LIB_CAT_MALFORMED;
         }
         jo2p = sgj_new_unattached_object_r(jsp);
-        sgj_js_designation_descriptor(jsp, jo2p, bp, i_len + 4);
+
+        sgj_haj_designation_descriptor(jsp, jo2p, leadin_sp, pr_assoc, bp,
+                                       i_len + 4);
         sgj_js_nv_o(jsp, jap, NULL /* name */, jo2p);
     }
     if (-2 == u) {
@@ -1088,9 +1096,6 @@ decode_nvme_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
                sg_get_unaligned_le32(buff + 184), true);
     sgj_haj_vi(jsp, jop, 2, "ZNS command set version", SGJ_SEP_COLON_1_SPACE,
                sg_get_unaligned_le32(buff + 188), true);
-#if 0
-xxxxx
-#endif
 }
 
 /* VPD_SCSI_FEATURE_SETS  0x92  ["sfs"] */
@@ -1919,7 +1924,7 @@ decode_block_lb_prov_vpd(const uint8_t * buff, int len, struct opts_t * op,
     if (dp && (len > 11)) {
         int i_len;
         const uint8_t * bp;
-        sgj_opaque_p jo2p;
+        sgj_opaque_p jo2p = NULL;
 
         bp = buff + 8;
         i_len = bp[3];
@@ -1927,17 +1932,7 @@ decode_block_lb_prov_vpd(const uint8_t * buff, int len, struct opts_t * op,
             pr2serr("%s too short=%d\n", pgd, i_len);
             return 0;
         }
-        if (jsp->pr_as_json) {
-            jo2p = sgj_snake_named_subobject_r(jsp, jop, pgd);
-            sgj_js_designation_descriptor(jsp, jo2p, bp, i_len + 4);
-        }
-        sgj_pr_hr(jsp, "  %s:\n", pgd);
-        sg_get_designation_descriptor_str("    ", bp, i_len + 4, true,
-                                          op->do_long, blen, b);
-        if (jsp->pr_as_json && jsp->pr_out_hr)
-            sgj_hr_str_out(jsp, b, strlen(b));
-        else
-            sgj_pr_hr(jsp, "%s", b);
+        sgj_haj_designation_descriptor(jsp, jo2p, 2, true, bp, i_len + 4);
     }
     return 0;
 }

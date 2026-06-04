@@ -4,8 +4,6 @@
 /*
  * Copyright (c) 2022-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -162,9 +160,10 @@ struct opts_t {
     int maxlen;                 /* sg_inq[was: resp_len] + sg_vpd */
     int num_pages;              /* sg_inq */
     int page_pdt;               /* sg_inq */
-    int vend_prod_num;          /* sg_vpd */
+    int vend_prod_num;          /* sg_vpd, seems to hold subvalue */
     int verbose;                /* sg_inq + sg_vpd */
     int vpd_pn;                 /* sg_vpd */
+    int orig_vpd_pn;            /* sg_vpd */
     const char * device_name;   /* sg_inq + sg_vpd */
     const char * page_str;      /* sg_inq + sg_vpd */
     const char * inhex_fn;      /* sg_inq + sg_vpd */
@@ -208,8 +207,9 @@ void decode_cga_profile_vpd(const uint8_t * buff, int len, struct opts_t * op,
                        sgj_opaque_p jap);
 void decode_power_condition(const uint8_t * buff, int len, struct opts_t * op,
                             sgj_opaque_p jop);
-int filter_json_dev_ids(uint8_t * buff, int len, int m_assoc,
-                        struct opts_t * op, sgj_opaque_p jap);
+int filter_process_desig_descs(const uint8_t * buff, int len, int leadin_sp,
+                               bool pr_assoc, int m_assoc, struct opts_t * op,
+                               sgj_opaque_p jap);
 void decode_ata_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
                          sgj_opaque_p jop);
 void decode_nvme_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
@@ -306,11 +306,11 @@ extern const char * product_id_js;
 extern const char * product_rev_lev_hr;
 extern const char * product_rev_lev_js;
 extern const char * vpd_pg_s;
+extern const char * const dev_id_s;
 extern const char * lts_s;
 
 extern const char * svp_vpdp;
 extern const char * usn_vpdp;
-extern const char * di_vpdp;
 extern const char * mna_vpdp;
 extern const char * eid_vpdp;
 extern const char * mpp_vpdp;

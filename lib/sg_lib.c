@@ -1013,13 +1013,19 @@ sg_t10_uuid_desig2str(const uint8_t *dp, int dlen, int c_set, bool do_long,
     return n;
 }
 
+/* Note that dd_len_trick can be negative in which case its absolute value
+ * is the number of bytes starting at ddp _and_ only the first 2 bytes are
+ * decoded. 'lip' is pointer to leadin string which is prepended to every
+ * line written to 'b'; 'lip' may be NULL. Returns number of bytes
+ * written to 'b'. */
 int
 sg_get_designation_descriptor_str(const char * lip, const uint8_t * ddp,
-                                  int dd_len, bool print_assoc, bool do_long,
-                                  int blen, char * b)
+                                  int dd_len_trick, bool print_assoc,
+                                  bool do_long, int blen, char * b)
 {
     int m, p_id, piv, c_set, assoc, desig_type, ci_off, c_id, d_id, naa;
     int vsi, k, n, dlen;
+    int dd_len = abs(dd_len_trick);
     uint64_t ccc_id, vsei;
     const uint8_t * ip;
     char e[64];
@@ -1028,18 +1034,11 @@ sg_get_designation_descriptor_str(const char * lip, const uint8_t * ddp,
     n = 0;
     if (NULL == lip)
         lip = "";
-    if (dd_len < 4) {
+    if ((dd_len_trick < 0) && (dd_len < 2)) {
         n += sg_scn3pr(b, blen, n, "%sdesignator desc too short: got "
-                       "length of %d want 4 or more\n", lip, dd_len);
+                       "length of %d want 2 or more\n", lip, dd_len);
         return n;
     }
-    dlen = ddp[3];
-    if (dlen > (dd_len - 4)) {
-        n += sg_scn3pr(b, blen, n, "%sdesignator too long: says it is %d "
-                       "bytes, but given %d bytes\n", lip, dlen, dd_len - 4);
-        return n;
-    }
-    ip = ddp + 4;
     p_id = ((ddp[0] >> 4) & 0xf);
     c_set = (ddp[0] & 0xf);
     piv = ((ddp[1] & 0x80) ? 1 : 0);
@@ -1059,6 +1058,23 @@ sg_get_designation_descriptor_str(const char * lip, const uint8_t * ddp,
     if (piv && ((1 == assoc) || (2 == assoc)))
         n += sg_scn3pr(b, blen, n, "%s     transport: %s\n", lip,
                        sg_get_trans_proto_str(p_id, sizeof(e), e));
+    if (dd_len_trick < 0)
+        return n;
+
+    /* decoding full designation descriptor follows */
+    if (dd_len < 4) {
+        n += sg_scn3pr(b, blen, n, "%sdesignator desc too short: got "
+                       "length of %d want 4 or more\n", lip, dd_len);
+        return n;
+    }
+    dlen = ddp[3];
+    if (dlen > (dd_len - 4)) {
+        n += sg_scn3pr(b, blen, n, "%sdesignator too long: says it is %d "
+                       "bytes, but given %d bytes\n", lip, dlen, dd_len - 4);
+        return n;
+    }
+    ip = ddp + 4;
+
     switch (desig_type) {
     case 0: /* vendor specific */
         k = 0;
@@ -1298,9 +1314,10 @@ sg_get_designation_descriptor_str(const char * lip, const uint8_t * ddp,
             n += hex2str(ip, dlen, "", 1, blen - n, b + n);
             break;
         }
-        n += sg_scn3pr(b, blen, n, "%s      MD5 logical unit identifier:\n",
+        n += sg_scn3pr(b, blen, n, "%s      MD5 logical unit identifier: ",
                        lip);
-        n += hex2str(ip, dlen, lip, 1, blen - n, b + n);
+        /* should be 16 bytes long to keep on same line */
+        n += hex2str(ip, dlen, "" /* lip */, 1, blen - n, b + n);
         break;
     case 8: /* SCSI name string */
         if (3 != c_set) {       /* accept ASCII as subset of UTF-8 */
@@ -2562,7 +2579,10 @@ sg_get_nvme_opcode_name(uint8_t cmd_byte0, bool admin, int buff_len,
  * call. If 0 returned then 'initial_desig_desc + *off' should be a valid
  * descriptor; returns -1 if normal end condition and -2 for an abnormal
  * termination. Matches association, designator_type and/or code_set when
- * any of those values are greater than or equal to zero. */
+ * any of those values are >= 0. m_assoc=-1 means match all associations,
+ * dito for m_desig_type and m_desig_type. If all the m_* arguments are -1
+ * then iterates through all descriptors in the order they appear, starting
+ * at initial_desig_desc . Does NOT re-order. */
 int
 sg_vpd_dev_id_iter(const uint8_t * initial_desig_desc, int page_len,
                    int * off, int m_assoc, int m_desig_type, int m_code_set)

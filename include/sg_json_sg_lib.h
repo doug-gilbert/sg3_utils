@@ -4,8 +4,6 @@
 /*
  * Copyright (c) 2023-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +19,9 @@ extern "C" {
 #endif
 
 /* These JSON support functions' implementations depend on code in
- * the rest of sg_lib.c . Since sg_json.h is included above, once this
+ * the rest of sg_lib.c . The bulk of JSON support functions (and
+ * structures) can be found in sg_json.h which does not depend on
+ * sg_lib.c . Since sg_json.h is included above, once this
  * header is included, there is no need to include sg_json.h . */
 
 
@@ -32,11 +32,21 @@ extern "C" {
 bool sgj_js_sense(sgj_state * jsp, sgj_opaque_p jop, const uint8_t * sbp,
                   int sb_len);
 
-/* Decodes a designation descriptor (e.g. as found in the Device
- * Identification VPD page (0x83)) into JSON at position 'jop'.
- * Returns true if successful. */
-bool sgj_js_designation_descriptor(sgj_state * jsp, sgj_opaque_p jop,
-                                   const uint8_t * ddp, int dd_len);
+/* This function decodes one designation descriptor which starts at 'ddp'
+ * and is 'dd_len' bytes long. Designation descriptors are mainly found
+ * in the Device identification VPD page [0x83] but do arise in other
+ * situations (e.g. SCSI ports VPD page [0x86]). This function produces
+ * either human readable output (to stdout) or JSON output or both. The
+ * both variant is when JSON output is selected and additionally
+ * jsp->pr_out_hr is true (e.g. with the '-j=o' option). In this case,
+ * human readable output is placed in a JSON array called
+ * 'plain_text_output' with each line in a single array element.
+ * Implementation note: the designation descriptor is parsed twice in the
+ * "both' case. Each line of human readable output is prefixed by (at least)
+ * leadin_sp spaces. Returns true if successful, else false. */
+bool sgj_haj_designation_descriptor(sgj_state * jsp, sgj_opaque_p jop,
+                                    int leadin_sp, bool pr_assoc,
+                                    const uint8_t * ddp, int dd_len);
 
 /* The in-core JSON tree is printed to 'fp' (typically stdout) by this call.
  * If jsp is NULL, jsp->pr_as_json is false or jsp->basep is NULL then this

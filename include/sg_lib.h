@@ -4,8 +4,6 @@
 /*
  * Copyright (c) 2004-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -305,8 +303,10 @@ int sg_get_sense_descriptors_str(const char * leadin,
 /* Decodes a designation descriptor (e.g. as found in the Device
  * Identification VPD page (0x83)) into string 'b' whose maximum length is
  * blen. 'leadin' is string prepended to each line written to 'b', NULL
- * treated as "". Returns the number of bytes written to 'b' excluding the
- * trailing '\0'. */
+ * treated as "". dd_len may be negative in which case its absolute value
+ * is the length in bytes pointed to by ddp and only the header part of
+ * the designation descriptor (first 2 bytes) is decoded. Returns the
+ * number of bytes written to 'b' excluding the trailing '\0'. */
 int sg_get_designation_descriptor_str(const char * leadin,
                                       const uint8_t * ddp, int dd_len,
                                       bool print_assoc, bool do_long,
@@ -604,7 +604,10 @@ const char * sg_get_category_sense_str(int sense_cat, int buff_len,
  * call. If 0 returned then 'initial_desig_desc + *off' should be a valid
  * descriptor; returns -1 if normal end condition and -2 for an abnormal
  * termination. Matches association, designator_type and/or code_set when
- * any of those values are greater than or equal to zero. */
+ * any of those values are greater than or equal to zero. m_assoc=-1 means
+ * match all associations, dito for m_desig_type and m_desig_type. If all
+ * the m_* arguments are -1 then iterates through all descriptors in the
+ * order they appear starting at initial_desig_desc . */
 int sg_vpd_dev_id_iter(const uint8_t * initial_desig_desc, int page_len,
                        int * off, int m_assoc, int m_desig_type,
                        int m_code_set);

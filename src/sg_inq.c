@@ -55,7 +55,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.61 20260521";  /* spc7r05, sbc6r02 */
+static const char * version_str = "2.62 20260604";  /* spc7r05, sbc6r02 */
 
 #define MY_NAME "sg_inq"
 
@@ -122,8 +122,9 @@ static const int rsp_buff_sz = MX_ALLOC_LEN + 1;
 static char xtra_buff[MX_ALLOC_LEN + 1];
 static char usn_buff[MX_ALLOC_LEN + 1];
 
-static void decode_dev_ids(const char * leadin, uint8_t * buff, int len,
-                           struct opts_t * op, sgj_opaque_p jop);
+static void decode_desig_desc(const char * namep, int leadin_sp,
+                              uint8_t * buff, int len, struct opts_t * op,
+                              sgj_opaque_p jop);
 static int vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op,
                       sgj_opaque_p jop, int off);
 
@@ -1373,15 +1374,16 @@ decode_ascii_inf(uint8_t * buff, int len, struct opts_t * op,
     if (jsp->pr_as_json)
         sgjv_js_hex_long(jsp, jop, buff, len);
 }
-
+/* A Device Identifier VPD pages can contain multiple device ids */
 static void
-decode_id_vpd(uint8_t * buff, int len, struct opts_t * op, sgj_opaque_p jap)
+decode_dev_id_vpd(uint8_t * buff, int len, struct opts_t * op,
+                  sgj_opaque_p jap)
 {
     if (len < 4) {
-        pr2serr("%s %s=%d\n", di_vpdp,  lts_s, len);
+        pr2serr("%s %s %s=%d\n", dev_id_s, vpd_pg_s, lts_s, len);
         return;
     }
-    decode_dev_ids("Device identification", buff + 4, len - 4, op, jap);
+    decode_desig_desc(dev_id_s, 2, buff + 4, len - 4, op, jap);
 }
 
 /* VPD_SCSI_PORTS   0x88  ["sp"] */
@@ -1450,8 +1452,8 @@ decode_scsi_ports_vpd_4inq(uint8_t * buff, int len, struct opts_t * op,
                 sgj_opaque_p ja2p = sgj_named_subarray_r(jsp, jo2p,
                                         "target_port_descriptor_list");
 
-                decode_dev_ids("SCSI Ports", bp + bump + 4, tpd_len,
-                               op, ja2p);
+                decode_desig_desc("SCSI Ports", 2, bp + bump + 4, tpd_len,
+                                  op, ja2p);
             }
         }
         bump += tpd_len + 4;
@@ -1459,366 +1461,31 @@ decode_scsi_ports_vpd_4inq(uint8_t * buff, int len, struct opts_t * op,
     }
 }
 
-/* These are target port, device server (i.e. target) and LU identifiers */
+/* These are target port, device server (i.e. target) and LU identifiers.
+ * jap should point to the designator list (an array). */
 static void
-decode_dev_ids(const char * leadin, uint8_t * buff, int len,
-               struct opts_t * op, sgj_opaque_p jap)
+decode_desig_desc(const char * namep, int leadin_sp, uint8_t * buff, int len,
+                  struct opts_t * op, sgj_opaque_p jap)
 {
-    int u, j, m, id_len, p_id, c_set, piv, assoc, desig_type, i_len;
-    int off, ci_off, c_id, d_id, naa, vsi, k, n;
-    uint64_t vsei, id_ext, ccc_id;
-    const uint8_t * bp;
-    const uint8_t * ip;
-    const char * cp;
     sgj_state * jsp = &op->json_st;
-    char b[256];
-    char d[64];
-    static const int blen = sizeof(b);
-    static const int dlen = sizeof(d);
+    uint8_t e[36];
+    static const int elen = sizeof(e);
 
-    if (jsp->pr_as_json) {
-        int ret = filter_json_dev_ids(buff, len, -1, op, jap);
+    sgj_pr_hr(jsp, "%s\n", (namep ? namep : ""));
+    /* Check for EMC Symmetrix "pre-SPC" designation descriptor that has no
+     * 4 byte header and is a 16 byte NAA-6 identify with OUI of 06048 (EMC).
+     * Note that only sg_inq does this check, not sg_vpd (nor sdparm). */
+    if ((buff[2] > 2) && (len <= (elen - 8)) && (buff[0] == 0x60)) {
+        sgj_pr_hr(jsp, "  Pre-SPC descriptor, descriptor length: %d\n", len);
+        memcpy(e + 4, buff, len);
+        e[0] = 0x1;     /* Code set: 1 --> binary */
+        e[1] = 0x3;     /* PIV=0, Assoc=0 --> LU; desig_type=3 --> NAA */
+        e[2] = 0x0;     /* "Reserved" which means 0x0 */
+        e[3] = len;
+        filter_process_desig_descs(e, len + 4, leadin_sp, true, -1, op, jap);
 
-        if (ret || (! jsp->pr_out_hr))
-            return;
-    }
-    if (buff[2] > 2) {  /* SPC-3,4,5 buff[2] is upper byte of length */
-        /*
-         * Reference the 3rd byte of the first Identification descriptor
-         * of a page 83 reply to determine whether the reply is compliant
-         * with SCSI-2 or SPC-2/3 specifications.  A zero value in the
-         * 3rd byte indicates an SPC-2/3 conforming reply ( the field is
-         * reserved ).  This byte will be non-zero for a SCSI-2
-         * conforming page 83 reply from these EMC Symmetrix models since
-         * the 7th byte of the reply corresponds to the 4th and 5th
-         * nibbles of the 6-byte OUI for EMC, that is, 0x006048.
-         */
-        i_len = len;
-        ip = bp = buff;
-        c_set = 1;
-        assoc = 0;
-        piv = 0;
-        p_id = 0xf;
-        desig_type = 3;
-        j = 1;
-        off = 16;
-        sgj_pr_hr(jsp, "  Pre-SPC descriptor, descriptor length: %d\n",
-                  i_len);
-        goto decode;
-    }
-
-    for (j = 1, off = -1;
-         (u = sg_vpd_dev_id_iter(buff, len, &off, -1, -1, -1)) == 0;
-         ++j) {
-        bp = buff + off;
-        i_len = bp[3];
-        id_len = i_len + 4;
-        sgj_pr_hr(jsp, "  Designation descriptor number %d, "
-                  "descriptor length: %d\n", j, id_len);
-        if ((off + id_len) > len) {
-            pr2serr("%s %s error: designator length longer than\n"
-                    "     remaining response length=%d\n", leadin, vpd_pg_s,
-                    (len - off));
-            return;
-        }
-        ip = bp + 4;
-        p_id = ((bp[0] >> 4) & 0xf);   /* protocol identifier */
-        c_set = (bp[0] & 0xf);         /* code set */
-        piv = ((bp[1] & 0x80) ? 1 : 0); /* protocol identifier valid */
-        assoc = ((bp[1] >> 4) & 0x3);
-        desig_type = (bp[1] & 0xf);
-  decode:
-        if (piv && ((1 == assoc) || (2 == assoc)))
-            sgj_pr_hr(jsp, "    transport: %s\n",
-                      sg_get_trans_proto_str(p_id, dlen, d));
-        n = 0;
-        cp = sg_get_desig_type_str(desig_type);
-        sg_scn3pr(b, blen, n, "    designator_type: %s,  ", cp ? cp : "-");
-        cp = sg_get_desig_code_set_str(c_set);
-        sgj_pr_hr(jsp, "%scode_set: %s\n", b, cp ? cp : "-");
-        cp = sg_get_desig_assoc_str(assoc);
-        sgj_pr_hr(jsp, "    associated with the %s\n", cp ? cp : "-");
-        if (op->do_hex) {
-            sgj_pr_hr(jsp, "    designator header(hex): %.2x %.2x %.2x %.2x\n",
-                   bp[0], bp[1], bp[2], bp[3]);
-            sgj_pr_hr(jsp, "    designator:\n");
-            hex2stdout(ip, i_len, -1);
-            continue;
-        }
-        switch (desig_type) {
-        case 0: /* vendor specific */
-            k = 0;
-            if ((2 == c_set) || (3 == c_set)) { /* ASCII or UTF-8 */
-                for (k = 0; (k < i_len) && isprint(ip[k]); ++k)
-                    ;
-                if (k >= i_len)
-                    k = 1;
-            }
-            if (k)
-                sgj_pr_hr(jsp, "      vendor specific: %.*s\n", i_len, ip);
-            else {
-                sgj_pr_hr(jsp, "      vendor specific:\n");
-                /* plain text output only here */
-                hex2stdout(ip, i_len, no_ascii_4hex(op));
-            }
-            break;
-        case 1: /* T10 vendor identification */
-            sgj_pr_hr(jsp, "      vendor id: %.8s\n", ip);
-            if (i_len > 8) {
-                if ((2 == c_set) || (3 == c_set)) { /* ASCII or UTF-8 */
-                    sgj_pr_hr(jsp, "      vendor specific: %.*s\n", i_len - 8,
-                              ip + 8);
-                } else {
-                    n = 0;
-                    n += sg_scn3pr(b, blen, n, "      vendor specific: 0x");
-                    for (m = 8; m < i_len; ++m)
-                        n += sg_scn3pr(b, blen, n, "%02x", ip[m]);
-                    sgj_pr_hr(jsp, "%s\n", b);
-                }
-            }
-            break;
-        case 2: /* EUI-64 based */
-            sgj_pr_hr(jsp, "      EUI-64 based %d byte identifier\n", i_len);
-            if (1 != c_set) {
-                pr2serr("      << expected binary code_set (1)>>\n");
-                hex2stderr(ip, i_len, -1);
-                break;
-            }
-            ci_off = 0;
-            n = 0;
-            b[0] = '\0';
-            if (16 == i_len) {
-                ci_off = 8;
-                id_ext = sg_get_unaligned_be64(ip);
-                sg_scn3pr(b, blen, n, "      Identifier extension: 0x%"
-                          PRIx64 "\n", id_ext);
-            } else if ((8 != i_len) && (12 != i_len)) {
-                pr2serr("      << can only decode 8, 12 and 16 "
-                        "byte ids>>\n");
-                hex2stderr(ip, i_len, -1);
-                break;
-            }
-            ccc_id = sg_get_unaligned_be64(ip + ci_off);
-            sgj_pr_hr(jsp, "%s      IEEE identifier: 0x%" PRIx64 "\n", b,
-                      ccc_id);
-            if (12 == i_len) {
-                d_id = sg_get_unaligned_be32(ip + 8);
-                sgj_pr_hr(jsp, "      Directory ID: 0x%x\n", d_id);
-            }
-            n = sg_scnpr(b, blen, "      [0x");
-            for (m = 0; m < i_len; ++m)
-                n += sg_scn3pr(b, blen, n, "%02x", ip[m]);
-            sgj_pr_hr(jsp, "%s]\n", b);
-            break;
-        case 3: /* NAA <n> */
-            naa = (ip[0] >> 4) & 0xff;
-            if (1 != c_set) {
-                pr2serr("      << expected binary code_set (1), got %d for "
-                        "NAA=%d>>\n", c_set, naa);
-                hex2stderr(ip, i_len, -1);
-                break;
-            }
-            switch (naa) {
-            case 2:     /* NAA 2: IEEE Extended */
-                if (8 != i_len) {
-                    pr2serr("      << unexpected NAA 2 identifier "
-                            "length: 0x%x>>\n", i_len);
-                    hex2stderr(ip, i_len, -1);
-                    break;
-                }
-                d_id = (((ip[0] & 0xf) << 8) | ip[1]);
-                c_id = sg_get_unaligned_be24(ip + 2);
-                vsi = sg_get_unaligned_be24(ip + 5);
-                sgj_pr_hr(jsp, "      NAA 2, vendor specific identifier A: "
-                          "0x%x\n", d_id);
-                sgj_pr_hr(jsp, "      AOI: 0x%x\n", c_id);
-                sgj_pr_hr(jsp, "      vendor specific identifier B: 0x%x\n",
-                          vsi);
-                n = sg_scnpr(b, blen, "      [0x");
-                for (m = 0; m < 8; ++m)
-                    n += sg_scn3pr(b, blen, n, "%02x", ip[m]);
-                sgj_pr_hr(jsp, "%s]\n", b);
-                break;
-            case 3:     /* NAA 3: Locally assigned */
-                if (8 != i_len) {
-                    pr2serr("      << unexpected NAA 3 identifier "
-                            "length: 0x%x>>\n", i_len);
-                    hex2stderr(ip, i_len, -1);
-                    break;
-                }
-                sgj_pr_hr(jsp, "      NAA 3, Locally assigned:\n");
-                n = sg_scnpr(b, blen, "      [0x");
-                for (m = 0; m < 8; ++m)
-                    n += sg_scn3pr(b, blen, n, "%02x", ip[m]);
-                sgj_pr_hr(jsp, "%s]\n", b);
-                break;
-            case 5:     /* NAA 5: IEEE Registered */
-                if (8 != i_len) {
-                    pr2serr("      << unexpected NAA 5 identifier "
-                            "length: 0x%x>>\n", i_len);
-                    hex2stderr(ip, i_len, -1);
-                    break;
-                }
-                c_id = (((ip[0] & 0xf) << 20) | (ip[1] << 12) |
-                        (ip[2] << 4) | ((ip[3] & 0xf0) >> 4));
-                vsei = ip[3] & 0xf;
-                for (m = 1; m < 5; ++m) {
-                    vsei <<= 8;
-                    vsei |= ip[3 + m];
-                }
-                sgj_pr_hr(jsp, "      NAA 5, AOI: 0x%x\n", c_id);
-                n = sg_scnpr(b, blen, "      Vendor Specific Identifier: "
-                             "0x%" PRIx64 "\n", vsei);
-                n += sg_scn3pr(b, blen, n, "      [0x");
-                for (m = 0; m < 8; ++m)
-                    n += sg_scn3pr(b, blen, n, "%02x", ip[m]);
-                sgj_pr_hr(jsp, "%s]\n", b);
-                break;
-            case 6:     /* NAA 6: IEEE Registered extended */
-                if (16 != i_len) {
-                    pr2serr("      << unexpected NAA 6 identifier "
-                            "length: 0x%x>>\n", i_len);
-                    hex2stderr(ip, i_len, -1);
-                    break;
-                }
-                c_id = (((ip[0] & 0xf) << 20) | (ip[1] << 12) |
-                        (ip[2] << 4) | ((ip[3] & 0xf0) >> 4));
-                vsei = ip[3] & 0xf;
-                for (m = 1; m < 5; ++m) {
-                    vsei <<= 8;
-                    vsei |= ip[3 + m];
-                }
-                sgj_pr_hr(jsp, "      NAA 6, AOI: 0x%x\n", c_id);
-                sgj_pr_hr(jsp, "      Vendor Specific Identifier: 0x%"
-                          PRIx64 "\n", vsei);
-                vsei = sg_get_unaligned_be64(ip + 8);
-                sgj_pr_hr(jsp, "      Vendor Specific Identifier Extension: "
-                          "0x%" PRIx64 "\n", vsei);
-                n = sg_scnpr(b, blen, "      [0x");
-                for (m = 0; m < 16; ++m)
-                    n += sg_scn3pr(b, blen, n, "%02x", ip[m]);
-                sgj_pr_hr(jsp, "%s]\n", b);
-                break;
-            default:
-                pr2serr("      << bad NAA nibble , expect 2, 3, 5 or 6, "
-                        "got %d>>\n", naa);
-                hex2stderr(ip, i_len, -1);
-                break;
-            }
-            break;
-        case 4: /* Relative target port */
-            if ((1 != c_set) || (1 != assoc) || (4 != i_len)) {
-                pr2serr("      << expected binary code_set, target "
-                        "port association, length 4>>\n");
-                hex2stderr(ip, i_len, -1);
-                break;
-            }
-            d_id = sg_get_unaligned_be16(ip + 2);
-            sgj_pr_hr(jsp, "      Relative target port: 0x%x\n", d_id);
-            break;
-        case 5: /* (primary) Target port group */
-            if ((1 != c_set) || (1 != assoc) || (4 != i_len)) {
-                pr2serr("      << expected binary code_set, target "
-                        "port association, length 4>>\n");
-                hex2stderr(ip, i_len, -1);
-                break;
-            }
-            d_id = sg_get_unaligned_be16(ip + 2);
-            sgj_pr_hr(jsp, "      Target port group: 0x%x\n", d_id);
-            break;
-        case 6: /* Logical unit group */
-            if ((1 != c_set) || (0 != assoc) || (4 != i_len)) {
-                pr2serr("      << expected binary code_set, logical "
-                        "unit association, length 4>>\n");
-                hex2stderr(ip, i_len, -1);
-                break;
-            }
-            d_id = sg_get_unaligned_be16(ip + 2);
-            sgj_pr_hr(jsp, "      Logical unit group: 0x%x\n", d_id);
-            break;
-        case 7: /* MD5 logical unit identifier */
-            if ((1 != c_set) || (0 != assoc)) {
-                pr2serr("      << expected binary code_set, logical "
-                        "unit association>>\n");
-                hex2stderr(ip, i_len, -1);
-                break;
-            }
-            sgj_pr_hr(jsp, "      MD5 logical unit identifier:\n");
-            if (jsp->pr_out_hr)
-                sgj_hr_str_out(jsp, (const char *)ip, i_len);
-            else
-                hex2stdout(ip, i_len, -1);
-            break;
-        case 8: /* SCSI name string */
-            if (3 != c_set) {
-                if (2 == c_set) {
-                    if (op->verbose)
-                        pr2serr("      << expected UTF-8, use ASCII>>\n");
-                } else {
-                    pr2serr("      << expected UTF-8 code_set>>\n");
-                    hex2stderr(ip, i_len, -1);
-                    break;
-                }
-            }
-            sgj_pr_hr(jsp, "      SCSI name string:\n");
-            /* does %s print out UTF-8 ok??
-             * Seems to depend on the locale. Looks ok here with my
-             * locale setting: en_AU.UTF-8
-             */
-            sgj_pr_hr(jsp, "      %.*s\n", i_len, (const char *)ip);
-            break;
-        case 9: /* Protocol specific port identifier */
-            /* added in spc4r36, PIV must be set, proto_id indicates */
-            /* whether UAS (USB) or SOP (PCIe) or ... */
-            if (! piv)
-                pr2serr("      >>>> Protocol specific port identifier "
-                        "expects protocol\n"
-                        "           identifier to be valid and it is not\n");
-            if (TPROTO_UAS == p_id) {
-                sgj_pr_hr(jsp, "      USB device address: 0x%x\n",
-                          0x7f & ip[0]);
-                sgj_pr_hr(jsp, "      USB interface number: 0x%x\n", ip[2]);
-            } else if (TPROTO_SOP == p_id) {
-                sgj_pr_hr(jsp, "      PCIe routing ID, bus number: 0x%x\n",
-                          ip[0]);
-                sgj_pr_hr(jsp, "          function number: 0x%x\n", ip[1]);
-                sgj_pr_hr(jsp, "          [or device number: 0x%x, function "
-                          "number: 0x%x]\n", (0x1f & (ip[1] >> 3)),
-                          0x7 & ip[1]);
-            } else
-                sgj_pr_hr(jsp, "      >>>> unexpected protocol identifier: "
-                          "%s\n           with Protocol specific port "
-                          "identifier\n", sg_get_trans_proto_str(p_id, dlen,
-                                                                 d));
-            break;
-        case 0xa: /* UUID identifier [spc5r08] RFC 4122 */
-            if (1 != c_set) {
-                pr2serr("      << expected binary code_set >>\n");
-                hex2stderr(ip, i_len, no_ascii_4hex(op));
-                break;
-            }
-            if ((1 != ((ip[0] >> 4) & 0xf)) || (18 != i_len)) {
-                pr2serr("      << expected locally assigned UUID, 16 bytes "
-                        "long >>\n");
-                hex2stderr(ip, i_len, no_ascii_4hex(op));
-                break;
-            }
-            n = sg_scnpr(b, blen, "      Locally assigned UUID: ");
-            for (m = 0; m < 16; ++m) {
-                if ((4 == m) || (6 == m) || (8 == m) || (10 == m))
-                    n += sg_scn3pr(b, blen, n, "-");
-                n += sg_scn3pr(b, blen, n, "%02x", ip[2 + m]);
-            }
-            sgj_pr_hr(jsp, "%s\n", b);
-            break;
-        default: /* reserved */
-            pr2serr("      reserved designator=0x%x\n", desig_type);
-            hex2stderr(ip, i_len, -1);
-            break;
-        }
-    }
-    if (-2 == u)
-        pr2serr("%s %s error: around offset=%d\n", leadin, vpd_pg_s, off);
+    } else
+        filter_process_desig_descs(buff, len, leadin_sp, true, -1, op, jap);
 }
 
 /* The --export and --json options are assumed to be mutually exclusive.
@@ -1854,9 +1521,9 @@ export_dev_ids(uint8_t * buff, int len, int verbose)
         id_len = i_len + 4;
         if ((off + id_len) > len) {
             if (verbose)
-                pr2serr("Device Identification %s error: designator length "
-                        "longer than\n     remaining response length=%d\n",
-                        vpd_pg_s, (len - off));
+                pr2serr("%s %s error: designator length [%d] longer than\n"
+                        "     remaining response length=%d\n", dev_id_s,
+                        vpd_pg_s, id_len, (len - off));
             return;
         }
         ip = bp + 4;
@@ -2114,7 +1781,7 @@ export_dev_ids(uint8_t * buff, int len, int verbose)
         }
     }
     if (-2 == u && verbose)
-        pr2serr("%s error: around offset=%d\n", di_vpdp, off);
+        pr2serr("%s %s error: around offset=%d\n", dev_id_s, vpd_pg_s, off);
 }
 
 /* VPD_BLOCK_LIMITS  0xb0 ["bl"]  (SBC) */
@@ -2986,7 +2653,7 @@ vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op, sgj_opaque_p jop,
                 jap = sgj_named_subarray_r(jsp, jo2p,
                                   "designation_descriptor_list");
             }
-            decode_id_vpd(rp, len, op, jap);
+            decode_dev_id_vpd(rp, len, op, jap);
         }
         break;
     case VPD_SOFTW_INF_ID:      /* 0x84  ["sii"] */
@@ -4403,6 +4070,12 @@ main(int argc, char * argv[])
             op->do_hex = -op->do_hex;
     }
 
+    if (op->do_json && op->do_export) {
+        if (op->verbose > 0)
+            pr2serr("Options '--export' and '--json' contradict, do "
+                    "export\n");
+        op->do_json = false;    /* override */
+    }
     jsp = &op->json_st;
     if (op->do_json) {
         if (! sgj_init_state(jsp, op->json_arg)) {
@@ -4419,7 +4092,11 @@ main(int argc, char * argv[])
             goto err_out;
         }
         jop = sgj_start_r(MY_NAME, version_str, argc, argv, jsp);
+        if ((op->verbose > 0) && (0 == jsp->verbose))
+            jsp->verbose = op->verbose;
     }
+    if (op->do_long > 0)
+        jsp->z_counter = op->do_long;
     as_json = jsp->pr_as_json;
     if (op->page_str) {
         if (op->vpd_pn >= 0) {

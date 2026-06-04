@@ -1,8 +1,11 @@
 #
 # An example invocation:
-#    sg_vpd --inhex=vpd_di_all.hex
+#    sg_vpd --inhex=vpd_di_bad_all.hex
+#
+# This file is a small modification of vpd_di_all.hex that puts a control
+# character (0xa LF) into ASCII strings to see how sg_inq -export reacts.
 
-00 83 01 04
+00 83 01 08
 
 # Vendor specific designator
 01 00 00 16 11 22 33 44  55 66 77 88 99 aa bb cc
@@ -10,7 +13,7 @@ dd ee ff ed cb a9 87 65  43 21
 
 # T10 vendor ID
 02 01 00 14
-41 42 43 20 20 20 20 20
+41 42 43 20 20 20 20 0a
 58 59 5a 31 32 33 34 35  36 37 38 39
 
 # EUI-64
@@ -34,12 +37,12 @@ dd ee ff ed cb a9 87 65  43 21
 # MD5 logical unitp
 01 07 00 10 ff ee dd cc  bb aa 99 88 77 66 55 44  33 22 11 00
 
-# SCSI name string: iqn.5886.com.acme.diskarrays-sn-a8675309
+# SCSI name string: iqn.5886.com.acme.diskarrays-sn-a8675309\nboo
 # "Code set" flag should be set to UTF-8 (3 in byte 0)
-03 28 00 28
+03 28 00 2c
 69 71 6e 2e 35 38 38 36  2e 63 6f 6d 2e 61 63 6d    
 65 2e 64 69 73 6b 61 72  72 61 79 73 2d 73 6e 2d    
-61 38 36 37 35 33 30 39
+61 38 36 37 35 33 30 39  0a 62 6f 6f
 
 # Protocol specific
 # USB

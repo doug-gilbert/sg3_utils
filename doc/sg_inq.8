@@ -1,4 +1,4 @@
-.TH SG_INQ "8" "November 2023" "sg3_utils\-1.49" SG3_UTILS
+.TH SG_INQ "8" "June 2026" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_inq \- issue SCSI INQUIRY command and/or decode its response
 .SH SYNOPSIS
@@ -125,6 +125,8 @@ page is given it prints out information in the form:
 "SCSI_VENDOR=<vendor>", "SCSI_MODEL=<model>", and
 "SCSI_REVISION=<rev>", taken from the standard inquiry. This may be
 useful for tools like udev(7) in Linux.
+.br
+This option takes precedence over the JSON options which will be ignored.
 .TP
 \fB\-E\fR, \fB\-x\fR, \fB\-\-extended\fR
 prints the extended INQUIRY VPD page [0x86]. It has the same effect
@@ -170,6 +172,8 @@ output is in JSON format instead of plain text form. Note that arguments
 to the short and long form are themselves optional and if present start
 with "=" and no whitespace is permitted around that "=".
 .br
+If the \fI\-\-export\fR option is also given, this option is ignored.
+.br
 See sg3_utils_json manpage or use '?' for \fIJO\fR to get a summary.
 .TP
 \fB\-J\fR, \fB\-\-js\-file\fR=\fIJFN\fR
@@ -180,6 +184,8 @@ stdout.
 When this option is given, the \fI\-\-json[=JO]\fR option is implied and
 need not be given. The \fI\-\-json[=JO]\fR option may still be needed to
 set the \fIJO\fR parameter to non\-default values.
+.br
+If the \fI\-\-export\fR option is also given, this option is ignored.
 .TP
 \fB\-l\fR, \fB\-\-len\fR=\fILEN\fR
 the number \fILEN\fR is the "allocation length" field in the INQUIRY cdb.
@@ -587,7 +593,7 @@ Written by Douglas Gilbert
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2001\-2023 Douglas Gilbert
+Copyright \(co 2001\-2026 Douglas Gilbert
 .br
 This software is distributed under the GPL version 2 or the BSD\-2\-Clause
 license. There is NO warranty; not even for MERCHANTABILITY or

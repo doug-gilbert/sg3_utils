@@ -1,13 +1,11 @@
 /*
- * Copyright (c) 2006-2023 Douglas Gilbert.
+ * Copyright (c) 2006-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_win32 version 1.36 20231124 */
+/* sg_pt_win32 version 1.37 20260603 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -347,7 +345,9 @@ scsi_pt_open_device(const char * device_name, bool read_only, int vb)
 {
     int oflags = 0 /* O_NONBLOCK*/ ;
 
+#if 0
     oflags |= (read_only ? 0 : 0);      /* was ... ? O_RDONLY : O_RDWR) */
+#endif
     return scsi_pt_open_flags(device_name, oflags, vb);
 }
 
