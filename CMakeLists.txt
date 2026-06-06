@@ -25,6 +25,7 @@ option ( DISABLE_SCSISTRINGS "Disable full SCSI sense strings and NVMe status st
 option ( DISABLE_NVME_SUPP "remove all or most NVMe code" OFF)
 option ( DISABLE_LINUX_SGV4 "for Linux sg driver avoid v4 interface even if available" OFF)
 option ( DISABLE_LINUXBSG "option ignored, this is placeholder" OFF)
+option ( DISABLE_LIBSGUTILS "Library code compiled in directly" OFF)
 
 # The intention is to support both cmake _and_ GNU Autotools build systems.
 # To this end (and to shorten the actual compile line) a dynamic config.h

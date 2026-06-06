@@ -66,11 +66,16 @@ set ( sgutils2_lib_common
 ## )
 
 if ( BUILD_SHARED_LIBS )
-    MESSAGE( STATUS ">> Build shared library(s) (default)" )
-    add_library(sgutils2 SHARED ${sgutils2_lib_common} ${sgutils2_lib_hal} )
-    set_target_properties(sgutils2 PROPERTIES
-        WINDOWS_EXPORT_ALL_SYMBOLS ON
-    )
+    if ( DISABLE_LIBSGUTILS )
+        MESSAGE( STATUS ">> Build sgutils2 library static, otherwise use shared library(s)" )
+        add_library(sgutils2 STATIC ${sgutils2_lib_common} ${sgutils2_lib_hal} )
+    else ( DISABLE_LIBSGUTILS )
+        MESSAGE( STATUS ">> Build shared library(s) (default)" )
+        add_library(sgutils2 SHARED ${sgutils2_lib_common} ${sgutils2_lib_hal} )
+        set_target_properties(sgutils2 PROPERTIES
+            WINDOWS_EXPORT_ALL_SYMBOLS ON
+        )
+    endif ( DISABLE_LIBSGUTILS )
 else ( BUILD_SHARED_LIBS )
     MESSAGE( STATUS ">> Build a static library" )
     add_definitions ( -static )
