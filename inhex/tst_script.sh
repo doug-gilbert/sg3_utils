@@ -89,5 +89,19 @@ sg_vpd -I vpd_zbdc.hex
 
 sg_z_act_query --inhex=z_act_query.hex
 
+echo ""
+echo ">>>>>>>>>>>>>>>> sg_inq --export udev encoding conformance test"
+# VPD 0x83 designator type 8 (SCSI name string) udev encoding conformance
+# test. The --export output must be in conformance with other udev character
+# encoding rules.
+export_output=$(sg_inq --export --inhex=vpd_di_name_inject.hex 2>/dev/null)
+export_lines=$(echo "$export_output" | wc -l)
+if [ "$export_lines" -eq 1 ] && echo "$export_output" | grep -q '\\x0a'; then
+    echo "PASS: SCSI name string is udev conformed character encoding ($export_lines line)"
+else
+    echo "FAIL: expected udev conformance, instead got $export_lines line(s):"
+    echo "$export_output"
+fi
+
 # D. Gilbert, last updated 20230420
 

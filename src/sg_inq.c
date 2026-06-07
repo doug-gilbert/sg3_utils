@@ -1590,8 +1590,17 @@ export_dev_ids(uint8_t * buff, int len, int verbose)
                 }
                 printf("\n");
                 if (!memcmp(ip, "ATA_", 4)) {
-                    printf("SCSI_IDENT_%s_ATA=%.*s\n", assoc_str,
-                           k - 4, ip + 4);
+                    printf("SCSI_IDENT_%s_ATA=", assoc_str);
+                    for (m = 4; m < k; ++m) {
+                        if ((ip[m] >= '0' && ip[m] <= '9') ||
+                            (ip[m] >= 'A' && ip[m] <= 'Z') ||
+                            (ip[m] >= 'a' && ip[m] <= 'z') ||
+                            strchr("#+-.:=@_", ip[m]) != NULL)
+                            printf("%c", ip[m]);
+                        else
+                            printf("\\x%02x", ip[m]);
+                    }
+                    printf("\n");
                 }
             } else {
                 for (m = 0; m < i_len; ++m)
@@ -1714,8 +1723,17 @@ export_dev_ids(uint8_t * buff, int len, int verbose)
                 break;
             }
 
-            printf("SCSI_IDENT_%s_NAME=%.*s\n", assoc_str, i_len,
-                   (const char *)ip);
+            printf("SCSI_IDENT_%s_NAME=", assoc_str);
+            for (m = 0; m < i_len; ++m) {
+                if ((ip[m] >= '0' && ip[m] <= '9') ||
+                    (ip[m] >= 'A' && ip[m] <= 'Z') ||
+                    (ip[m] >= 'a' && ip[m] <= 'z') ||
+                    strchr("#+-.:=@_", ip[m]) != NULL)
+                    printf("%c", ip[m]);
+                else
+                    printf("\\x%02x", ip[m]);
+            }
+            printf("\n");
             break;
         case 9: /*  Protocol specific port identifier */
             if (TPROTO_UAS == p_id) {

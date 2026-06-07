@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-Changelog for pre-release sg3_utils-1.49 [20260606] [svn: r1124]
+Changelog for pre-release sg3_utils-1.49 [20260606] [svn: r1125]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -27,6 +27,8 @@ Changelog for pre-release sg3_utils-1.49 [20260606] [svn: r1124]
     - add NVMe Information VPD page
     - clean up ATA Information VPD page
     - rework designation descriptor handling
+    - sg_inq --export conformance for SCSI name string
+      by Paul Evans github PR #83
   - sg_lib: add sg_last_n_non_blank() for SNT FR field
     - sg_json.c fixes from lsscsi project pull #15
     - sg_json.[hc] add sgj_haj_vs_hex_bytes_nex() for
