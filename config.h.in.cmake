@@ -1,3 +1,6 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
 // This file (config.h.in.cmake) is used as a template to generate the
 // config.h file in the first step of a cmake build. This file should be
 // kept under source control (e.g. svn or git) while config.h can be
@@ -67,3 +70,4 @@
 // #      set(FEATURE_COMMENT "//")
 // @FEATURE_COMMENT@#define OPTIONAL_SETTING 1
 
+#endif

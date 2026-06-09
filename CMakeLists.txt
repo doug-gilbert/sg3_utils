@@ -10,9 +10,7 @@ include(CMakePackageConfigHelpers)
 set ( CMAKE_C_STANDARD 99 )
 set ( CMAKE_C_STANDARD_REQUIRED ON )
 set ( CMAKE_C_EXTENSIONS OFF )
-set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -Wall -W" )
-
-add_compile_definitions ( _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64 )
+set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -Wall -W -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H" )
 
 string(TIMESTAMP BUILD_TIME "%Y%m%d %H:%M:%S")
 
@@ -234,7 +232,6 @@ else()
 endif()
 
 configure_file( ${CMAKE_SOURCE_DIR}/config.h.in.cmake ${CMAKE_BINARY_DIR}/config.h )
-add_definitions ( -DHAVE_CONFIG_H )
 
 
 add_subdirectory( include )

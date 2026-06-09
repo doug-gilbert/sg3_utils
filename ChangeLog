@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-Changelog for pre-release sg3_utils-1.49 [20260606] [svn: r1125]
+Changelog for pre-release sg3_utils-1.49 [20260608] [svn: r1126]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -67,6 +67,8 @@ Changelog for pre-release sg3_utils-1.49 [20260606] [svn: r1125]
     - wire option(DISABLE_LIBSGUTILS (def: OFF)) so when
       ON sgutils2 library is static but other libraries
       are shared objects (e.g. libc.so)
+    - github PR #84 by Paul Evans to fix cpack generated
+      Debian dev library path, needed by sdparm and ddpt
   - fixes so musl-gcc builds clean
   - start complying with T10 23-047r1 "Broadcom SNT Reference"
     document assuming T10 SNT drafts are coming

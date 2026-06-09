@@ -126,10 +126,12 @@ install(TARGETS sgutils2
 # plain libsgutils2.so name (without the release version embedded).
 # Create the directory first so this works when CPack stages components
 # into separate trees.
-install(CODE "file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_LIBDIR}\")
+# Use escaped CMAKE_INSTALL_PREFIX so CPack can override it at install
+# time (CMAKE_INSTALL_FULL_LIBDIR bakes in the configure-time prefix).
+install(CODE "file(MAKE_DIRECTORY \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\")
 file(CREATE_LINK
     \"libsgutils2-${PROJECT_VERSION}.so.2\"
-    \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_LIBDIR}/libsgutils2.so\"
+    \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libsgutils2.so\"
     SYMBOLIC)"
     COMPONENT development
 )
