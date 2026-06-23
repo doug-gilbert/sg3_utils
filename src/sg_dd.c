@@ -78,7 +78,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"              /* used to get to SNTL for NVMe devices */
 
-static const char * version_str = "6.51 20260523";
+static const char * version_str = "6.52 20260620";
 
 static const char * my_name = "sg_dd: ";
 
@@ -1508,7 +1508,7 @@ process_flags(const char * arg, struct flags_t * fp)
     char * cp;
     char * np;
 
-    strncpy(buff, arg, sizeof(buff));
+    sg_strscpy(buff, arg, sizeof(buff));
     buff[sizeof(buff) - 1] = '\0';
     if ('\0' == buff[0]) {
         pr2serr("no flag found\n");
@@ -1573,7 +1573,7 @@ process_conv(const char * arg, struct flags_t * ifp, struct flags_t * ofp)
     char * cp;
     char * np;
 
-    strncpy(buff, arg, sizeof(buff));
+    sg_strscpy(buff, arg, sizeof(buff));
     buff[sizeof(buff) - 1] = '\0';
     if ('\0' == buff[0]) {
         pr2serr("no conversions found\n");

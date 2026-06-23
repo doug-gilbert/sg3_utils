@@ -63,7 +63,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.42 20260523";
+static const char * version_str = "1.43 20260620";
 
 #define DEF_BLOCK_SIZE 512
 #define DEF_BLOCKS_PER_TRANSFER 128
@@ -451,7 +451,7 @@ main(int argc, char * argv[])
 
     for (k = 1; k < argc; k++) {
         if (argv[k]) {
-            strncpy(str, argv[k], STR_SZ);
+            sg_strscpy(str, argv[k], STR_SZ);
             str[STR_SZ - 1] = '\0';
         } else
             continue;

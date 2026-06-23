@@ -670,55 +670,6 @@ sg_ln_snt_rluns(struct sg_pt_linux_scsi * ptp, const uint8_t * cdbp,
     return 0;
 }
 
-#if 0
-struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
-                  const uint8_t * nvme_id_ctlp, uint32_t nsid, uint8_t * dip,
-                  int mx_di_len, struct sg_snt_result_t * resp);
-    max_nsid = sg_get_unaligned_le32(ptp->nvme_id_ctlp + 516);
-    switch (sel_report) {
-    case 0:
-    case 2:
-        num = max_nsid;
-        break;
-    case 1:
-    case 0x10:
-    case 0x12:
-        num = 0;
-        break;
-    case 0x11:
-        num = (1 == ptp->nvme_nsid) ? max_nsid :  0;
-        break;
-    default:
-        if (vb > 1)
-            pr2ws("%s: bad select_report value: 0x%x\n", __func__,
-                  sel_report);
-        mk_sense_invalid_fld(ptp, true, 2, 7, vb);
-        return 0;
-    }
-    rl_doutp = (uint8_t *)calloc(num + 1, 8);
-    if (NULL == rl_doutp) {
-        pr2ws("%s: calloc() failed to get memory\n", __func__);
-        return sg_convert_errno(ENOMEM);
-    }
-    for (k = 0, up = rl_doutp + 8; k < num; ++k, up += 8)
-        sg_put_unaligned_be16(k, up);
-    n = num * 8;
-    sg_put_unaligned_be32(n, rl_doutp);
-    n+= 8;
-    if (alloc_len > 0) {
-        n = (alloc_len < n) ? alloc_len : n;
-        n = (n < ptp->io_hdr.din_xfer_len) ? n : ptp->io_hdr.din_xfer_len;
-        ptp->io_hdr.din_resid = ptp->io_hdr.din_xfer_len - n;
-        if (n > 0)
-            memcpy((uint8_t *)(sg_uintptr_t)ptp->io_hdr.din_xferp, rl_doutp,
-                   n);
-    }
-    res = 0;
-    free(rl_doutp);
-    return res;
-}
-#endif
-
 static int
 sg_snt_tur(struct sg_pt_linux_scsi * ptp, int time_secs, int vb)
 {

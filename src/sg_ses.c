@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2004-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -2330,7 +2328,7 @@ etype_str(int elem_type_code, char * b, int mlen_b)
             if (len < mlen_b)
                 strcpy(b, etp->desc);
             else {
-                strncpy(b, etp->desc, mlen_b - 1);
+                sg_strscpy(b, etp->desc, mlen_b - 1);
                 b[mlen_b - 1] = '\0';
             }
             return b;

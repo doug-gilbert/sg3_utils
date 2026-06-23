@@ -74,7 +74,7 @@
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "0.78 20260508";
+static const char * version_str = "0.80 20260620";
 
 #define ME "sg_xcopy: "
 
@@ -1027,7 +1027,7 @@ decode_designation_descriptor(const uint8_t * bp, int i_len)
 {
     char c[2048];
 
-    sg_get_designation_descriptor_str(NULL, bp, i_len, 1, verbose,
+    sg_get_designation_descriptor_str(NULL, bp, i_len, true, verbose > 0,
                                       sizeof(c), c);
     pr2serr("%s", c);
 }
@@ -1178,7 +1178,7 @@ process_flags(const char * arg, struct xcopy_fp_t * fp)
     char * cp;
     char * np;
 
-    strncpy(buff, arg, sizeof(buff) - 1);
+    sg_strscpy(buff, arg, sizeof(buff) - 1);
     buff[sizeof(buff) - 1] = '\0';
     if ('\0' == buff[0]) {
         pr2serr("no flag found\n");
@@ -1360,7 +1360,7 @@ main(int argc, char * argv[])
 
     for (k = 1; k < argc; k++) {
         if (argv[k]) {
-            strncpy(str, argv[k], STR_SZ - 1);
+            sg_strscpy(str, argv[k], STR_SZ - 1);
             str[STR_SZ - 1] = '\0';
         } else
             continue;

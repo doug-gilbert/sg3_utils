@@ -29,12 +29,14 @@ extern "C" {
 #ifndef HAVE___U64
 /* typedefs if linux/types.h header not available */
 
+#ifndef __cplusplus
 typedef uint64_t __u64;
 typedef int64_t __s64;
 typedef uint32_t __u32;
 typedef int32_t __s32;
 typedef uint16_t __u16;
 typedef int16_t __s16;
+#endif
 #endif
 
 

@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2004-2023 Douglas Gilbert.
+ * Copyright (c) 2004-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +31,7 @@
 
 */
 
-static const char * version_str = "0.51 20230618";    /* mmc6r02 */
+static const char * version_str = "0.52 20260620";    /* mmc6r02 */
 
 #define MX_ALLOC_LEN 8192
 #define NAME_BUFF_SZ 64
@@ -785,7 +783,7 @@ decode_feature(int feature, uint8_t * bp, int len)
         num = len - 4;
         n = sizeof(buff) - 1;
         n = ((num < n) ? num : n);
-        strncpy(buff, (const char *)(bp + 4), n);
+        sg_strscpy(buff, (const char *)(bp + 4), n);
         buff[n] = '\0';
         printf("      Drive serial number: %s\n", buff);
         break;

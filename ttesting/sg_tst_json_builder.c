@@ -29,7 +29,7 @@
 
 #define MY_NAME "sg_tst_json_builder"
 
-static const char * version_str = "1.06 20260503";
+static const char * version_str = "1.07 20260622";
 
 
 static struct option long_options[] = {
@@ -47,6 +47,12 @@ static  json_serialize_opts out_settings = {
     json_serialize_mode_multiline,
     0,
     4
+};
+
+static uint8_t hex_bytes[] = {
+     0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
+     0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f, 0x50,
+     0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58,
 };
 
 
@@ -84,7 +90,7 @@ main(int argc, char * argv[])
     int ret = 0;
     size_t len;
     sgj_state jstate SG_C_CPP_ZERO_INIT;
-    sgj_state * jstp = &jstate;
+    sgj_state * jsp = &jstate;
     json_value * jv1p;
     json_value * jv2p;
     json_value * jv3p = json_object_new(0);
@@ -104,8 +110,7 @@ main(int argc, char * argv[])
     const char * js_file = NULL;
     char b[8192];
 
-// xxxxx
-    sgj_init_state(jstp, NULL);
+    sgj_init_state(jsp, NULL);
     if (getenv("SG3_UTILS_INVOCATION"))
         sg_rep_invocation(MY_NAME, version_str, argc, argv, stderr);
     while (1) {
@@ -163,7 +168,7 @@ main(int argc, char * argv[])
         pr2serr("version: %s\n", version_str);
         return 0;
     }
-    jvp = sgj_start_r(MY_NAME, version_str, argc, argv, jstp);
+    jvp = (json_value *)sgj_start_r(MY_NAME, version_str, argc, argv, jsp);
     jv1p = json_object_push(jvp, "contents", js1p);
 
     if (jvp == jv1p)
@@ -263,10 +268,24 @@ main(int argc, char * argv[])
         sgj_js_nv_s_nex(jsp, jo2p, "kernel_node_name", "/dev/sda",
                         "kernel name before udev or user changed it");
 
-        /* add more tests here <<<<<<<<<             xxxxxxxxxxxxxxxxx */
-        sgj_pr_hr(jsp, "Test '_haj_' calls (human readable and json)\n");
+        sgj_pr_hr(jsp, "Test '_haj_' calls (human readable and/or json)\n");
+
         sgj_haj_vs(jsp, jo2p, 2, "sgj_haj_vs", SGJ_SEP_COLON_1_SPACE,
-                   "should have leading spaces");
+                   "this is the value string");
+        sgj_haj_vs_len(jsp, jo2p, 2, "sgj_haj_vs_len", SGJ_SEP_COLON_1_SPACE,
+                       "1234567890", 5 /* take first 5 chars */);
+        sgj_haj_vs_nex(jsp, jo2p, 2, "sgj_haj_vs_nex", SGJ_SEP_COLON_1_SPACE,
+                       "this is the value string",
+                       "name of the function being tested");
+
+        sgj_haj_vs_hex_bytes_nex(jsp, jo2p, 2, "sgj_haj_vs_hex_bytes_nex",
+                                 SGJ_SEP_COLON_1_SPACE, hex_bytes,
+                                 sizeof(hex_bytes),
+                                 "nex: 24 bytes starting at 0x41");
+        sgj_haj_vs_hex_bytes_nex(jsp, jo2p, 2, "sgj_haj_vs_hex_bytes_nex",
+                                 SGJ_SEP_COLON_1_SPACE, hex_bytes, 1,
+                                 "nex: 1 byte starting at 0x41");
+
         sgj_haj_vi(jsp, jo2p, 2, "sgj_haj_vi", SGJ_SEP_COLON_1_SPACE,
                    42, false);
         sgj_haj_vi(jsp, jo2p, 4, "sgj_haj_vi_hex_haj", SGJ_SEP_COLON_1_SPACE,
@@ -304,58 +323,3 @@ main(int argc, char * argv[])
 
     return ret;
 }
-
-
-#if 0
-int main(int argc, char **argv)
-{
-        json_writer_t *wr = jsonw_new(stdout);
-
-        jsonw_start_object(wr);
-        jsonw_pretty(wr, true);
-        jsonw_name(wr, "Vyatta");
-        jsonw_start_object(wr);
-        jsonw_string_field(wr, "url", "http://vyatta.com");
-        jsonw_uint_field(wr, "downloads", 2000000ul);
-        jsonw_float_field(wr, "stock", 8.16);
-
-        jsonw_name(wr, "ARGV");
-        jsonw_start_array(wr);
-        while (--argc)
-                jsonw_string(wr, *++argv);
-        jsonw_end_array(wr);
-
-        jsonw_name(wr, "empty");
-        jsonw_start_array(wr);
-        jsonw_end_array(wr);
-
-        jsonw_name(wr, "NIL");
-        jsonw_start_object(wr);
-        jsonw_end_object(wr);
-
-        jsonw_null_field(wr, "my_null");
-
-        jsonw_name(wr, "special chars");
-        jsonw_start_array(wr);
-        jsonw_string_field(wr, "slash", "/");
-        jsonw_string_field(wr, "newline", "\n");
-        jsonw_string_field(wr, "tab", "\t");
-        jsonw_string_field(wr, "ff", "\f");
-        jsonw_string_field(wr, "quote", "\"");
-        jsonw_string_field(wr, "tick", "\'");
-        jsonw_string_field(wr, "backslash", "\\");
-        jsonw_end_array(wr);
-
-jsonw_name(wr, "ARGV");
-jsonw_start_array(wr);
-jsonw_string(wr, "boo: appended or new entry?");
-jsonw_end_array(wr);
-
-        jsonw_end_object(wr);
-
-        jsonw_end_object(wr);
-        jsonw_destroy(&wr);
-        return 0;
-}
-
-#endif

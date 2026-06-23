@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2009-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,7 +34,7 @@
  * device.
  */
 
-static const char * version_str = "1.45 20260406";      /* sbc6r01 */
+static const char * version_str = "1.46 20260613";      /* sbc6r02 */
 
 #define MY_NAME "sg_get_lba_status"
 
@@ -124,8 +122,8 @@ usage()
             "add_status>\n"
             "                      use twice ('-bb') for given LBA "
             "provisioning status\n"
-            "    --element-id=EI|-e EI      EI is the element identifier "
-            "(def: 0)\n"
+            "    --element-id=EI|-e EI      Element Identifier (EI) "
+            "(def: 0 --> all)\n"
             "    --help|-h         print out usage message\n"
             "    --hex|-H          output in hexadecimal\n"
             "    --inhex=FN|-i FN    input taken from file FN rather than "

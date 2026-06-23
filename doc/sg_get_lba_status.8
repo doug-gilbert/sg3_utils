@@ -1,4 +1,4 @@
-.TH SG_GET_LBA_STATUS "8" "October 2023" "sg3_utils\-1.49" SG3_UTILS
+.TH SG_GET_LBA_STATUS "8" "2026-06-01" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_get_lba_status \- send SCSI GET LBA STATUS(16 or 32) command
 .SH SYNOPSIS
@@ -67,10 +67,13 @@ output in decimal.
 where \fIEI\fR is the element identifier of the physical element for which
 the LBAs shall be reported based on the value in the report type field (i.e.
 \fIRT\fR). This option is only active with the SCSI GET LBA STATUS(32)
-command (i.e. it is ignored if the GET LBA STATUS(16) command is sent).
+command (i.e. it is ignored if the GET LBA STATUS(16) command is sent which
+is equivalent to it being set to zero).
 .br
-Valid element identifiers are non\-zero. The default value of \fIEI\fR is 0
-which means in the context that no element identifier is specified.
+Valid element identifiers start at 1 and increase in integer order.
+\fIEI\fR's default value of 0 means that
+.B all
+element identifiers are examined based on the value of the report type field.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -106,7 +109,8 @@ set the \fIJO\fR parameter to non\-default values.
 \fB\-l\fR, \fB\-\-lba\fR=\fILBA\fR
 where \fILBA\fR is the starting Logical Block Address (LBA) to check the
 provisioning status for. Note that the \fIDEVICE\fR chooses how many
-following blocks that it will return provisioning status for.
+following blocks that it will return provisioning status for, limited by
+\fI\-\-maxlen=LEN\fR.
 .TP
 \fB\-m\fR, \fB\-\-maxlen\fR=\fILEN\fR
 where \fILEN\fR is the (maximum) response length in bytes. It is placed in
@@ -152,6 +156,9 @@ caused by this option is sent to stderr.
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH NOTES
+A LBA extent is a set of contiguous logical blocks whose address is that
+of the lowest LB.
+.PP
 In SBC\-3 revision 25 the calculation associated with the Parameter Data
 Length field in the response was modified. Prior to that the byte offset
 was 8 and in revision 25 it was changed to 4.
@@ -177,7 +184,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2009\-2022 Douglas Gilbert
+Copyright \(co 2009\-2026 Douglas Gilbert
 .br
 This software is distributed under a BSD\-2\-Clause license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

@@ -10,7 +10,16 @@ include(CMakePackageConfigHelpers)
 set ( CMAKE_C_STANDARD 99 )
 set ( CMAKE_C_STANDARD_REQUIRED ON )
 set ( CMAKE_C_EXTENSIONS OFF )
-set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -Wall -W -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H" )
+set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -Wall -W" )
+
+add_compile_definitions ( _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64 HAVE_CONFIG_H )
+
+# The C code in this package can be compiled as C++ with a few additions
+# such as un-commenting the 2 lines below and adding CXX to the LANGUAGES
+# section of the project() statement above. Additionally see the C++
+# comments in the CMakeLists.txt scripts in the lib and src directories.
+# set ( CMAKE_CXX_STANDARD 23 )
+# set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -Wall -W" )
 
 string(TIMESTAMP BUILD_TIME "%Y%m%d %H:%M:%S")
 

@@ -170,7 +170,7 @@ favours POSIX system and library calls over OS specific calls. The plan
 is to move to C11 as the base version in the future.
 
 The C code is written in a C++ friendly way and is checked from time to
-time that it compiles clean with C++. To accommodate C++ certain C99
+time that it compiles cleanly with C++. To accommodate C++ certain C99
 constructs such as designated initializers cannot be used. To build
 with C++, C++11 (i.e. the C++ standard from 2011) or later is required.
 Finding a common C and C++ syntax for zeroing stack variables (including
@@ -219,6 +219,23 @@ including more compiler checks and defining "DEBUG" within the src and
 lib source files. Most utilities in the src directory set '-vv' (i.e.
 equivalent to calling "--verbose" twice) when "DEBUG" is set.
 
+Autotools can also create an "out-of-tree" build. Here is an example:
+    # cd <top-level-directory-of-package>
+    # ./autogen.sh
+    # mkdir build
+    # cd build
+    # ../configure
+    # make
+    # make install
+
+The executables will be in the build/src directory and the libraries
+will be in the build/lib directory.
+
+All the generated files (most of them are artifacts that are only needed
+during the build) can be removed like this:
+    # cd ..
+    # rm -rf build
+
 In Linux there are package build files for "rpm" based and for "deb" based
 systems. The 'sg3_utils.spec' file in the main directory can be used like
 this: 'rpmbuild -ba sg3_utils.spec' in a rpmbuild tree SPECS directory.
@@ -244,9 +261,9 @@ Changes have been made so this package will build with the MUSL libc
 replacing the "standard" libc (GNU and/or clang?) in Linux. In the Ubuntu
 distribution the following packages were installed: musl-dev, musl-tools
 and musl. Then the ./configure line is changed to
-    CC=musl-gcc ./configure
+    # CC=musl-gcc ./configure
 or
-    CC=musl-gcc cmake -S . -B build
+    # CC=musl-gcc cmake -S . -B build
 
 MUSL depends a lot less on Linux specific header files (e.g.
 <linux/major.h> ) so a minimal replacement header has been added:
@@ -254,47 +271,46 @@ include/sg_pt_linux_missing.h .
 
 Building with cmake
 ==================
-The author is experimenting with cmake with a goal to support _both_
-cmake and autotools. This is a relatively simple project with one
-a feq source files (some C++ the rest C). It requires a C++20 or
-better compiler. There is also a manpage in nroff format. The
-sequence of commands to build and install is:
-    cmake .
-    cmake --build .
-    cmake --install .
+The cmake build and packaging system has been introduced to augment rather
+than replace the pre-existing GNU Autotools build system. The goal is
+that both systems generate roughly the same output and that is more
+difficult than it sounds. The cmake build sequence (roughly equivalent to
+./autogen.sh ; ./configure ; make ; make install ) is:
+    # cmake .
+    # cmake --build .
+    # cmake --install .
 
-The last cmake invocation needs root permissions. 'make clean' does
-the same thing as it does in autotools. There is no 'make distclean'
-so the above sequence leaves a lot of garbage "on the floor".
-The ./cmake_del_artifacts.sh.sh script cleans up most of that.
-To build static executable(s) instead of 'cmake .' use
-    cmake . -DBUILD_SHARED_LIBS=OFF
+The last cmake invocation (usually) needs root permissions. Alternatively
+the last step can be replaced by this invocation:
+    # cpack .
 
-The following places the executable in the /usr/bin directory, the man
-pages in the /usr/share/man/man8 directory, and other documentation in
-the /usr/share/doc/ddpt directory.
- $ sudo cmake  --install . --prefix=/usr
-
-Rather than the last step (i.e. 'cmake --install . ') this invocation:
-    cpack .
-
-will build a "deb" and a "rpm" package and place them in the current
-directory. Root permissions are not required. The package that is
-appropriate for the machine's Linux distribution can be installed with:
-    dpkg -i <package>.deb
+which on Linux will build a "deb" and/or a "rpm" package and place it/them
+in the current directory. Root permissions are not required. The package that
+is appropriate for the machine's Linux distribution can be installed with:
+    # dpkg -i <package>.deb
 or
-    rpm -iv <package>.rpm
+    # rpm -iv <package>.rpm
 and that will require root permissions.
 
+With cmake 'make clean' does the same thing as it does in Autotools. There is
+no 'make distclean' so a cmake build leaves a lot of garbage "on the floor".
+The ./cmake_del_artifacts.sh.sh scripts clean up most of that.
+To build static executable(s) instead of 'cmake .' use
+    # cmake . -DBUILD_SHARED_LIBS=OFF
+
+The following invocation places the executable in the /usr/bin directory, the
+man pages in the /usr/share/man/man8 directory, and other documentation in
+the /usr/share/doc/ddpt directory.
+    # sudo cmake  --install . --prefix=/usr
+
 There is no uninstall but after a successful install there is a
-install_manifest.txt file that can be used to remove the files
-installed like this:
-    xargs rm < install_manifest.txt
+install_manifest.txt file that can be used to remove the files installed like this:
+    # xargs rm < install_manifest.txt
 
 Options can be requested like this in the first step of a cmake build:
     # cmake . -DENABLE_DEBUG=ON
 
-[The available options can be viewed with 'cmake -LH .' . for this
+[The available options can be viewed with 'cmake -LH .' . For this
  package it can be seen that ENABLE_DEBUG is default OFF .]
 
 
@@ -316,18 +332,20 @@ The individual executables will be in the <src_top_level_dir>/build/src
 directory. The deb and rpm packages should be in the
 <src_top_level_dir>/build directory. There is no need to call the
 <src_top_level_dir>/cmake_del_artifacts.sh script. Once the packages
-and/or indivudual executable have been copied out of the build
+and/or individual executables have been copied out of the build
 sub-directory, all of cmake's artifact files can be removed with:
-    rm -rf <src_top_level_dir>/build/
+    # rm -rf <src_top_level_dir>/build/
 
-To build a single exceutable (rather than the whole package):
+To build a single executable (rather than the whole package):
     # cd <src_top_level_dir>
     #
     # cmake -S . -B build
     # cd build
     # cmake --build . --target sg_inq
 
-The executable should then be at <src_top_level_dir>/build/src/sg_inq .
+If that succeeds the executable should then be at
+<src_top_level_dir>/build/src/sg_inq .
+
 
 Warning
 =======
@@ -385,7 +403,7 @@ with autotools (e.g. ./configure ).
 
 Man pages can be read (without building and installing the package) by
 going to the 'doc' subdirectory and executing something like this:
- $ man ./sg_dd.8
+    # man ./sg_dd.8
 
 To see which SCSI commands (and ATA commands) are used by these utilities
 refer to the COVERAGE file.
@@ -641,7 +659,7 @@ Coding Style
 ============
 Everyone has their own C/C++ coding style and the author is no different.
 In terms of the GNU indent command:
-     indent -i4 -il0 -nut -br -npcs -ncs -ce
+    # indent -i4 -il0 -nut -br -npcs -ncs -ce
 is pretty close. That is similar to the Linux kernel coding style but
 with 4 space indentations and no tabs.
 
@@ -652,4 +670,4 @@ See https://sg.danny.cz/sg/tools.html
 
 
 Douglas Gilbert         dgilbert@interlog.com
-30th May 2026
+20th June 2026

@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2007-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,8 +22,8 @@
  * standards. Note the version string below applies to the whole library.
  */
 
-const char * const sg_lib_version_str = "3.17 20260401";
-/* spc6r11, sbc6r02, zbc3r03 */
+const char * const sg_lib_version_str = "3.18 20260620";
+/* spc7r05, sbc6r02, zbc3r06 */
 
 
 /* indexed by pdt; those that map to own index do not decay */

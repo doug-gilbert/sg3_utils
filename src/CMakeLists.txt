@@ -21,6 +21,10 @@ function(build_one util_name source_files)
         add_executable( ${util_name} ${source_files} )
     endif ( )
 
+    # For testing it can be useful to compile C code with a C++ compiler. 
+    # That can be done by uncommenting the following line:
+    # set_source_files_properties( ${util_name} PROPERTIES LANGUAGE CXX )
+
     if ( ENABLE_DEBUG )
         target_compile_definitions(${util_name} PRIVATE DEBUG)
         target_compile_options(${util_name} PRIVATE

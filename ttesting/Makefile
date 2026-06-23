@@ -17,7 +17,7 @@ BSG_EXTRAS =
 MAN_PGS =
 MAN_PREF = man8
 
-LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DSG_LIB_LINUX
 
 # For C++/clang testing
 ## CC = gcc
@@ -28,20 +28,20 @@ LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 LD = $(CXX)
 CXXLD = $(CXX)
 
-CPPFLAGS = -iquote ../include -iquote .. -D_REENTRANT $(LARGE_FILE_FLAGS) -DHAVE_CONFIG_H -DHAVE_NVME
+CPPFLAGS = -iquote ../include -iquote .. -D_REENTRANT $(LARGE_FILE_FLAGS) -DHAVE_NVME
 ### CXXFLAGS = -std=c++11 -pthread -ggdb -O2 -W -Wall -iquote ../include -D_REENTRANT $(LARGE_FILE_FLAGS)
 ## CXXFLAGS = -std=c++14 -pthread -ggdb -O2 -W -Wall -iquote ../include -D_REENTRANT $(LARGE_FILE_FLAGS)
 ## CXXFLAGS = -std=c++17 -pthread -ggdb -O2 -W -Wall -iquote ../include -D_REENTRANT $(LARGE_FILE_FLAGS)
 ## CXXFLAGS = -std=c++20 -pthread -ggdb -O2 -W -Wall -iquote ../include -D_REENTRANT $(LARGE_FILE_FLAGS)
-CXXFLAGS = -std=c++2a -pthread -ggdb -O2 -W -Wall -iquote ../include -D_REENTRANT $(LARGE_FILE_FLAGS)
+CXXFLAGS = -std=c++23 -pthread -ggdb -O2 -W -Wall -iquote ../include -D_REENTRANT $(LARGE_FILE_FLAGS)
 # CPPFLAGS = -iquote ../include -iquote .. -D_REENTRANT $(LARGE_FILE_FLAGS) -DHAVE_CONFIG_H -DHAVE_NVME -DDEBUG
-### CFLAGS = -g -O2 -W -Wall
+CFLAGS = -g -O2 -W -Wall
 # CFLAGS = -ggdb -O2 -W -Wall -DDEBUG
 # CFLAGS = -g -O2 -Wall -DSG_KERNEL_INCLUDES
 # CFLAGS = -g -O2 -Wall -pedantic
 # CFLAGS = -Wall -W -pedantic -std=c11 --analyze
 # CFLAGS = -Wall -W -pedantic -std=c++14 -fPIC
-CFLAGS = -Wall -W -pedantic -std=c++20
+# CFLAGS = -Wall -W -pedantic -std=c++23
 
 LDFLAGS =
 

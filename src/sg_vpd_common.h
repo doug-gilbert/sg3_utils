@@ -207,8 +207,9 @@ void decode_cga_profile_vpd(const uint8_t * buff, int len, struct opts_t * op,
                        sgj_opaque_p jap);
 void decode_power_condition(const uint8_t * buff, int len, struct opts_t * op,
                             sgj_opaque_p jop);
-int filter_process_desig_descs(const uint8_t * buff, int len, int leadin_sp,
-                               bool pr_assoc, int m_assoc, struct opts_t * op,
+int filter_process_desig_descs(const char * print_if_found, int leadin_sp,
+                               const uint8_t * buff, int blen, bool pr_assoc,
+                               int m_assoc, struct opts_t * op,
                                sgj_opaque_p jap);
 void decode_ata_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
                          sgj_opaque_p jop);

@@ -1044,8 +1044,6 @@ sg_get_designation_descriptor_str(const char * lip, const uint8_t * ddp,
     piv = ((ddp[1] & 0x80) ? 1 : 0);
     assoc = ((ddp[1] >> 4) & 0x3);
     desig_type = (ddp[1] & 0xf);
-    if (print_assoc && ((cp = sg_get_desig_assoc_str(assoc))))
-        n += sg_scn3pr(b, blen, n, "%s  %s:\n", lip, cp);
     n += sg_scn3pr(b, blen, n, "%s    designator type: ", lip);
     cp = sg_get_desig_type_str(desig_type);
     if (cp)
@@ -1055,8 +1053,10 @@ sg_get_designation_descriptor_str(const char * lip, const uint8_t * ddp,
     if (cp)
         n += sg_scn3pr(b, blen, n, "%s", cp);
     n += sg_scn3pr(b, blen, n, "\n");
+    if (print_assoc && ((cp = sg_get_desig_assoc_str(assoc))))
+        n += sg_scn3pr(b, blen, n, "%s    associated with the %s\n", lip, cp);
     if (piv && ((1 == assoc) || (2 == assoc)))
-        n += sg_scn3pr(b, blen, n, "%s     transport: %s\n", lip,
+        n += sg_scn3pr(b, blen, n, "%s    transport: %s\n", lip,
                        sg_get_trans_proto_str(p_id, sizeof(e), e));
     if (dd_len_trick < 0)
         return n;
@@ -2799,7 +2799,7 @@ sg_get_nvme_cmd_status_str(uint16_t sct_sc, int b_len, char * b)
     }
     for (k = 0; (vp->name && (k < 1000)); ++k, ++vp) {
         if (s == (uint16_t)vp->value) {
-            strncpy(b, vp->name, b_len);
+            sg_strscpy(b, vp->name, b_len);
             b[b_len - 1] = '\0';
             return b;
         }
@@ -4158,7 +4158,8 @@ sg_set_big_endian(uint64_t val, uint8_t * to,
 }
 
 /* Returns true and exits when a byte < 0x20 or DEL is detected. If no
- * such byte is found by *(up + len - 1) then false is returned. */
+ * such byte is found by *(up + len - 1) then false is returned. Note that
+ * scan stops if null char ('\0') found and false is returned. */
 bool
 sg_has_control_char(const uint8_t * up, int len)
 {
@@ -4167,6 +4168,8 @@ sg_has_control_char(const uint8_t * up, int len)
 
     for (k = 0; k < len; ++k) {
         u = up[k];
+        if (0 == u)
+            break;
         if ((u < 0x20) || (0x7f == u))
             return true;
     }

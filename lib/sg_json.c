@@ -157,11 +157,11 @@ sg_json_usage(int char_if_not_j, char * b, int blen)
     if (n >= (blen - 1))
         goto fini;
     n += sg_scn3pr(b, blen, n, "      e    show 'exit_status' field\n");
-    n += sg_scn3pr(b, blen, n, "      h    show 'hex' fields\n");
+    n += sg_scn3pr(b, blen, n, "      h    additionally show 'hex' fields\n");
     n += sg_scn3pr(b, blen, n,
                    "      k    packed, only non-pretty printed output\n");
-    n += sg_scn3pr(b, blen, n, "      l    show lead-in fields (invocation "
-                   "information)\n");
+    n += sg_scn3pr(b, blen, n, "      l    show lead-in fields (version and "
+                   "invocation information)\n");
     n += sg_scn3pr(b, blen, n,
                    "      n    show 'name_extra' information fields\n");
     n += sg_scn3pr(b, blen, n,
@@ -628,7 +628,8 @@ sgj_js_nv_s_len(sgj_state * jsp, sgj_opaque_p jop, const char * name_so_s,
         return NULL;
 }
 
-/* Local copy of sg_lib:sg_has_control_char() */
+/* Local copy of sg_lib:sg_has_control_char() . Note that scan stops if
+ * null char ('\0') found and false is returned. */
 static bool
 has_control_char(const uint8_t * up, int len)
 {
@@ -637,6 +638,8 @@ has_control_char(const uint8_t * up, int len)
 
     for (k = 0; k < len; ++k) {
         u = up[k];
+        if (0 == u)
+            break;
         if ((u < 0x20) || (0x7f == u))
             return true;
     }
@@ -1172,7 +1175,8 @@ sgj_haj_helper(char * b, int blen_max, const char * name,
     return n;
 }
 
-/* aname will be converted to a snake name, if required */
+/* aname will be converted to a snake name, if required. leadin_sp is
+ * clamped at 128 . */
 static void
 sgj_haj_xx(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
            const char * aname, enum sgj_separator_t sep, json_value * jvp,
@@ -1188,11 +1192,10 @@ sgj_haj_xx(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
     char jname[96];
     static const int blen = sizeof(b);
 
-    if (leadin_sp > 128)
-        leadin_sp = 128;
-    for (n = 0; n < leadin_sp; ++n)
-        b[n] = ' ';
-    b[n] = '\0';
+    b[0] = '\0';
+    /* if leadin_sp negative, snprintf() takes abs(leadin_sp) */
+    snprintf(b, blen, "%*s", ((abs(leadin_sp > 128)) ? 128 : leadin_sp), "");
+    n = strlen(b);
     if (NULL == aname) {
         if ((! as_json) || (jsp && jsp->pr_out_hr)) {
             sgj_jtype_to_s(b + n, blen - n, jvp, hex_haj);
@@ -1310,6 +1313,18 @@ sgj_haj_vs_len(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
 }
 
 void
+sgj_haj_vs_nex(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
+               const char * name, enum sgj_separator_t sep,
+               const char * val_s, const char * nex_s)
+{
+    json_value * jvp;
+
+    /* make json_value even if jsp->pr_as_json is false */
+    jvp = val_s ? json_string_new(val_s) : NULL;
+    sgj_haj_xx(jsp, jop, leadin_sp, name, sep, jvp, false, NULL, nex_s);
+}
+
+void
 sgj_haj_vi(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
           const char * name, enum sgj_separator_t sep, int64_t val_i,
            bool hex_haj)
@@ -1379,9 +1394,8 @@ sgj_haj_subo_r(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
 
     if (NULL == aname)
         return NULL;
-    for (n = 0; n < leadin_sp; ++n)
-        b[n] = ' ';
-    b[n] = '\0';
+    snprintf(b, blen, "%*s", ((abs(leadin_sp > 128)) ? 128 : leadin_sp), "");
+    n = strlen(b);
     if ((! as_json) || jsp->pr_out_hr)
         sgj_haj_helper(b + n, blen - n, aname, sep, false, NULL, val_i,
                        hex_haj);
@@ -1414,7 +1428,7 @@ sgj_haj_vs_hex_bytes_nex(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
 {
     static const int max_fixed_len = 132;
     char b[132];
-    int blen = num_bytes * 4;
+    int blen = num_bytes * 4 + 8;
     char * bp = b;
 
     if (blen >= max_fixed_len) {
@@ -1423,9 +1437,11 @@ sgj_haj_vs_hex_bytes_nex(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
     if (bp) {
         json_value * jvp;
 
-        h2str(byte_arr, num_bytes, leadin_sp, bp, blen);
+        if (leadin_sp < 0)
+            leadin_sp = 0;
+        h2str(byte_arr, num_bytes, 0 /* leadin_sp */, bp, blen);
         /* make json_value even if jsp->pr_as_json is false */
-        jvp = json_string_new(bp + leadin_sp);
+        jvp = json_string_new(bp);
         sgj_haj_xx(jsp, jop, leadin_sp, name, sep, jvp, false, NULL, nex_s);
         if (bp != b)
             free(bp);

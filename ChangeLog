@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-Changelog for pre-release sg3_utils-1.49 [20260608] [svn: r1126]
+Changelog for pre-release sg3_utils-1.49 [20260622] [svn: r1127]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -30,10 +30,12 @@ Changelog for pre-release sg3_utils-1.49 [20260608] [svn: r1126]
     - sg_inq --export conformance for SCSI name string
       by Paul Evans github PR #83
   - sg_lib: add sg_last_n_non_blank() for SNT FR field
+    - sg_lib.[hc] add sg_strscpy() to replace strncpy()
     - sg_json.c fixes from lsscsi project pull #15
     - sg_json.[hc] add sgj_haj_vs_hex_bytes_nex() for
       outputing IDs as ASCII hex strings
     - sg_json.[hc] add sgj_haj_vs_len()
+    - sg_json.[hc] add sgj_haj_vs_nex()
     - sg_json_sg_lib.[hc] sgj_js_designation_descriptor()
       changed to sgj_haj_designation_descriptor()
   - sg_logs: correct tape Device statisitics lpage [0x14]

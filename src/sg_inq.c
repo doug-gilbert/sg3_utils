@@ -55,7 +55,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.62 20260604";  /* spc7r05, sbc6r02 */
+static const char * version_str = "2.63 20260617";  /* spc7r05, sbc6r02 */
 
 #define MY_NAME "sg_inq"
 
@@ -122,9 +122,8 @@ static const int rsp_buff_sz = MX_ALLOC_LEN + 1;
 static char xtra_buff[MX_ALLOC_LEN + 1];
 static char usn_buff[MX_ALLOC_LEN + 1];
 
-static void decode_desig_desc(const char * namep, int leadin_sp,
-                              uint8_t * buff, int len, struct opts_t * op,
-                              sgj_opaque_p jop);
+static void decode_desig_descs(int leadin_sp, uint8_t * buff, int len,
+                               struct opts_t * op, sgj_opaque_p jop);
 static int vpd_decode(struct sg_pt_base * ptvp, struct opts_t * op,
                       sgj_opaque_p jop, int off);
 
@@ -1383,7 +1382,7 @@ decode_dev_id_vpd(uint8_t * buff, int len, struct opts_t * op,
         pr2serr("%s %s %s=%d\n", dev_id_s, vpd_pg_s, lts_s, len);
         return;
     }
-    decode_desig_desc(dev_id_s, 2, buff + 4, len - 4, op, jap);
+    decode_desig_descs(0, buff + 4, len - 4, op, jap);
 }
 
 /* VPD_SCSI_PORTS   0x88  ["sp"] */
@@ -1445,15 +1444,14 @@ decode_scsi_ports_vpd_4inq(uint8_t * buff, int len, struct opts_t * op,
             return;
         }
         if (tpd_len > 0) {
-            sgj_pr_hr(jsp, " Target port descriptor(s):\n");
+            sgj_pr_hr(jsp, "  Target port descriptor(s):\n");
             if (dhex > 0)
                 hex2stdout(bp + bump + 4, tpd_len, no_ascii_4hex(op));
             else {
                 sgj_opaque_p ja2p = sgj_named_subarray_r(jsp, jo2p,
                                         "target_port_descriptor_list");
 
-                decode_desig_desc("SCSI Ports", 2, bp + bump + 4, tpd_len,
-                                  op, ja2p);
+                decode_desig_descs(2, bp + bump + 4, tpd_len, op, ja2p);
             }
         }
         bump += tpd_len + 4;
@@ -1464,28 +1462,28 @@ decode_scsi_ports_vpd_4inq(uint8_t * buff, int len, struct opts_t * op,
 /* These are target port, device server (i.e. target) and LU identifiers.
  * jap should point to the designator list (an array). */
 static void
-decode_desig_desc(const char * namep, int leadin_sp, uint8_t * buff, int len,
-                  struct opts_t * op, sgj_opaque_p jap)
+decode_desig_descs(int leadin_sp, uint8_t * buff, int blen,
+                   struct opts_t * op, sgj_opaque_p jap)
 {
     sgj_state * jsp = &op->json_st;
     uint8_t e[36];
     static const int elen = sizeof(e);
 
-    sgj_pr_hr(jsp, "%s\n", (namep ? namep : ""));
     /* Check for EMC Symmetrix "pre-SPC" designation descriptor that has no
      * 4 byte header and is a 16 byte NAA-6 identify with OUI of 06048 (EMC).
      * Note that only sg_inq does this check, not sg_vpd (nor sdparm). */
-    if ((buff[2] > 2) && (len <= (elen - 8)) && (buff[0] == 0x60)) {
-        sgj_pr_hr(jsp, "  Pre-SPC descriptor, descriptor length: %d\n", len);
-        memcpy(e + 4, buff, len);
+    if ((buff[2] > 2) && (blen <= (elen - 8)) && (buff[0] == 0x60)) {
+        sgj_pr_hr(jsp, "  Pre-SPC descriptor, descriptor length: %d\n", blen);
+        memcpy(e + 4, buff, blen);
         e[0] = 0x1;     /* Code set: 1 --> binary */
         e[1] = 0x3;     /* PIV=0, Assoc=0 --> LU; desig_type=3 --> NAA */
         e[2] = 0x0;     /* "Reserved" which means 0x0 */
-        e[3] = len;
-        filter_process_desig_descs(e, len + 4, leadin_sp, true, -1, op, jap);
-
+        e[3] = blen;
+        filter_process_desig_descs(NULL, leadin_sp, e, blen + 4, true, -1,
+                                   op, jap);
     } else
-        filter_process_desig_descs(buff, len, leadin_sp, true, -1, op, jap);
+        filter_process_desig_descs(NULL, leadin_sp, buff, blen, true, -1,
+                                   op, jap);
 }
 
 /* The --export and --json options are assumed to be mutually exclusive.
@@ -4115,6 +4113,8 @@ main(int argc, char * argv[])
     }
     if (op->do_long > 0)
         jsp->z_counter = op->do_long;
+    else if (! op->do_quiet)
+        jsp->z_counter = 1;
     as_json = jsp->pr_as_json;
     if (op->page_str) {
         if (op->vpd_pn >= 0) {

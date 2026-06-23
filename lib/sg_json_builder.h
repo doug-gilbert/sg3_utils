@@ -38,13 +38,13 @@
  * This header file is in this 'lib' directory so its interface is _not_
  * published with sg3_utils other header files found in the 'include'
  * directory. Currently only this header's implementation (i.e.
- * sg_json_builder.c), sg_json.c and sg_json_sglib.c are the only users of
+ * sg_json_builder.c), sg_json.c and sg_json_sg_lib.c are the only users of
  * this header. */
 
 /*
- * Used to require json.h from json-parser but what was needed has been
- * included in this header.
- * https://github.com/udp/json-parser
+ * Formerly required json.h from json-parser (see:
+ * https://github.com/udp/json-parser). However what was needed has been
+ * included directly in this header.
  */
 /* #include "json.h" */
 

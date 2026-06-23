@@ -76,7 +76,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.30 20260523";
+static const char * version_str = "1.31 20260620";
 
 static const char * my_name = "sgm_dd: ";
 
@@ -778,7 +778,7 @@ process_flags(const char * arg, struct flags_t * fp)
     char * cp;
     char * np;
 
-    strncpy(buff, arg, sizeof(buff));
+    sg_strscpy(buff, arg, sizeof(buff));
     buff[sizeof(buff) - 1] = '\0';
     if ('\0' == buff[0]) {
         pr2serr("no flag found\n");

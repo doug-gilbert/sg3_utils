@@ -1,5 +1,5 @@
 /* A utility program for the Linux OS SCSI subsystem.
- *  Copyright (C) 2004-2023 D. Gilbert
+ *  Copyright (C) 2004-2026 D. Gilbert
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
@@ -36,7 +36,7 @@
 #include "sg_cmds_extra.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "1.28 20230519";
+static const char * version_str = "1.29 20260620";
 
 #define MAX_XFER_LEN 10000
 
@@ -172,7 +172,7 @@ main(int argc, char * argv[])
             llba = (uint64_t)ll;
             break;
         case 'o':
-            strncpy(out_fname, optarg, sizeof(out_fname) - 1);
+            sg_strscpy(out_fname, optarg, sizeof(out_fname) - 1);
             break;
         case 'p':
             pblock = true;

@@ -10,6 +10,9 @@
  * Borrowed from Linux kernel [5.17.0]: tools/bpf/bpftool/json_writer.[hc]
  */
 
+/* This file is not built. It is just here as a reference for testing
+ * json_builder or json writer (the latter is not used anyway). */
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdarg.h>

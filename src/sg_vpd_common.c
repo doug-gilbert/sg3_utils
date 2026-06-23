@@ -5,6 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+/*
+ * This file holds common code for sg_inq and sg_vpd as both those utilities
+ * decode SCSI VPD pages.
+ */
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -32,9 +37,6 @@
 #include "sg_pr2serr.h"
 
 #include "sg_vpd_common.h"
-
-/* This file holds common code for sg_inq and sg_vpd as both those utilities
- * decode SCSI VPD pages. */
 
 const char * t10_vendor_id_hr = "T10_vendor_identification";
 const char * t10_vendor_id_sn = "t10_vendor_identification";
@@ -880,26 +882,40 @@ decode_power_condition(const uint8_t * buff, int len, struct opts_t * op,
                    true, "unit: millisecond");
 }
 
-/* Filter list (array) of designation descriptors by association. All matches
- * are processed to produce output (human readable and/or JSON). */
+/* Filter list (array) of designation descriptors by association. m_assoc
+ * is an association mask where -1 means match any. m_assoc is passed to
+ * sg_vpd_dev_id_iter(). All matches are processed to produce output (human
+ * readable and/or JSON). */
 int
-filter_process_desig_descs(const uint8_t * buff, int len, int leadin_sp,
-                           bool pr_assoc, int m_assoc, struct opts_t * op,
-                           sgj_opaque_p jap)
+filter_process_desig_descs(const char * print_if_found, int leadin_sp,
+                           const uint8_t * buff, int blen, bool pr_assoc,
+                           int m_assoc, struct opts_t * op, sgj_opaque_p jap)
 {
-    int u, off, i_len;
+    bool found = false;
+    int j, u, off, i_len;
     sgj_opaque_p jo2p;
     const uint8_t * bp;
     sgj_state * jsp = &op->json_st;
 
     off = -1;
-    while ((u = sg_vpd_dev_id_iter(buff, len, &off, m_assoc, -1, -1)) == 0) {
+    for (j = 1;
+         (u = sg_vpd_dev_id_iter(buff, blen, &off, m_assoc, -1, -1)) == 0;
+         ++j) {
+        if (print_if_found && (! found)) {
+            found = true;
+            if (op->do_quiet < 1)
+                sgj_pr_hr(jsp, "%*s  %s:\n", leadin_sp, "", print_if_found);
+        }
         bp = buff + off;
         i_len = bp[3];
-        if ((off + i_len + 4) > len) {
+        if ((NULL == print_if_found) && (-1 == m_assoc)) {
+            sgj_pr_hr(jsp, "%*s  Designation descriptor number %d, "
+                      "descriptor length: %d\n", leadin_sp, "", j, i_len + 4);
+        }
+        if ((off + i_len + 4) > blen) {
             pr2serr("    %s error: designator length [%d] longer than "
                     "remaining\n" "     response length=%d\n", vpd_pg_s,
-                    i_len, (len - off));
+                    i_len, (blen - off));
             return SG_LIB_CAT_MALFORMED;
         }
         jo2p = sgj_new_unattached_object_r(jsp);
@@ -922,7 +938,8 @@ decode_ata_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
                     sgj_opaque_p jop)
 {
     bool do_long_nq = op->do_long && (! op->do_quiet);
-    int num, is_be, cc;
+    int num, is_be;
+    unsigned cc;
     sgj_state * jsp = &op->json_st;
     sgj_opaque_p jo2p = NULL;
     const char * cp;
@@ -962,12 +979,13 @@ decode_ata_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
                ata_transp);
     if (len < 56)
         return;
-    sgj_haj_vs_hex_bytes_nex(jsp, jop, 2, "Command code (hex)",
-                             SGJ_SEP_COLON_1_SPACE_RM_PARENS, buff + 56, 1,
-                     "ATA command code (in hex) that got this response");
 
     cc = buff[56];      /* 0xec for IDENTIFY DEVICE and 0xa1 for IDENTIFY
                          * PACKET DEVICE (obsolete) */
+    snprintf(b, blen, "0x%02x", cc);
+    sgj_haj_vs_nex(jsp, jop, 2, "Command code (hex)",
+                   SGJ_SEP_COLON_1_SPACE_RM_PARENS, b,
+                   "ATA command code (in hex) that got this response");
     if (len < 60)
         return;
     if (0xec == cc)
@@ -1878,8 +1896,8 @@ decode_block_lb_prov_vpd(const uint8_t * buff, int len, struct opts_t * op,
         return SG_LIB_CAT_MALFORMED;
     }
     t_exp = buff[4];
-    sgj_js_nv_ihexstr(jsp, jop, "threshold_exponent", t_exp, NULL,
-                      (0 == t_exp) ? ns_s : NULL);
+    sgj_haj_vi(jsp, jop, 2, "Threshold exponent", SGJ_SEP_EQUAL_NO_SPACE,
+               t_exp, false);
     sgj_haj_vi_nex(jsp, jop, 2, "LBPU", SGJ_SEP_EQUAL_NO_SPACE,
                    !!(buff[5] & 0x80), false,
                    "Logical Block Provisioning Unmap command supported");

@@ -332,6 +332,9 @@ void sgj_haj_vs(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
 void sgj_haj_vs_len(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
                     const char * name, enum sgj_separator_t sep,
                     const char * val_s, int val_len);
+void sgj_haj_vs_nex(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
+                    const char * name, enum sgj_separator_t sep,
+                    const char * val_s, const char * nex_s);
 
 /* Similar to sgj_haj_vs()'s description with 'JSON string object'
  * replaced by 'JSON integer object'. hex_haj when set will cause val_i

@@ -1,5 +1,5 @@
 /* A utility program originally written for the Linux OS SCSI subsystem.
- *  Copyright (C) 2004-2023 D. Gilbert
+ *  Copyright (C) 2004-2026 D. Gilbert
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
@@ -34,7 +34,7 @@
 
 #include "sg_pt.h"
 
-static const char * version_str = "1.03 20231209";    /* spc6r11 */
+static const char * version_str = "1.04 20260620";    /* spc6r11 */
 
 #define MY_NAME "sg_opcodes"
 
@@ -511,7 +511,7 @@ new_parse_cmd_line(struct opts_t * op, int argc, char * argv[])
             cp = strchr(optarg, ',');
             if (cp) {
                 memset(b, 0, sizeof(b));
-                strncpy(b, optarg, cp - optarg);
+                sg_strscpy(b, optarg, cp - optarg);
                 n = sg_get_num(b);
                 if ((n < 0) || (n > 255)) {
                     pr2serr("bad OP argument to '--opcode'\n");

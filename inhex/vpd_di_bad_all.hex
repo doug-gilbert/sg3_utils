@@ -3,7 +3,7 @@
 #    sg_vpd --inhex=vpd_di_bad_all.hex
 #
 # This file is a small modification of vpd_di_all.hex that puts a control
-# character (0xa LF) into ASCII strings to see how sg_inq -export reacts.
+# character (0xa LF) into ASCII strings to see how sg_inq --export reacts.
 
 00 83 01 08
 

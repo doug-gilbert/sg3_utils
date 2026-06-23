@@ -1,13 +1,11 @@
 /*
  * Copyright (c) 2005-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_linux version 1.57 20260430 */
+/* sg_pt_linux version 1.58 20260620 */
 
 
 #include <stdio.h>
@@ -1034,7 +1032,7 @@ get_scsi_pt_os_err_str(const struct sg_pt_base * vp, int max_b_len, char * b)
     const char * cp;
 
     cp = safe_strerror(ptp->os_err);
-    strncpy(b, cp, max_b_len);
+    sg_strscpy(b, cp, max_b_len);
     if ((int)strlen(cp) >= max_b_len)
         b[max_b_len - 1] = '\0';
     return b;

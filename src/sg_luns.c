@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2004-2023 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,7 +33,7 @@
  * and decodes the response.
  */
 
-static const char * version_str = "1.58 20230519";      /* spc6r08 */
+static const char * version_str = "1.59 20260620";      /* spc6r08 */
 
 #define MY_NAME "sg_luns"
 
@@ -221,7 +219,7 @@ decode_lun(const char * leadin, const uint8_t * lunp, struct opts_t * op,
             jo2p = sgj_named_subobject_r(jsp, jo2p, "decode_level");
             next_level = false;
         }
-        strncpy(l_leadin, leadin, leadin_len - 3);
+        sg_strscpy(l_leadin, leadin, leadin_len - 3);
         if (k > 0) {
             if (lu_cong) {
                 admin_lu_cong = false;

@@ -5,6 +5,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+/*
+ * Functions in this file support JSON output (but with some settings will
+ * output only human readable form) and have dependencies on major parts
+ * of the sg3_utils library (sgutils2). JSON support functions that do
+ * _not_ depend on the rest of the sg3_utils library (apart from
+ * sg_json_builder.[hc]) can be found in the sg_json.c file.
+ * For non-JSON output the jsp pointer is assumed to be valid and point
+ * to a sgj_state object that has JSON output deselected (e.g. in its
+ * default state).
+ */
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +33,7 @@
 #include "sg_json_builder.h"
 
 
+static const char * ts_s = "too short";
 static const char * dts_s = "descriptor too short";
 static const char * sksv_s = "sense-key specific valid";
 static const char * dde_s = "designation_descriptor_error";
@@ -68,13 +80,21 @@ snake(const char * in_name, char * name_so_s, int max_sname_len)
     return sgj_convert2snake(in_name, name_so_s, max_sname_len);
 }
 
-/* This function will only output JSON if (l_sp < 0); otherwise it will
- * produce human readable and/or JSON output. The latter case includes
- * putting the human readable form in a JSON array called 'plain_text_output'
- * with each line in a single array element. */
+/* This function decodes one designation descriptor which starts at 'ddp'
+ * and is 'dd_len' bytes long. Designation descriptors are mainly found
+ * in the Device identification VPD page [0x83] but do arise in other
+ * situations (e.g. SCSI ports VPD page [0x86]). This function produces
+ * either human readable output (to stdout) or JSON output or both. The
+ * both variant is when JSON output is selected and additionally
+ * jsp->pr_out_hr is true (e.g. with the '-j=o' option). In this case,
+ * human readable output is placed in a JSON array called
+ * 'plain_text_output' with each line in a single array element.
+ * Implementation note: the designation descriptor is parsed twice in the
+ * "both' case. Each line of human readable output is prefixed by (at least)
+ * leadin_sp spaces. Returns true if successful, else false. */
 bool
 sgj_haj_designation_descriptor(sgj_state * jsp, sgj_opaque_p jop,
-                               int l_sp /* leadin_sp */, bool pr_assoc,
+                               int leadin_sp, bool pr_assoc,
                                const uint8_t * ddp, int dd_len)
 {
     bool as_json = jsp && jsp->pr_as_json;
@@ -94,16 +114,15 @@ sgj_haj_designation_descriptor(sgj_state * jsp, sgj_opaque_p jop,
     static const int c2s_len = sizeof(c2s);
 
     if (dd_len < 4) {
-        sgj_haj_vs(jsp, jop, l_sp, dde_s, SGJ_SEP_COLON_1_SPACE, "too short");
+        sgj_haj_vs(jsp, jop, leadin_sp, dde_s, SGJ_SEP_COLON_1_SPACE, ts_s);
         return false;
     }
     if ((! as_json) || (as_json && jsp->pr_out_hr)) {
-        n = (l_sp < 64) ? l_sp : 64;
+        n = (leadin_sp < 64) ? leadin_sp : 64;
         for (k = 0; k < n; ++k)
             e[k] = ' ';
         e[k] = '\0';
-        n = sg_get_designation_descriptor_str(e, ddp, dd_len ,
-                                              pr_assoc,
+        n = sg_get_designation_descriptor_str(e, ddp, dd_len, pr_assoc,
                                               jsp->z_counter > 0, // do_long
                                               blen, b);
         if (as_json)
@@ -127,8 +146,6 @@ sgj_haj_designation_descriptor(sgj_state * jsp, sgj_opaque_p jop,
     assoc = ((ddp[1] >> 4) & 0x3);
     desig_type = (ddp[1] & 0xf);
     cp = sg_get_desig_assoc_str(assoc);
-    if (assoc == 3)
-        cp = "Reserved [0x3]";    /* should not happen */
     sgj_js_nv_ihexstr(jsp, jop, snake(assoc_s, c2s, c2s_len), assoc, NULL,
                       cp);
     cp = sg_get_desig_type_str(desig_type);
@@ -153,10 +170,22 @@ sgj_haj_designation_descriptor(sgj_state * jsp, sgj_opaque_p jop,
         n = (dlen < 8) ? dlen : 8;
         snprintf(b, blen, "%.*s", n, ip);
         sgj_js_nv_s(jsp, jop, snake(t10vi_s, c2s, c2s_len), b);
-        b[0] = '\0';
-        if (dlen > 8)
-            snprintf(b, blen, "%.*s", dlen - 8, ip + 8);
-        sgj_js_nv_s(jsp, jop, snake(vsi_s, c2s, c2s_len), b);
+        snake(vsi_s, c2s, c2s_len);
+        if (dlen <= 8) {
+            sgj_js_nv_s(jsp, jop, c2s, "");
+            break;
+        }
+        if ((2 == c_set) || (3 == c_set)) {    /* ASCII or UTF-8 */
+            sgj_js_nv_s_len(jsp, jop, c2s, (const char *)ip + 8, dlen - 8);
+            break;
+        }
+        /* assume Vendor specific identifier (vsi) is in binary */
+        if (dlen <= 16) {
+            ull = sg_get_unaligned_be(dlen - 8, ip + 8);
+            sgj_js_nv_ihex(jsp, jop, c2s, ull);
+        } else {
+            sgj_js_nv_hex_bytes(jsp, jop, c2s, ip + 8, dlen - 8);
+        }
         break;
     case 2: /* EUI-64 based */
         sgj_js_nv_i(jsp, jop, snake(eui_l_s, c2s, c2s_len), dlen);
@@ -276,12 +305,13 @@ sgj_haj_designation_descriptor(sgj_state * jsp, sgj_opaque_p jop,
                                 dlen);
         snprintf(b, blen, "%.*s", dlen, ip);
         if (has_control_char) {   /* replace control chars with space */
-            for (k = 0; k < dlen; ++k) {
+            for (k = 0; (k < dlen) && b[k]; ++k) {
                 if ((b[k] < 0x20) || (b[k] == 0x7f))
                     b[k] = ' ';
             }
-        }
-        sgj_js_nv_s(jsp, jop, snake(sns_s, c2s, c2s_len), b);
+        } else
+            k = dlen;
+        sgj_js_nv_s_len(jsp, jop, snake(sns_s, c2s, c2s_len), b, k);
         break;
     case 9: /* Protocol specific port identifier */
         if (jsp->pr_hex) {
@@ -318,213 +348,6 @@ sgj_haj_designation_descriptor(sgj_state * jsp, sgj_opaque_p jop,
     }
     return true;
 }
-
-#if 0
-bool
-sgj_js_designation_descriptor(sgj_state * jsp, sgj_opaque_p jop,
-                              const uint8_t * ddp, int dd_len)
-{
-    int p_id, piv, c_set, assoc, desig_type, d_id, naa;
-    int n, aoi, vsi, dlen;
-    uint64_t ull;
-    const uint8_t * ip;
-    char e[80];
-    char b[256];
-    const char * cp;
-    const char * naa_sp;
-    sgj_opaque_p jo2p;
-    static const int blen = sizeof(b);
-    static const int elen = sizeof(e);
-
-    if (dd_len < 4) {
-        sgj_js_nv_s(jsp, jop, dde_s, "too short");
-        return false;
-    }
-    dlen = ddp[3];
-    if (dlen > (dd_len - 4)) {
-        snprintf(e, elen, "too long: says it is %d bytes, but given %d "
-                 "bytes\n", dlen, dd_len - 4);
-        sgj_js_nv_s(jsp, jop, dde_s, e);
-        return false;
-    }
-    ip = ddp + 4;
-    p_id = ((ddp[0] >> 4) & 0xf);
-    c_set = (ddp[0] & 0xf);
-    piv = ((ddp[1] & 0x80) ? 1 : 0);
-    assoc = ((ddp[1] >> 4) & 0x3);
-    desig_type = (ddp[1] & 0xf);
-    cp = sg_get_desig_assoc_str(assoc);
-    if (assoc == 3)
-        cp = "Reserved [0x3]";    /* should not happen */
-    sgj_js_nv_ihexstr(jsp, jop, "association", assoc, NULL, cp);
-    cp = sg_get_desig_type_str(desig_type);
-    if (NULL == cp)
-        cp = "unknown";
-    sgj_js_nv_ihexstr(jsp, jop, "designator_type", desig_type,
-                       NULL, cp);
-    cp = sg_get_desig_code_set_str(c_set);
-    if (NULL == cp)
-        cp = "unknown";
-    sgj_js_nv_ihexstr(jsp, jop, "code_set", desig_type,
-                      NULL, cp);
-    sgj_js_nv_ihex_nex(jsp, jop, "piv", piv, false,
-                       "Protocol Identifier Valid");
-    sg_get_trans_proto_str(p_id, elen, e);
-    sgj_js_nv_ihexstr(jsp, jop, "protocol_identifier", p_id, NULL, e);
-    switch (desig_type) {
-    case 0: /* vendor specific */
-        sgj_js_nv_hex_bytes(jsp, jop, "vendor_specific_hexbytes", ip, dlen);
-        break;
-    case 1: /* T10 vendor identification */
-        n = (dlen < 8) ? dlen : 8;
-        snprintf(b, blen, "%.*s", n, ip);
-        sgj_js_nv_s(jsp, jop, "t10_vendor_identification", b);
-        b[0] = '\0';
-        if (dlen > 8)
-            snprintf(b, blen, "%.*s", dlen - 8, ip + 8);
-        sgj_js_nv_s(jsp, jop, "vendor_specific_identifier", b);
-        break;
-    case 2: /* EUI-64 based */
-        sgj_js_nv_i(jsp, jop, "eui_64_based_designator_length", dlen);
-        ull = sg_get_unaligned_be64(ip);
-        switch (dlen) {
-        case 8:
-            sgj_js_nv_ihex(jsp, jop, "ieee_identifier", ull);
-            break;
-        case 12:
-            sgj_js_nv_ihex(jsp, jop, "ieee_identifier", ull);
-            sgj_js_nv_ihex(jsp, jop, "directory_id",
-                            sg_get_unaligned_be32(ip + 8));
-            break;
-        case 16:
-            sgj_js_nv_ihex(jsp, jop, "identifier_extension", ull);
-            sgj_js_nv_ihex(jsp, jop, "ieee_identifier",
-                            sg_get_unaligned_be64(ip + 8));
-            break;
-        default:
-            sgj_js_nv_s(jsp, jop, "eui_64", "decoding failed");
-            break;
-        }
-        break;
-    case 3: /* NAA <n> */
-        if (jsp->pr_hex)
-            sgj_js_nv_hex_bytes(jsp, jop, "full_naa_hexbytes", ip, dlen);
-        naa = (ip[0] >> 4) & 0xff;
-        switch (naa) {
-        case 2:
-            naa_sp = "IEEE Extended";
-            sgj_js_nv_ihexstr_nex(jsp, jop, "naa", naa, false, NULL, naa_sp,
-                                  naa_ex_s);
-            d_id = (((ip[0] & 0xf) << 8) | ip[1]);
-            sgj_js_nv_ihex(jsp, jop, "vendor_specific_identifier_a", d_id);
-            aoi = sg_get_unaligned_be24(ip + 2);
-            sgj_js_nv_ihex_nex(jsp, jop, "aoi", aoi, true, aoi_ex_s);
-            vsi = sg_get_unaligned_be24(ip + 5);
-            sgj_js_nv_ihex(jsp, jop, "vendor_specific_identifier_b", vsi);
-            break;
-        case 3:
-            naa_sp = "Locally Assigned";
-            sgj_js_nv_ihexstr_nex(jsp, jop, "naa", naa, false, NULL, naa_sp,
-                                  naa_ex_s);
-            ull = sg_get_unaligned_be64(ip + 0) & 0xfffffffffffffffULL;
-            sgj_js_nv_ihex(jsp, jop, "locally_administered_value", ull);
-            break;
-        case 5:
-            naa_sp = "IEEE Registered";
-            sgj_js_nv_ihexstr_nex(jsp, jop, "naa", naa, false, NULL, naa_sp,
-                                  naa_ex_s);
-            aoi = (sg_get_unaligned_be32(ip + 0) >> 4) & 0xffffff;
-            sgj_js_nv_ihex_nex(jsp, jop, "aoi", aoi, true, aoi_ex_s);
-            ull = sg_get_unaligned_be48(ip + 2) & 0xfffffffffULL;
-            sgj_js_nv_ihex(jsp, jop, "vendor_specific_identifier", ull);
-            break;
-        case 6:
-            naa_sp = "IEEE Registered Extended";
-            sgj_js_nv_ihexstr_nex(jsp, jop, "naa", naa, false, NULL, naa_sp,
-                                  naa_ex_s);
-            aoi = (sg_get_unaligned_be32(ip + 0) >> 4) & 0xffffff;
-            sgj_js_nv_ihex_nex(jsp, jop, "aoi", aoi, true, aoi_ex_s);
-            ull = sg_get_unaligned_be48(ip + 2) & 0xfffffffffULL;
-            sgj_js_nv_ihex(jsp, jop, "vendor_specific_identifier", ull);
-            ull = sg_get_unaligned_be64(ip + 8);
-            sgj_js_nv_ihex(jsp, jop, "vendor_specific_identifier_extension",
-                           ull);
-            break;
-        default:
-            snprintf(b, blen, "unknown NAA value=0x%x", naa);
-            sgj_js_nv_ihexstr_nex(jsp, jop, "naa", naa, true, NULL, b,
-                                  naa_ex_s);
-            sgj_js_nv_hex_bytes(jsp, jop, "full_naa_hexbytes", ip, dlen);
-            break;
-        }
-        break;
-    case 4: /* Relative target port */
-        if (jsp->pr_hex)
-            sgj_js_nv_hex_bytes(jsp, jop, "relative_target_port_hexbytes",
-                                ip, dlen);
-        sgj_js_nv_ihex(jsp, jop, "relative_target_port_identifier",
-                       sg_get_unaligned_be16(ip + 2));
-        break;
-    case 5: /* (primary) Target port group */
-        if (jsp->pr_hex)
-            sgj_js_nv_hex_bytes(jsp, jop, "target_port_group_hexbytes",
-                                ip, dlen);
-        sgj_js_nv_ihex(jsp, jop, "target_port_group",
-                       sg_get_unaligned_be16(ip + 2));
-        break;
-    case 6: /* Logical unit group */
-        if (jsp->pr_hex)
-            sgj_js_nv_hex_bytes(jsp, jop, "logical_unit_group_hexbytes",
-                                ip, dlen);
-        sgj_js_nv_ihex(jsp, jop, "logical_unit_group",
-                       sg_get_unaligned_be16(ip + 2));
-        break;
-    case 7: /* MD5 logical unit identifier */
-        sgj_js_nv_hex_bytes(jsp, jop, "md5_logical_unit_hexbytes",
-                            ip, dlen);
-        break;
-    case 8: /* SCSI name string */
-        if (jsp->pr_hex)
-            sgj_js_nv_hex_bytes(jsp, jop, "scsi_name_string_hexbytes",
-                                ip, dlen);
-        snprintf(b, blen, "%.*s", dlen, ip);
-        sgj_js_nv_s(jsp, jop, "scsi_name_string", b);
-        break;
-    case 9: /* Protocol specific port identifier */
-        if (jsp->pr_hex)
-            sgj_js_nv_hex_bytes(jsp, jop,
-                                "protocol_specific_port_identifier_hexbytes",
-                                ip, dlen);
-        if (TPROTO_UAS == p_id) {
-            jo2p = sgj_named_subobject_r(jsp, jop,
-                                        "usb_target_port_identifier");
-            sgj_js_nv_ihex(jsp, jo2p, "device_address", 0x7f & ip[0]);
-            sgj_js_nv_ihex(jsp, jo2p, "interface_number", ip[2]);
-        } else if (TPROTO_SOP == p_id) {
-            jo2p = sgj_named_subobject_r(jsp, jop, "pci_express_routing_id");
-            sgj_js_nv_ihex(jsp, jo2p, "routing_id",
-                           sg_get_unaligned_be16(ip + 0));
-        } else
-            sgj_js_nv_s(jsp, jop, "protocol_specific_port_identifier", dfa_s);
-
-        break;
-    case 0xa: /* UUID identifier */
-        if (jsp->pr_hex)
-            sgj_js_nv_hex_bytes(jsp, jop, "uuid_hexbytes", ip, dlen);
-        sg_t10_uuid_desig2str(ip, dlen, c_set, false, true, NULL, blen, b);
-        n = strlen(b);
-        if ((n > 0) && ('\n' == b[n - 1]))
-            b[n - 1] = '\0';
-        sgj_js_nv_s(jsp, jop, "uuid", b);
-        break;
-    default: /* reserved */
-        sgj_js_nv_hex_bytes(jsp, jop, "reserved_designator_hexbytes",
-                            ip, dlen);
-        break;
-    }
-    return true;
-}
-#endif
 
 static void
 sgj_progress_indication(sgj_state * jsp, sgj_opaque_p jop,
@@ -728,10 +551,6 @@ sgj_js_sense_descriptors(sgj_state * jsp, sgj_opaque_p jop,
     char b[80];
     static const int blen = sizeof(b);
     static const char * parsing = "parsing_error";
-#if 0
-    static const char * eccp = "Extended copy command";
-    static const char * ddp = "destination device";
-#endif
 
     add_sb_len = sshp->additional_length;
     add_sb_len = (add_sb_len < sb_len) ? add_sb_len : sb_len;
@@ -1109,7 +928,7 @@ sgj_js_sense(sgj_state * jsp, sgj_opaque_p jop, const uint8_t * sbp,
         sgj_js_nv_ihex(jsp, jop, "number_of_bytes_beyond_18",
                        (n > 18) ? n - 18 : 0);
     } else {
-        snprintf(ebuff, sizeof(ebuff), "sb_len=%d too short", sb_len);
+        snprintf(ebuff, sizeof(ebuff), "sb_len=%d %s", sb_len, ts_s);
         ebp = ebuff;
         ret = false;
     }

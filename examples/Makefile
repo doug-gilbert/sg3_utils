@@ -27,7 +27,7 @@ BSG_EXTRAS =
 MAN_PGS =
 MAN_PREF = man8
 
-LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -DSG_LIB_LINUX
 
 CPPFLAGS = -iquote ../include -D_REENTRANT $(LARGE_FILE_FLAGS)
 # CPPFLAGS = -iquote ../include -D_REENTRANT $(LARGE_FILE_FLAGS) -DDEBUG
@@ -38,6 +38,8 @@ CFLAGS = -g -O2 -W -Wall
 
 LDFLAGS =
 
+# This Makefile assumes individual library have been compiled and are
+# sitting in the ../lib directory
 LIBFILESOLD = ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_pr2serr.o \
 	      ../lib/sg_io_linux.o 
 LIBFILESNEW = ../lib/sg_lib.o ../lib/sg_lib_data.o ../lib/sg_pr2serr.o \

@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2009-2023 Douglas Gilbert.
+ * Copyright (c) 2009-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +31,7 @@
 #include "sg_unaligned.h"
 #include "sg_pr2serr.h"
 
-static const char * version_str = "1.35 20230623";
+static const char * version_str = "1.37 20260620";
 
 
 #define ME "sg_write_same: "
@@ -108,7 +106,7 @@ static void
 usage()
 {
     pr2serr("Usage: sg_write_same [--10] [--16] [--32] [--anchor] "
-            "[-ff] [--grpnum=GN]\n"
+            "[--ff] [--grpnum=GN]\n"
             "                     [--help] [--in=IF] [--lba=LBA] [--lbdata] "
             "[--ndob]\n"
             "                     [--num=NUM] [--pbdata] [--timeout=TO] "
@@ -145,7 +143,7 @@ usage()
             "    --pbdata|-P          set PBDATA bit (obsolete)\n"
             "    --timeout=TO|-t TO    command timeout (unit: seconds) (def: "
             "60)\n"
-            "    --unmap|-U           set UNMAP bit\n"
+            "    --unmap|-U           set UNMAP bit in cdb\n"
             "    --verbose|-v         increase verbosity\n"
             "    --version|-V         print version string then exit\n"
             "    --wrprotect=WPR|-w WPR    WPR is the WRPROTECT field value "
@@ -371,7 +369,7 @@ main(int argc, char * argv[])
             usage();
             return 0;
         case 'i':
-            strncpy(op->ifilename, optarg, sizeof(op->ifilename) - 1);
+            sg_strscpy(op->ifilename, optarg, sizeof(op->ifilename) - 1);
             op->ifilename[sizeof(op->ifilename) - 1] = '\0';
             if_given = true;
             break;

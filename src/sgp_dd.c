@@ -94,7 +94,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "5.96 20260429";
+static const char * version_str = "5.97 20260620";
 
 #define DEF_BLOCK_SIZE 512
 #define DEF_BLOCKS_PER_TRANSFER 128
@@ -489,7 +489,7 @@ tsafe_strerror(int code, char * ebp)
     status = pthread_mutex_lock(&strerr_mut);
     if (0 != status) pr2serr("lock strerr_mut");
     cp = safe_strerror(code);
-    strncpy(ebp, cp, STRERR_BUFF_LEN);
+    sg_strscpy(ebp, cp, STRERR_BUFF_LEN);
     status = pthread_mutex_unlock(&strerr_mut);
     if (0 != status) pr2serr("unlock strerr_mut");
     ebp[STRERR_BUFF_LEN - 1] = '\0';
@@ -1450,7 +1450,7 @@ process_flags(const char * arg, struct flags_t * fp)
     char * cp;
     char * np;
 
-    strncpy(buff, arg, sizeof(buff));
+    sg_strscpy(buff, arg, sizeof(buff));
     buff[sizeof(buff) - 1] = '\0';
     if ('\0' == buff[0]) {
         pr2serr("no flag found\n");

@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2022-2023 Douglas Gilbert.
+ * Copyright (c) 2022-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -107,4 +105,37 @@ sg_scn3pr(char * fcp, int fcp_len, int off, const char * fmt, ...)
               fcp, fmt);
 #endif
     return (n < cp_max_len) ? n : (cp_max_len - 1);
+}
+
+/* Safer form of strncpy() modelled on Linux kernel strscpy() function.
+ * Returns 0 if count is 1 or less (notice count is an int so that includes
+ * negative values) and doesn't touch dest. Otherwise copies up to count-1
+ * characters from src to dest; stopping if a null char has just been
+ * copied. If count-1 copies is reached, a null character is written to src.
+ * So in the case where count is 1, a null character is written to dest[0]
+ * and 0 is returned. dest must be large enough to accept count characters.
+ * If dest in a visible array (to the compiler) then this invocation:
+ *    sg_strscpy(dest, src, sizeof(dest))
+ * is safe and returns zero or a positive number. */
+int
+sg_strscpy(char * dest, const char * src, int count)
+{
+    int res = 0;
+
+    if (count < 1)
+        return res;
+    /* Should there be a clamp of say 4096, 65536? Not yet */
+    while (count > 1) {
+        char c;
+
+        c = src[res];
+        dest[res] = c;
+        if (!c)
+            return res;    /* just wrote a null char */
+        res++;
+        count--;
+    }
+    /* Force NUL-termination. */
+    dest[res] = '\0';
+    return res;
 }

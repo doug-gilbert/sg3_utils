@@ -42,7 +42,7 @@
 
 */
 
-static const char * version_str = "2.07 20260604";  /* spc7r05 + sbc6r02 */
+static const char * version_str = "2.08 20260618";  /* spc7r05 + sbc6r02 */
 
 #define MY_NAME "sg_vpd"
 
@@ -75,9 +75,10 @@ static int svpd_decode_t10(struct sg_pt_base * ptvp, struct opts_t * op,
                            sgj_opaque_p jop, int subvalue, int off,
                            const char * prefix);
 
-static int filter_desig_descs(const char * print_if_found, int num_leading,
-                          const uint8_t * buff, int len, bool pr_assoc,
-                          int m_assoc, struct opts_t * op, sgj_opaque_p jop);
+static int svpd_desig_descs(const char * print_if_found, int leadin_sp,
+                            const uint8_t * buff, int blen, bool pr_assoc,
+                            int m_assoc, struct opts_t * op,
+                            sgj_opaque_p jop);
 
 static const int rsp_buff_sz = MX_ALLOC_LEN + 2;
 
@@ -484,26 +485,26 @@ device_id_vpd_variants(uint8_t * buff, int len, int subvalue,
     }
     blen = len - 4;
     b = buff + 4;
-    m_a = -1;
+    m_a = -1;           /* association mask; -1 => any/all */
     if (0 == subvalue) {
-        filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_LU), 0, b, blen,
-                           false, VPD_ASSOC_LU, op, jap);
-        filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TPORT), 0, b,
-                           blen, false, VPD_ASSOC_TPORT, op, jap);
-        filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TDEVICE), 0, b,
-                           blen, false, VPD_ASSOC_TDEVICE, op, jap);
+        svpd_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_LU), 0,
+                         b, blen, false, VPD_ASSOC_LU, op, jap);
+        svpd_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TPORT), 0, b,
+                         blen, false, VPD_ASSOC_TPORT, op, jap);
+        svpd_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TDEVICE), 0, b,
+                         blen, false, VPD_ASSOC_TDEVICE, op, jap);
     } else if (VPD_DI_SEL_AS_IS == subvalue)
-        filter_desig_descs(NULL, 0, b, blen, true, m_a, op, jap);
+        svpd_desig_descs(NULL, 0, b, blen, true, m_a, op, jap);
     else {
         if (VPD_DI_SEL_LU & subvalue)
-            filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_LU), 0, b,
-                               blen, false, VPD_ASSOC_LU, op, jap);
+            svpd_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_LU), 0, b,
+                             blen, false, VPD_ASSOC_LU, op, jap);
         if (VPD_DI_SEL_TPORT & subvalue)
-            filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TPORT), 0, b,
-                               blen, false, VPD_ASSOC_TPORT, op, jap);
+            svpd_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TPORT), 0, b,
+                             blen, false, VPD_ASSOC_TPORT, op, jap);
         if (VPD_DI_SEL_TARGET & subvalue)
-            filter_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TDEVICE), 0,
-                               b, blen, false, VPD_ASSOC_TDEVICE, op, jap);
+            svpd_desig_descs(sg_get_desig_assoc_str(VPD_ASSOC_TDEVICE), 0,
+                             b, blen, false, VPD_ASSOC_TDEVICE, op, jap);
     }
 }
 
@@ -653,8 +654,8 @@ decode_scsi_ports_vpd_4vpd(uint8_t * buff, int len, struct opts_t * op,
                     ja2p = sgj_named_subarray_r(jsp, jo3p,
                                         "designation_descriptor_list");
                 }
-                filter_desig_descs("", 2 /* leading spaces */, bp + bump + 4,
-                               tpd_len, true, VPD_ASSOC_TPORT, op, ja2p);
+                svpd_desig_descs(NULL, 2 /* leading spaces */, bp + bump + 4,
+                                 tpd_len, true, VPD_ASSOC_TPORT, op, ja2p);
             }
         }
         bump += tpd_len + 4;
@@ -666,8 +667,10 @@ decode_scsi_ports_vpd_4vpd(uint8_t * buff, int len, struct opts_t * op,
    selected by association, designator type and/or code set. Not used
    for JSON output. */
 static int
-filter_desig_descs_quiet(const uint8_t * buff, int len, int m_assoc)
+svpd_quiet_desig_descs(const char * print_if_found, int leadin_sp,
+                       const uint8_t * buff, int blen, int m_assoc)
 {
+    bool found = false;
     int k, m, p_id, c_set, piv, desig_type, i_len, naa, off, u;
     int assoc, is_sas, rtp;
     const uint8_t * bp;
@@ -681,6 +684,10 @@ filter_desig_descs_quiet(const uint8_t * buff, int len, int m_assoc)
             /* first already in buff */
             if (m_assoc != VPD_ASSOC_LU)
                 return 0;
+            if (print_if_found && (! found)) {
+                found = true;
+                printf("%*s  %s:\n", leadin_sp, "", print_if_found);
+            }
             ip = buff;
             c_set = 1;
             assoc = VPD_ASSOC_LU;
@@ -688,15 +695,19 @@ filter_desig_descs_quiet(const uint8_t * buff, int len, int m_assoc)
             desig_type = 3;
             i_len = 16;
         } else {
-            u = sg_vpd_dev_id_iter(buff, len, &off, m_assoc, -1, -1);
+            u = sg_vpd_dev_id_iter(buff, blen, &off, m_assoc, -1, -1);
             if (0 != u)
                 break;
+            if (print_if_found && (! found)) {
+                found = true;
+                printf("%*s  %s:\n", leadin_sp, "", print_if_found);
+            }
             bp = buff + off;
             i_len = bp[3];
-            if ((off + i_len + 4) > len) {
+            if ((off + i_len + 4) > blen) {
                 pr2serr("    %s error: designator length longer than\n"
                         "     remaining response length=%d\n", vpd_pg_s,
-                        (len - off));
+                        (blen - off));
                 return SG_LIB_CAT_MALFORMED;
             }
             ip = bp + 4;
@@ -709,7 +720,7 @@ filter_desig_descs_quiet(const uint8_t * buff, int len, int m_assoc)
         }
         switch (desig_type) {
         case 0: /* vendor specific */
-            break;
+            break;      /* ignore */
         case 1: /* T10 vendor identification */
             break;
         case 2: /* EUI-64 based */
@@ -863,18 +874,18 @@ filter_desig_descs_quiet(const uint8_t * buff, int len, int m_assoc)
 /* Prints outs designation descriptors (dd_s) selected by association,
    designator type and/or code set. For VPD_DEVICE_ID and VPD_SCSI_PORTS */
 static int
-filter_desig_descs(const char * print_if_found, int num_leading,
-                   const uint8_t * buff, int len, bool pr_assoc,
-                   int m_assoc, struct opts_t * op, sgj_opaque_p jap)
+svpd_desig_descs(const char * print_if_found, int leadin_sp,
+                 const uint8_t * buff, int blen, bool pr_assoc,
+                 int m_assoc, struct opts_t * op, sgj_opaque_p jap)
 {
     sgj_state * jsp = &op->json_st;
 
-    sgj_pr_hr(jsp, "%*s  %s:\n", num_leading, "", print_if_found);
     if (op->do_quiet && (! jsp->pr_as_json))
-        return filter_desig_descs_quiet(buff, len, m_assoc);
+        return svpd_quiet_desig_descs(print_if_found, leadin_sp, buff,
+                                      blen, m_assoc);
 
-    return filter_process_desig_descs(buff, len, num_leading, pr_assoc,
-                                      m_assoc, op, jap);
+    return filter_process_desig_descs(print_if_found, leadin_sp, buff, blen,
+                                      pr_assoc, m_assoc, op, jap);
 }
 
 /* VPD_BLOCK_LIMITS sbc */
@@ -2796,6 +2807,9 @@ main(int argc, char * argv[])
     }
     if (op->do_long > 0)
         jsp->z_counter = op->do_long;
+    else if (! op->do_quiet)
+        jsp->z_counter = 1;
+
     as_json = jsp->pr_as_json;
 
     if (op->page_str) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2023 Douglas Gilbert.
+ * Copyright (c) 2013-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -45,7 +45,7 @@
  * related to snprintf().
  */
 
-static const char * version_str = "1.21 20231119";
+static const char * version_str = "1.22 20260621";
 
 
 #define MY_NAME "tst_sg_lib"
@@ -165,7 +165,7 @@ static void
 usage()
 {
     fprintf(stderr,
-            "Usage: tst_sg_lib [--blank=N] [--byteswap=B] [--exit] [--help] "
+            "Usage: tst_sg_lib [--blank=N] [--byteswap=W] [--exit] [--help] "
             "[--hex2]\n"
             "                  [--leadin=STR] [--printf] [--sense] "
             "[--unaligned]\n"
@@ -175,7 +175,7 @@ usage()
             "    --blank=N|-B N    where N non-blank characters taken "
             "from\n"
             "                      end of test string 'doe a deer ...'\n"
-            "    --byteswap=B|-b B    B is 16, 32 or 64; tests NUM "
+            "    --byteswap=W|-b W    W is 16, 32 or 64; tests NUM "
             "byteswaps\n"
             "                         compared to sg_unaligned "
             "equivalent\n"
@@ -223,13 +223,13 @@ get_exit_status_str(int exit_status, bool longer, int b_len, char * b)
 static uint8_t arr[64];
 #endif
 
-#define OFF 7   /* in byteswap mode, can test different alignments (def: 8) */
+#define OFF 7   /* in byteswap mode, can test different alignments (def: 7) */
 
 int
 main(int argc, char * argv[])
 {
     bool as_json = false;
-    bool last_n_last_blank = false;
+    bool last_n_non_blank = false;
     bool do_exit_status = false;
     bool ok;
     int k, c, n, len;
@@ -269,7 +269,7 @@ main(int argc, char * argv[])
             break;
         case 'B':
             do_num = sg_get_num(optarg);
-            last_n_last_blank = true;
+            last_n_non_blank = true;
             break;
         case 'e':
             do_exit_status = true;
@@ -330,7 +330,7 @@ main(int argc, char * argv[])
         }
     }
 
-    if (last_n_last_blank) {
+    if (last_n_non_blank) {           /* --blank */
         const char * mp = sg_last_n_non_blank(test_str, do_num, b,
                                               sizeof(b));
 
@@ -351,10 +351,10 @@ main(int argc, char * argv[])
     }
 
     as_json = json_st.pr_as_json;
-    if (as_json)
+    if (as_json)                 /* --json */
         jop = sgj_start_r(MY_NAME, version_str, argc, argv, jsp);
 
-    if (do_exit_status) {
+    if (do_exit_status) {           /* --exit */
         ++did_something;
 
         printf("Test Exit Status strings (add -v for long version):\n");
@@ -381,14 +381,14 @@ main(int argc, char * argv[])
         printf("%s\n", get_exit_status_str(51, (vb > 0), b_len, b));
         printf("%s\n", get_exit_status_str(96, (vb > 0), b_len, b));
         printf("%s\n", get_exit_status_str(97, (vb > 0), b_len, b));
-        printf("%s\n", get_exit_status_str(97, (vb > 0), b_len, b));
+        printf("%s\n", get_exit_status_str(98, (vb > 0), b_len, b));
         printf("%s\n", get_exit_status_str(255, (vb > 0), b_len, b));
         printf("%s\n", get_exit_status_str(-1, (vb > 0), b_len, b));
 
         printf("\n");
     }
 
-    if (do_sense ) {
+    if (do_sense ) {           /* --sense */
         ++did_something;
         if (as_json) {
             jo2p = sgj_named_subobject_r(jsp, jop, "desc_sense_data__test1");
@@ -473,13 +473,13 @@ main(int argc, char * argv[])
         }
     }
 
-    if (do_printf) {
+    if (do_printf) {              /* --printf */
         ++did_something;
         printf("Testing sg_scnpr():\n");
         b[0] = '\0';
         len = b_len;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
@@ -487,7 +487,7 @@ main(int argc, char * argv[])
         b[0] = '\0';
         len = -1;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
@@ -495,7 +495,7 @@ main(int argc, char * argv[])
         b[0] = '\0';
         len = 0;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
@@ -503,7 +503,7 @@ main(int argc, char * argv[])
         b[0] = '\0';
         len = 1;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
@@ -511,7 +511,7 @@ main(int argc, char * argv[])
         b[0] = '\0';
         len = 2;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
@@ -519,7 +519,7 @@ main(int argc, char * argv[])
         b[0] = '\0';
         len = 3;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
@@ -527,7 +527,7 @@ main(int argc, char * argv[])
         b[0] = '\0';
         len = 4;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
@@ -535,7 +535,7 @@ main(int argc, char * argv[])
         b[0] = '\0';
         len = 5;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
@@ -543,7 +543,7 @@ main(int argc, char * argv[])
         b[0] = '\0';
         len = 6;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
@@ -551,12 +551,55 @@ main(int argc, char * argv[])
         b[0] = '\0';
         len = 7;
         n = sg_scnpr(b, len, "%s", "test");
-        printf("sg_scnpr(,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+        printf("sg_scnpr(b,%d,,\"test\") -> %d; strlen(b) -> %u\n",
+               len, n, (uint32_t)strlen(b));
+        if (strlen(b) > 0)
+            printf("Resulting string: %s\n", b);
+
+        printf("\nTest sg_strscpy() replacing strncpy()\n");
+        b[0] = '\0';
+        len = 7;
+        n = sg_strscpy(b, "test", len);
+        printf("sg_strscpy(b,\"test\",%d) -> %d; strlen(b) -> %u\n",
+               len, n, (uint32_t)strlen(b));
+        if (strlen(b) > 0)
+            printf("Resulting string: %s\n", b);
+
+        b[0] = '\0';
+        len = 4;
+        n = sg_strscpy(b, "test", len);
+        printf("sg_strscpy(b,\"test\",%d) -> %d; strlen(b) -> %u\n",
+               len, n, (uint32_t)strlen(b));
+        if (strlen(b) > 0)
+            printf("Resulting string: %s\n", b);
+
+        b[0] = '\0';
+        len = 3;
+        n = sg_strscpy(b, "test", len);
+        printf("sg_strscpy(b,\"test\",%d) -> %d; strlen(b) -> %u\n",
+               len, n, (uint32_t)strlen(b));
+        if (strlen(b) > 0)
+            printf("Resulting string: %s\n", b);
+
+        b[0] = 'z';
+        b[1] = 'e';
+        b[2] = 'n';
+        b[3] = '\0';
+        printf("Starting string: %s\n", b);
+        len = -1;
+        n = sg_strscpy(b, "test", len);
+        printf("sg_strscpy(b,\"test\",%d) -> %d; strlen(b) -> %u\n",
+               len, n, (uint32_t)strlen(b));
+        if (strlen(b) > 0)
+            printf("Resulting string: %s\n", b);
+        len = 0;
+        n = sg_strscpy(b, "test", len);
+        printf("sg_strscpy(b,\"test\",%d) -> %d; strlen(b) -> %u\n",
                len, n, (uint32_t)strlen(b));
         if (strlen(b) > 0)
             printf("Resulting string: %s\n", b);
     }
-    if (do_hex2) {
+    if (do_hex2) {              /* --hex */
         uint8_t b[] = {0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
                        0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f, 0x50,
                        0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58};
@@ -576,7 +619,7 @@ main(int argc, char * argv[])
             printf("\n");
         }
     }
-    if (do_unaligned) {
+    if (do_unaligned) {         /* --unaligned */
         uint16_t u16 = 0x55aa;
         uint16_t u16r;
         uint32_t u24 = 0x224488;
@@ -663,7 +706,7 @@ main(int argc, char * argv[])
     }
 
 #if defined(__GNUC__) && ! defined(SG_LIB_FREEBSD)
-    if (byteswap_sz > 0) {
+    if (byteswap_sz > 0) {        /* --byteswap=W where W is 16, 32 or 64 */
         uint32_t elapsed_msecs;
         uint16_t count16 = 0;
         uint32_t count32 = 0;
