@@ -1,13 +1,11 @@
 /*
  * Copyright (c) 2005-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_freebsd version 1.52 20260408 */
+/* sg_pt_freebsd version 1.53 20260623 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -174,14 +172,13 @@ nvme_get_nsid(int fd, uint32_t *nsid, char *b, int blen, int vb)
     if (nsid != NULL)
         *nsid = gnsid.nsid;
     if (n_cdev < blen) {
-        strncpy(b, gnsid.cdev, n_cdev);
+        sg_strscpy(b, gnsid.cdev, n_cdev);
         b[n_cdev] = '\0';
     } else {
         pr2ws("%s: 3rd argument too small (%d bytes), to hold nsid (%d "
               "bytes)\n", __func__, blen, n_cdev);
         return -ENOSPC;
-        /* strncpy(b, gnsid.cdev, blen); */
-        /* b[blen - 1] = '\0'; */
+        /* sg_strscpy(b, gnsid.cdev, blen); */
     }
     return 0;
 }
@@ -362,24 +359,22 @@ scsi_pt_open_flags(const char * device_name, int oflags, int vb)
 
             /* Step 1: if device_name is symlink, follow it */
             s = readlink(device_name,  b, sizeof(b));
-            if (s <= 0) {
-                strncpy(b, device_name, PATH_MAX - 1);
-                b[PATH_MAX - 1] = '\0';
-            }
+            if (s <= 0)
+                sg_strscpy(b, device_name, PATH_MAX);
             /* Step 2: if no leading '/' nor '.' given, prepend '/dev/' */
             first_ch = b[0];
             basnam0_n = ('n' == first_ch);
             if (('/' != first_ch) && ('.' != first_ch))
                 snprintf(dev_nm, sizeof(dev_nm), "%s%s", "/dev/", b);
             else
-                strcpy(dev_nm, b);
+                sg_strscpy(dev_nm, b, sizeof(dev_nm));
         } else {
             const char * cp;
 
-            strcpy(dev_nm, device_name);
+            sg_strscpy(dev_nm, device_name, sizeof(dev_nm));
             cp = basename(dev_nm);
             basnam0_n = ('n' == *cp);
-            strcpy(dev_nm, device_name);
+            sg_strscpy(dev_nm, device_name, sizeof(dev_nm));
         }
         if (stat(dev_nm, &a_stat) < 0) {
             err = errno;
@@ -419,9 +414,9 @@ scsi_pt_open_flags(const char * device_name, int oflags, int vb)
                 char * cp = strchr(dev_nm, 's');
 
                 *(cp - 2) = '\0';
-                strcpy(fdc_p->devname, dev_nm);
+                sg_strscpy(fdc_p->devname, dev_nm, DEV_IDLEN);
             } else if (1 == k) {
-                strncpy(fdc_p->devname, dev_nm, DEV_IDLEN);
+                sg_strscpy(fdc_p->devname, dev_nm, DEV_IDLEN);
                 fdc_p->nsid = 0;
             } else if (vb > 1) {
                 pr2ws("%s: only support '[/dev/]nvme<n>[ns<m>]'\n", __func__);
@@ -1122,9 +1117,9 @@ get_scsi_pt_transport_err_str(const struct sg_pt_base * vp, int max_b_len,
 {
     const struct sg_pt_freebsd_scsi * ptp = &vp->impl;
 
+    /* assume max_b_len > 0 */
     if (0 == ptp->transport_err) {
-        strncpy(b, "no transport error available", max_b_len);
-        b[max_b_len - 1] = '\0';
+        sg_strscpy(b, "no transport error available", max_b_len);
         return b;
     }
     if (ptp->mchanp && ptp->mchanp->is_nvme_dev) {
@@ -1136,13 +1131,10 @@ get_scsi_pt_transport_err_str(const struct sg_pt_base * vp, int max_b_len,
     if (ptp->mchanp && ptp->mchanp->cam_dev)
         cam_error_string(ptp->mchanp->cam_dev, ptp->ccb, b, max_b_len,
                          CAM_ESF_ALL, CAM_EPF_ALL);
-    else {
-        strncpy(b, "no transport error available", max_b_len);
-        b[max_b_len - 1] = '\0';
-   }
+    else
+        sg_strscpy(b, "no transport error available", max_b_len);
 #else
-    strncpy(b, "no transport error available", max_b_len);
-    b[max_b_len - 1] = '\0';
+    sg_strscpy(b, "no transport error available", max_b_len);
 #endif
     return b;
 }
@@ -1191,10 +1183,9 @@ get_scsi_pt_os_err_str(const struct sg_pt_base * vp, int max_b_len, char * b)
     const struct sg_pt_freebsd_scsi * ptp = &vp->impl;
     const char * cp;
 
+    /* assume max_b_len > 0 */
     cp = safe_strerror(ptp->os_err);
-    strncpy(b, cp, max_b_len);
-    if ((int)strlen(cp) >= max_b_len)
-        b[max_b_len - 1] = '\0';
+    sg_strscpy(b, cp, max_b_len);
     return b;
 }
 
@@ -1434,7 +1425,7 @@ nvme_pt_low(struct sg_pt_freebsd_scsi * ptp, void * dxferp, uint32_t len,
                 char dev_nm[PATH_MAX + 2];
 
                 if ((fdc_p->devname[0] == '/') || (fdc_p->devname[0] == '.'))
-                    strncpy(dev_nm, fdc_p->devname, PATH_MAX);
+                    sg_strscpy(dev_nm, fdc_p->devname, PATH_MAX);
                 else
                     snprintf(dev_nm, sizeof(dev_nm), "/dev/%s",
                              fdc_p->devname);

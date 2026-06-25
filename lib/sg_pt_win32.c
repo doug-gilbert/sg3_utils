@@ -399,7 +399,7 @@ scsi_pt_open_flags(const char * device_name, int flags, int vb)
     len = (int)strlen(device_name);
     k = (int)sizeof(shp->dname);
     if (len < k)
-        strcpy(shp->dname, device_name);
+        sg_strscpy(shp->dname, device_name, len);
     else if (len == k)
         memcpy(shp->dname, device_name, k - 1);
     else        /* trim on left */
@@ -1478,9 +1478,7 @@ get_scsi_pt_os_err_str(const struct sg_pt_base * vp, int max_b_len, char * b)
     const char * cp;
 
     cp = safe_strerror(psp->os_err);
-    strncpy(b, cp, max_b_len);
-    if ((int)strlen(cp) >= max_b_len)
-        b[max_b_len - 1] = '\0';
+    sg_strscpy(b, cp, max_b_len);/* if max_b_len > 0 then b null terminated */
     return b;
 }
 

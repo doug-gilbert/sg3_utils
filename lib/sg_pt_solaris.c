@@ -1,13 +1,11 @@
 /*
- * Copyright (c) 2007-2023 Douglas Gilbert.
+ * Copyright (c) 2007-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_solaris version 1.16 20230914 */
+/* sg_pt_solaris version 1.17 20260623 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -513,10 +511,9 @@ get_scsi_pt_os_err_str(const struct sg_pt_base * vp, int max_b_len, char * b)
     const struct sg_pt_solaris_scsi * ptp = &vp->impl;
     const char * cp;
 
+    /* assume max_b_len > 0 */
     cp = safe_strerror(ptp->os_err);
-    strncpy(b, cp, max_b_len);
-    if ((int)strlen(cp) >= max_b_len)
-        b[max_b_len - 1] = '\0';
+    sg_strscpy(b, cp, max_b_len);
     return b;
 }
 

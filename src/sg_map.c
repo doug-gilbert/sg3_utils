@@ -1,25 +1,17 @@
 /*
  * Utility program for the Linux OS SCSI generic ("sg") device driver.
  *     Copyright (C) 2000-2023 D. Gilbert
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
  * any later version.
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
-
-   This shows the mapping from "sg" devices to other scsi devices
-   (i.e. sd, scd or st) if any.
-
-   Note: This program requires sg version 2 or better.
-
-   Version 0.19 20041203
-
-   Version 1.02 20050511
-        - allow for sparse disk name with up to 3 letter SCSI
-          disk device node names (e.g. /dev/sdaaa)
-          [Nate Dailey < Nate dot Dailey at stratus dot com >]
-*/
+ *
+ *  This shows the mapping from "sg" devices to other scsi devices
+ * (i.e. sd, scd or st) if any.
+ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
@@ -35,6 +27,7 @@
 #include <errno.h>
 #include <dirent.h>
 #include <libgen.h>
+#include <limits.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -47,7 +40,8 @@
 #include "sg_io_linux.h"
 
 
-static const char * version_str = "1.14 20230130";
+/* full LUN (>255) match via sysfs */
+static const char * version_str = "1.15 20260625";
 
 static const char * devfs_id = "/dev/.devfsd";
 
@@ -185,6 +179,66 @@ static void make_dev_name(char * fname, const char * leadin, int k,
         buff[buff_idx] = '\0';
         strcat(fname, buff);
     }
+}
+
+/* Fetch the full SCSI <host:channel:id:lun> tuple for a Linux device node
+ * (e.g. "/dev/sdaa", "/dev/sr3", "/dev/nst0") from sysfs. This bypasses the
+ * legacy SCSI_IOCTL_GET_IDLUN interface whose packed dev_id only carries the
+ * low 8 bits of each component, which silently breaks the sg<->sd mapping for
+ * any LUN greater than 255. The "device" symlink under the relevant sysfs
+ * class points at a directory whose basename is "H:C:T:L". Returns 0 and fills
+ * the (optional) out parameters on success, or -1 if the tuple could not be
+ * obtained (caller should then fall back to the legacy ioctl decode).  */
+static int
+get_hctl_from_sysfs(const char * dev_path, int * hostp, int * channelp,
+                    int * idp, long long * lunp)
+{
+    int h, c, t;
+    long long l;
+    ssize_t len;
+    const char * base;
+    char * tail;
+    char syspath[PATH_MAX];
+    char lnk[PATH_MAX];
+    int i;
+    /* sd and sr (cdrom) are block devices; tapes live under their own
+     * char-device classes. We probe the plausible parents for each node. */
+    static const char * const sys_parents[] = {
+        "/sys/block",                   /* sd*, sr* */
+        "/sys/class/scsi_tape",         /* st*, nst* */
+        "/sys/class/onstream_tape",     /* osst* */
+        NULL,
+    };
+
+    if (NULL == dev_path)
+        return -1;
+    base = strrchr(dev_path, '/');
+    base = base ? base + 1 : dev_path;
+    if ('\0' == *base)
+        return -1;
+
+    for (i = 0; sys_parents[i]; ++i) {
+        snprintf(syspath, sizeof(syspath), "%s/%s/device", sys_parents[i],
+                 base);
+        len = readlink(syspath, lnk, sizeof(lnk) - 1);
+        if (len < 0)
+            continue;
+        lnk[len] = '\0';
+        tail = strrchr(lnk, '/');
+        tail = tail ? tail + 1 : lnk;
+        if (4 == sscanf(tail, "%d:%d:%d:%lld", &h, &c, &t, &l)) {
+            if (hostp)
+                *hostp = h;
+            if (channelp)
+                *channelp = c;
+            if (idp)
+                *idp = t;
+            if (lunp)
+                *lunp = l;
+            return 0;
+        }
+    }
+    return -1;
 }
 
 
@@ -404,8 +458,8 @@ int main(int argc, char * argv[])
     return 0;
 }
 
-static int find_dev_in_sg_arr(My_scsi_idlun * my_idlun, int host_no,
-                              int last_sg_ind)
+static int find_dev_in_sg_arr(int host_no, int channel, int scsi_id,
+                              long long lun, int last_sg_ind)
 {
     int k;
     struct sg_scsi_id * sidp;
@@ -413,9 +467,9 @@ static int find_dev_in_sg_arr(My_scsi_idlun * my_idlun, int host_no,
     for (k = 0; k <= last_sg_ind; ++k) {
         sidp = &(map_arr[k].sg_dat);
         if ((host_no == sidp->host_no) &&
-            ((my_idlun->dev_id & 0xff) == sidp->scsi_id) &&
-            (((my_idlun->dev_id >> 8) & 0xff) == sidp->lun) &&
-            (((my_idlun->dev_id >> 16) & 0xff) == sidp->channel))
+            (channel == sidp->channel) &&
+            (scsi_id == sidp->scsi_id) &&
+            (lun == (long long)sidp->lun))
             return k;
     }
     return -1;
@@ -428,6 +482,9 @@ static void scan_dev_type(const char * leadin, int max_dev, bool do_numeric,
     int num_errors = 0;
     int num_silent = 0;
     int host_no = -1;
+    int m_channel, m_scsi_id;           /* tuple actually used for matching */
+    int s_host, s_channel, s_id;        /* values read from sysfs */
+    long long m_lun, s_lun;
     My_scsi_idlun my_idlun;
     char fname[64];
 
@@ -500,7 +557,28 @@ static void scan_dev_type(const char * leadin, int max_dev, bool do_numeric,
                 (my_idlun.dev_id>>24)&0xff, (my_idlun.dev_id>>16)&0xff,
                 (my_idlun.dev_id>>8)&0xff, my_idlun.dev_id&0xff);
 #endif
-        ind = find_dev_in_sg_arr(&my_idlun, host_no, last_sg_ind);
+        /* Default to the legacy SCSI_IOCTL_GET_IDLUN decode. Note its dev_id
+         * packs only the low 8 bits of channel/id/lun, so LUN (and channel/id)
+         * above 255 are aliased here; host_no comes from the dedicated
+         * GET_BUS_NUMBER ioctl above and is already correct. */
+        m_channel = (my_idlun.dev_id >> 16) & 0xff;
+        m_scsi_id = my_idlun.dev_id & 0xff;
+        m_lun = (long long)((my_idlun.dev_id >> 8) & 0xff);
+        /* Prefer the authoritative, untruncated tuple from sysfs when present.
+         * This is what makes LUNs > 255 map correctly. */
+        if (0 == get_hctl_from_sysfs(fname, &s_host, &s_channel, &s_id,
+                                     &s_lun)) {
+            host_no = s_host;
+            m_channel = s_channel;
+            m_scsi_id = s_id;
+            m_lun = s_lun;
+        }
+#ifdef DEBUG
+        printf ("match tuple H:C:T:L = %d:%d:%d:%lld\n", host_no, m_channel,
+                m_scsi_id, m_lun);
+#endif
+        ind = find_dev_in_sg_arr(host_no, m_channel, m_scsi_id, m_lun,
+                                 last_sg_ind);
         if (ind >= 0) {
             map_arr[ind].oth_dev_num = k;
             map_arr[ind].lin_dev_type = lin_dev_type;

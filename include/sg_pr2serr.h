@@ -70,7 +70,7 @@ int sg_scn3pr(char * fcp, int fcp_len, int off,
  * copied. If count-1 copies are reached, a null character is written to
  * dest. So in the case where count is 1, a null character is written to
  * dest[0] and 0 is returned. dest must be large enough to accept count
- * characters. */
+ * characters. Returns characters copied excluding trailing null char. */
 int sg_strscpy(char * dest, const char * src, int count);
 
 #ifdef __cplusplus

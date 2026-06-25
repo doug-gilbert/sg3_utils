@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-Changelog for pre-release sg3_utils-1.49 [20260622] [svn: r1127]
+Changelog for pre-release sg3_utils-1.49 [20260625] [svn: r1128]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -41,6 +41,7 @@ Changelog for pre-release sg3_utils-1.49 [20260622] [svn: r1127]
   - sg_logs: correct tape Device statisitics lpage [0x14]
     serial number parameters [0x40 and 0x41] per
     https://github.com/doug-gilbert/sg3_utils/issues/45
+  - sg_map: handle LUNs > 255
   - sg_requests: improve buffer truncation
   - sg_ses: restore some help text, github PR #79 Paul Evans
   - sg_stream_ctl: add --hex, --inhex=, --json= and --raw

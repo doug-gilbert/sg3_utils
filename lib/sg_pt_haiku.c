@@ -17,25 +17,8 @@
 
 #include "sg_lib.h"
 #include "sg_pt.h"
+#include "sg_pr2serr.h"
 
-#if defined(__GNUC__) || defined(__clang__)
-static int pr2ws(const char * fmt, ...)
-        __attribute__ ((format (printf, 1, 2)));
-#else
-static int pr2ws(const char * fmt, ...);
-#endif
-
-static int
-pr2ws(const char * fmt, ...)
-{
-    va_list args;
-    int n;
-
-    va_start(args, fmt);
-    n = vfprintf(sg_warnings_strm ? sg_warnings_strm : stderr, fmt, args);
-    va_end(args);
-    return n;
-}
 
 struct sg_pt_haiku_scsi {
     raw_device_command raw_command;
@@ -362,9 +345,7 @@ get_scsi_pt_os_err_str(const struct sg_pt_base * vp __attribute__ ((unused)),
     const char *cp;
 
     cp = safe_strerror(ptp->os_err);
-    strncpy(b, cp, max_b_len);
-    if ((int)strlen(cp) >= max_b_len)
-        b[max_b_len - 1] = '\0';
+    sg_strscpy(b, cp, max_b_len);
     return b;
 }
 
@@ -385,8 +366,7 @@ get_scsi_pt_transport_err_str(
                 const struct sg_pt_base * vp __attribute__ ((unused)),
                               int max_b_len, char * b)
 {
-    strncpy(b, "no transport error available", max_b_len);
-    b[max_b_len - 1] = '\0';
+    sg_strscpy(b, "no transport error available", max_b_len);
     return b;
 }
 

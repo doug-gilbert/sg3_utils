@@ -1194,7 +1194,7 @@ sgj_haj_xx(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
 
     b[0] = '\0';
     /* if leadin_sp negative, snprintf() takes abs(leadin_sp) */
-    snprintf(b, blen, "%*s", ((abs(leadin_sp > 128)) ? 128 : leadin_sp), "");
+    snprintf(b, blen, "%*s", ((abs(leadin_sp) > 128) ? 128 : leadin_sp), "");
     n = strlen(b);
     if (NULL == aname) {
         if ((! as_json) || (jsp && jsp->pr_out_hr)) {
@@ -1394,7 +1394,7 @@ sgj_haj_subo_r(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
 
     if (NULL == aname)
         return NULL;
-    snprintf(b, blen, "%*s", ((abs(leadin_sp > 128)) ? 128 : leadin_sp), "");
+    snprintf(b, blen, "%*s", ((abs(leadin_sp) > 128) ? 128 : leadin_sp), "");
     n = strlen(b);
     if ((! as_json) || jsp->pr_out_hr)
         sgj_haj_helper(b + n, blen - n, aname, sep, false, NULL, val_i,

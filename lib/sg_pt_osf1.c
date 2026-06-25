@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2005-2021 Douglas Gilbert.
+ * Copyright (c) 2005-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,7 +28,7 @@
 #include "sg_lib.h"
 #include "sg_pr2serr.h"
 
-/* Version 2.04 20210617 */
+/* Version 2.05 20260623 */
 
 #define OSF1_MAXDEV 64
 
@@ -619,12 +617,10 @@ get_scsi_pt_transport_err_str(const struct sg_pt_base * vp, int max_b_len,
     const struct sg_pt_osf1_scsi * ptp = &vp->impl;
 
     if (0 == ptp->transport_err) {
-        strncpy(b, "no transport error available", max_b_len);
-        b[max_b_len - 1] = '\0';
+        sg_strscpy(b, "no transport error available", max_b_len);
         return b;
     }
-    strncpy(b, "no transport error available", max_b_len);
-    b[max_b_len - 1] = '\0';
+    sg_strscpy(b, "no transport error available", max_b_len);
     return b;
 }
 
@@ -635,9 +631,7 @@ get_scsi_pt_os_err_str(const struct sg_pt_base * vp, int max_b_len, char * b)
     const char * cp;
 
     cp = safe_strerror(ptp->os_err);
-    strncpy(b, cp, max_b_len);
-    if ((int)strlen(cp) >= max_b_len)
-        b[max_b_len - 1] = '\0';
+    sg_strscpy(b, cp, max_b_len);
     return b;
 }
 
