@@ -1,15 +1,13 @@
 /*
  * Copyright (c) 1999-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 /* NOTICE:
  *    On 5th October 2004 (v1.00) this file name was changed from sg_err.c
- *    to sg_lib.c and the previous GPL was changed to a FreeBSD license.
+ *    to sg_lib.c and the previous GPL was changed to a BSD license.
  *    The intention is to maintain this file and the related sg_lib.h file
  *    as open source and encourage their unencumbered use.
  *
@@ -3681,7 +3679,7 @@ sg_get_llnum_nomult(const char * buf)
 /* Read ASCII hex bytes or binary from fname (a file named '-' taken as
  * stdin). If reading ASCII hex then there should be either one entry per
  * line or a comma, space, hyphen or tab separated list of bytes. If no_space
- * is set then a string of ACSII hex digits is expected, 2 perbyte.
+ * is set then a string of ACSII hex digits is expected, 2 per byte.
  * Everything from and including a '#' on a line is ignored. Returns 0 if ok,
  * or an error code. If the error code is SG_LIB_LBA_OUT_OF_RANGE then mp_arr
  * would be exceeded and both mp_arr and mp_arr_len are written to.
@@ -3800,7 +3798,7 @@ sg_f2hex_arr(const char * fname, bool as_binary, bool no_space,
             continue;
         }
         if (carry_over[0]) {
-            if (isxdigit(line[0])) {
+            if (isxdigit((unsigned char)line[0])) {
                 carry_over[1] = line[0];
                 carry_over[2] = '\0';
                 if (1 == sscanf(carry_over, "%4x", &h)) {
@@ -3839,7 +3837,8 @@ sg_f2hex_arr(const char * fname, bool as_binary, bool no_space,
             goto fini;
         }
         if (no_space) {
-            for (k = 0; isxdigit(*lcp) && isxdigit(*(lcp + 1));
+            for (k = 0; isxdigit((unsigned char)*lcp) &&
+                        isxdigit((unsigned char)*(lcp + 1));
                  ++k, lcp += 2) {
                 if (1 != sscanf(lcp, "%2x", &h)) {
                     pr2ws("%s: bad hex number in line %d, pos %d\n",
@@ -3852,7 +3851,8 @@ sg_f2hex_arr(const char * fname, bool as_binary, bool no_space,
                 else
                     mp_arr[off + k] = h;
             }
-            if (isxdigit(*lcp) && (! isxdigit(*(lcp + 1))))
+            if (isxdigit((unsigned char)*lcp) &&
+                (! isxdigit((unsigned char)*(lcp + 1))))
                 carry_over[0] = *lcp;
             off += k;
         } else {        /* (white)space separated ASCII hexadecimal bytes */
@@ -3894,7 +3894,7 @@ sg_f2hex_arr(const char * fname, bool as_binary, bool no_space,
                     ret = SG_LIB_SYNTAX_ERROR;
                     goto fini;
                 }
-            }
+            }       /* end of loop over characters in line (max 1024) */
             off += (k + 1);
         }
     }           /* end of per line loop */

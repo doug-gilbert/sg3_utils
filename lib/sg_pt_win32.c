@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/* sg_pt_win32 version 1.37 20260603 */
+/* sg_pt_win32 version 1.38 20260628 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -347,6 +347,8 @@ scsi_pt_open_device(const char * device_name, bool read_only, int vb)
 
 #if 0
     oflags |= (read_only ? 0 : 0);      /* was ... ? O_RDONLY : O_RDWR) */
+#else
+    if (read_only) { }    /* suppress warning */
 #endif
     return scsi_pt_open_flags(device_name, oflags, vb);
 }

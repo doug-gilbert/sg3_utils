@@ -1554,6 +1554,8 @@ decode_block_limits_vpd(const uint8_t * buff, int len, struct opts_t * op,
     static const char * matlwab = "Maximum atomic transfer length with "
                                   "atomic boundary";
     static const char * mabs = "Maximum atomic boundary size";
+    static const char * mcclrd = "Maximum coalescing copy LBA range "
+                                 "descriptors";
 
     if (op->do_hex > 0) {
         if (op->do_hex > 2)
@@ -1721,6 +1723,15 @@ decode_block_limits_vpd(const uint8_t * buff, int len, struct opts_t * op,
         } else
             sgj_haj_vi_nex(jsp, jop, 2, mabs, SGJ_SEP_COLON_1_SPACE,
                            u, true, "unit: LB");
+    }
+    if (len > 64) {	/* added in sbc6r02 */
+        uint16_t s;
+
+        s = sg_get_unaligned_be16(buff + 64);
+        if (0xffff == s)
+            sgj_haj_vs(jsp, jop, 2, mcclrd, SGJ_SEP_COLON_1_SPACE, nlr_s);
+        else
+            sgj_haj_vi(jsp, jop, 2, mcclrd, SGJ_SEP_COLON_1_SPACE, s, false);
     }
 }
 

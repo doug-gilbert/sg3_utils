@@ -1,0 +1,11 @@
+#
+# An example invocation:
+#    sg_vpd --inhex=vpd_bl.hex
+
+# Dummy data for Block limits VPD page [0xb0]. Note there is also a Block
+# limits extension VPD page [0xb7].
+00 b0 00 3e 00 00 00 08  00 00 ff ff 00 00 00 00
+00 00 00 00 00 06 00 00  00 00 02 00 00 00 00 08
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+00 14

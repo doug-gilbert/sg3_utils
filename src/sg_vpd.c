@@ -42,7 +42,7 @@
 
 */
 
-static const char * version_str = "2.08 20260618";  /* spc7r05 + sbc6r02 */
+static const char * version_str = "2.09 20260630";  /* spc7r05 + sbc6r02 */
 
 #define MY_NAME "sg_vpd"
 
