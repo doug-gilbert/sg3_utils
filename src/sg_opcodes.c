@@ -34,7 +34,7 @@
 
 #include "sg_pt.h"
 
-static const char * version_str = "1.04 20260620";    /* spc6r11 */
+static const char * version_str = "1.05 20260701";    /* spc6r11 */
 
 #define MY_NAME "sg_opcodes"
 
@@ -978,8 +978,8 @@ list_all_codes(uint8_t * rsoc_buff, int rsoc_len, sgj_opaque_p jop,
         } else {            /* RCTD clear in cdb */
             /* before version 0.69 treated RWCDLP (1 bit) and CDLP (2 bits),
              * as a 3 bit field, now break them out separately */
-            int rwcdlp = (byt5 >> 2) & 0x3;
-            int cdlp = !!(0x40 & byt5);
+            int rwcdlp = !!(0x40 & byt5);
+            int cdlp = (byt5 >> 2) & 0x3;
 
             if (op->do_compact)
                 sgj_pr_hr(jsp, " %.2x%c%.4s   %s\n", bp[0],
