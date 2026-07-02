@@ -155,10 +155,14 @@ file is the good reference.
 The author's primary source code repository uses subversion and is on
 the author's equipment (a RPi). One advantage of subversion is its
 revision numbers which are simply integers starting at 1 and ascending.
-For this package the current revision is 1103 . The subversion repository
+For this package the current revision is 1130 . The subversion repository
 is mirrored in git (using "git svn" tools) here:
     https://github.com/doug-gilbert/sg3_utils
 
+See the COVERAGE file to view a mapping of supported SCSI, ATA and NVMe
+commands. For those commands that are supported, the name of the
+utility (or utilities) that can issue those commands is given.
+
 
 Douglas Gilbert
-23rd May 2026
+1st July 2026

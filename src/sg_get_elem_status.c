@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2019-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,7 +36,7 @@
  * given SCSI device.
  */
 
-static const char * version_str = "1.27 20260408";      /* sbc6r02 */
+static const char * version_str = "1.28 20260701";      /* sbc6r02 */
 
 #define MY_NAME "sg_get_elem_status"
 
@@ -786,7 +784,7 @@ start_response:
                    if (op->do_brief > 0)
                         m += sg_scn3pr(b2, b2len, m, "  fractional-access  "
                                        "oth_elem_id: 0x%06x;  ",
-				       a_ped.oth_elem_id);
+                                       a_ped.oth_elem_id);
                     else {
                         m += sg_scn3pr(b2, b2len, m, "  fractional-access  "
                                        "other_element_identifier: 0x%06x "
@@ -819,12 +817,12 @@ start_response:
 
 error:
     if (SG_LIB_CAT_INVALID_OP == res)
-        pr2serr("Get LBA Status command not supported\n");
+        pr2serr("Get Physical Element Status command not supported\n");
     else if (SG_LIB_CAT_ILLEGAL_REQ == res)
-        pr2serr("Get LBA Status command: bad field in cdb\n");
+        pr2serr("Get Physical Element Status command: bad field in cdb\n");
     else {
         sg_get_category_sense_str(res, sizeof(b), b, op->verbose);
-        pr2serr("Get LBA Status command: %s\n", b);
+        pr2serr("Get Physical Element Status command: %s\n", b);
     }
 
 fini:

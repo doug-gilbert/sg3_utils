@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2014-2023 Douglas Gilbert.
+ * Copyright (c) 2014-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,7 +38,7 @@
  *   - SEQUENTIALIZE ZONE
  */
 
-static const char * version_str = "1.21 20230623";
+static const char * version_str = "1.22 20260701";
 
 #define SG_ZONING_OUT_CMDLEN 16
 #define CLOSE_ZONE_SA 0x1
@@ -378,9 +376,13 @@ main(int argc, char * argv[])
         ret = sg_convert_errno(err);
         goto fini;
     }
-    if (reamz && (! quick))
+    if (reamz && (! quick)) {
+        if (! element_id_given)
+            pr2serr(">>> Warning: --element=EID option NOT given so "
+                    "assuming element 0\n");
         sg_warn_and_wait(sa_name_arr[REM_ELEM_MOD_ZONES_SA], device_name,
                          false);
+    }
 
     res = sg_ll_zone_out(sg_fd, sa, zid, zc, all, tmo, true, verbose);
     ret = res;

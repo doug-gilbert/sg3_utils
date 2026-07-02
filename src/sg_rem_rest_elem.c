@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2022-2023 Douglas Gilbert.
+ * Copyright (c) 2022-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,15 +30,17 @@
 
 /* A utility program originally written for the Linux OS SCSI subsystem.
  *
- * This program issues one of the following SCSI commands:
+ * This utility issues one of the following SCSI commands:
  *   - REMOVE ELEMENT AND TRUNCATE
+ *   - REMOVE ELEMENT AND MODIFY ZONES
  *   - RESTORE ELEMENTS AND REBUILD
  */
 
-static const char * version_str = "1.04 20230622";
+static const char * version_str = "1.05 20260701";
 
 #define REMOVE_ELEM_SA 0x18
 #define RESTORE_ELEMS_SA 0x19
+#define MODIFY_ELEM_SA 0x1a
 
 #define SENSE_BUFF_LEN 64       /* Arbitrary, could be larger */
 #define DEF_PT_TIMEOUT  60      /* 60 seconds */
@@ -51,6 +51,7 @@ static const struct option long_options[] = {
     {"element", required_argument, 0, 'e'},
     {"help", no_argument, 0, 'h'},
     {"quick", no_argument, 0, 'q'},
+    {"modify", no_argument, 0, 'm'},
     {"remove", no_argument, 0, 'r'},
     {"restore", no_argument, 0, 'R'},
     {"timeout", required_argument, 0, 't'},
@@ -61,6 +62,7 @@ static const struct option long_options[] = {
 };
 
 static const char * remove_cmd_s = "Remove element and truncate";
+static const char * modify_cmd_s = "Remove element and modify zones";
 static const char * restore_cmd_s = "Restore elements and rebuild";
 
 
@@ -81,6 +83,8 @@ usage()
             "                            default is 0 which is an invalid "
             "EID\n"
             "    --help|-h          print out usage message\n"
+            "    --modify|-m        issue REMOVE ELEMENT AND MODIFY ZONES "
+            "command\n"
             "    --quick|-q         bypass 15 second warn and wait\n"
             "    --remove|-r        issue REMOVE ELEMENT AND TRUNCATE "
             "command\n"
@@ -90,9 +94,10 @@ usage()
             "60 secs)\n"
             "    --verbose|-v       increase verbosity\n"
             "    --version|-V       print version string and exit\n\n"
-            "Performs a SCSI REMOVE ELEMENT AND TRUNCATE or RESTORE "
-            "ELEMENTS AND\nREBUILD command. Either the --remove or "
-            "--restore option needs to be given.\n");
+            "Performs a SCSI REMOVE ELEMENT AND TRUNCATE, REMOVE ELEMENT\n"
+            "AND MODIFY ZONES or RESTORE ELEMENTS AND REBUILD command.\n"
+            "Either the --remove, --modify or --restore option must be\n"
+            "given.\n");
 }
 
 /* Return of 0 -> success, various SG_LIB_CAT_* positive values or -1 ->
@@ -114,6 +119,10 @@ sg_ll_rem_rest_elem(int sg_fd, int sa, uint64_t req_cap, uint32_t e_id,
         sg_put_unaligned_be64(req_cap, sai16_cdb + 2);
         sg_put_unaligned_be32(e_id, sai16_cdb + 10);
         cmd_name = remove_cmd_s;
+    } else if (MODIFY_ELEM_SA == sa) {
+        sg_put_unaligned_be64(req_cap, sai16_cdb + 2);
+        sg_put_unaligned_be32(e_id, sai16_cdb + 10);
+        cmd_name = modify_cmd_s;
     } else
         cmd_name = restore_cmd_s;
     if (verbose) {
@@ -158,9 +167,11 @@ sg_ll_rem_rest_elem(int sg_fd, int sa, uint64_t req_cap, uint32_t e_id,
 int
 main(int argc, char * argv[])
 {
+    bool e_id_given = false;
     bool quick = false;
     bool reat = false;
     bool resar = false;
+    bool reamz = false;
     bool verbose_given = false;
     bool version_given = false;
     int res, c;
@@ -178,7 +189,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:e:hqrRt:vV", long_options,
+        c = getopt_long(argc, argv, "c:e:hmqrRt:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -201,11 +212,16 @@ main(int argc, char * argv[])
             if (0 == ll)
                 pr2serr("Warning: 0 is an invalid element identifier\n");
             e_id = (uint64_t)ll;
+            e_id_given = true;
             break;
         case 'h':
         case '?':
             usage();
             return 0;
+        case 'm':
+            reamz = true;
+            sa = MODIFY_ELEM_SA;
+            break;
         case 'q':
             quick = true;
             break;
@@ -272,13 +288,18 @@ main(int argc, char * argv[])
         return 0;
     }
 
-    if (1 != ((int)reat + (int)resar)) {
+    if (1 != ((int)reat + (int)reamz + (int)resar)) {
         pr2serr("One, and only one, of these options needs to be given:\n"
-                "   --remove or --restore\n\n");
+                "   --remove, --modify or --restore\n\n");
         usage();
         return SG_LIB_CONTRADICT;
     }
-    cmd_name = reat ? remove_cmd_s : restore_cmd_s;
+    if (reat)
+        cmd_name = remove_cmd_s;
+    else if (reamz)
+        cmd_name = modify_cmd_s;
+    else
+        cmd_name = restore_cmd_s;
 
     if (0 == tmo)
         tmo = DEF_PT_TIMEOUT;
@@ -311,6 +332,9 @@ main(int argc, char * argv[])
             else
                 b[k] = ch;
         }
+        if (! e_id_given)
+            pr2serr(">>> Warning: --element=EID option NOT given so "
+                    "assuming element 0\n");
         sg_warn_and_wait(b, device_name, false);
     }
 

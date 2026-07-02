@@ -1,20 +1,20 @@
-.TH SG_REM_REST_ELEM "8" "October 2023" "sg3_utils\-1.49" SG3_UTILS
+.TH SG_REM_REST_ELEM "8" "2026-07-01" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_rem_rest_elem \- send SCSI remove or restore element command
 .SH SYNOPSIS
 .B sg_rem_rest_elem
 [\fI\-\-capacity=RC\fR] [\fI\-\-element=EID\fR] [\fI\-\-help\fR]
-[\fI\-\-quick\fR] [\fI\-\-remove\fR] [\fI\-\-restore\fR]
-[\fI\-\-timeout=SE\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
-\fIDEVICE\fR
+[\fI\-\-modify\fR] [\fI\-\-quick\fR] [\fI\-\-remove\fR]
+[\fI\-\-restore\fR] [\fI\-\-timeout=SE\fR] [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] \fIDEVICE\fR
 .SH DESCRIPTION
 .\" Add any additional description here
-Sends a SCSI REMOVE ELEMENT AND TRUNCATE [RMEAT] or RESTORE ELEMENTS AND
-REBUILD [RSEAR] command to the \fIDEVICE\fR. Since both these commands have
-a potentially huge impact on the \fIDEVICE\fR (similar to the FORMAT UNIT
-command: destroying data and taking a long time to complete fully),
-they first give the user the chance to reconsider (3 times within 15
-seconds) before taking action.
+Sends a SCSI REMOVE ELEMENT AND TRUNCATE [REAT], SCSI REMOVE ELEMENT
+AND MODIFY ZONES [REAMZ] or RESTORE ELEMENTS AND REBUILD [RESAR] command to
+the \fIDEVICE\fR. Since these commands have a potentially huge impact on the
+\fIDEVICE\fR (similar to the FORMAT UNIT command: destroying data and taking
+a long time to complete fully), they first give the user the chance to
+reconsider (3 times within 15 seconds) before taking action.
 .PP
 Unlike the FORMAT UNIT command, these commands seem designed to work in
 the background. So they will return quickly (although sbc5r01.pdf does not
@@ -22,35 +22,44 @@ state that) and the disk will be placed in a reduced functionality state
 where only a specified number of commands will be executed (e.g. INQUIRY and
 REPORT LUNS) until the operation is complete. Other commands will receive
 sense data with a sense key of NOT READY and an additional sense code
-of 'Depopulation in progress' (for RMEAT) or 'Depopulation restoration in
-progress' (for RSEAR). See the NOTES section below for more information.
+of 'Depopulation in progress' (for REAT and REAMZ) or 'Depopulation
+restoration in progress' (for RESAR). See the NOTES section below for more
+information.
 .PP
-The REMOVE ELEMENT AND TRUNCATE has a close relative in ZBC\-2 called the
-REMOVE ELEMENT AND MODIFY ZONES [RMEMZ] command. See the sg_zone utility
-for an implementation of the latter command.
+The REMOVE ELEMENT AND TRUNCATE [REAT] and the RESTORE ELEMENTS AND REBUILD
+[RESAR] commands are defined in SBC-4 and later (i.e. SCSI Block Command
+standard) while REMOVE ELEMENT AND MODIFY ZONES [REAMZ] is defined in
+ZBC\-2 and later (i.e. Zoned Block Command standard). Note that the REAMZ
+command can be issued by this utility (with the \fI\-\-modify\fR option)
+or the sg_zone utility (with the \fI\-\-remove\fR option); the resulting
+action should be the same.
 .br
-The difference between RMEAT and RMEMZ is that the former "changes the
+The difference between REAT and REAMZ is that the former "changes the
 association between LBAs and physical blocks" and the latter does not
-change that association. Zones affected by the RMEMZ command are placed
+change that association. Zones affected by the REAMZ command are placed
 into the zone condition: "Offline".
 .SH OPTIONS
 Arguments to long options are mandatory for short options as well.
 .TP
 \fB\-c\fR, \fB\-\-capacity\fR=\fIRC\fR
 RC stands for Requested Capacity and is the number of logical blocks the
-\fIDEVICE\fR should have after the element is removed with the RMEAT
+\fIDEVICE\fR should have after the element is removed with the REAT
 command. The default value is 0 which allows the \fIDEVICE\fR to decide
-what the reduced capacity will be after the element removal. The RSEAR
+what the reduced capacity will be after the element removal. The RESAR
 command ignores this value.
 .TP
 \fB\-e\fR, \fB\-\-element\fR=\fIEID\fR
 where \fIEID\fR is an element identifier which is a 32 bit unsigned integer
-starting at one. This field is used by the RMEAT command and ignored
+starting at one. This field is used by the REAT command and ignored
 otherwise. The default value is zero (which is invalid). So the user needs
 to supply a valid element identifier when \fI\-\-remove\fR is used.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
+.TP
+\fB\-m\fR, \fB\-\-modify\fR
+causes the REMOVE ELEMENT AND MODIFY ZONES command [REAMZ] to be sent to the
+\fIDEVICE\fR. In practice, \fI\-\-element=EID\fR needs to be also given.
 .TP
 \fB\-q\fR, \fB\-\-quick\fR
 the default action (i.e. when this option is not given) is to give the user

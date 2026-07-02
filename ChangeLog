@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-Changelog for pre-release sg3_utils-1.49 [20260701] [svn: r1130]
+Changelog for pre-release sg3_utils-1.49 [20260701] [svn: r1131]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update 
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -17,6 +17,7 @@ Changelog for pre-release sg3_utils-1.49 [20260701] [svn: r1130]
   - sg_copy_results: part of github PR #74
   - sg_dd: add grpnum=GN operand and --nocopy option
   - sg_get_elem_status: fractional elements, sbc6r02
+    - correct several error messages
   - sg_get_lba_status: additional LBA accessibility values
   - sginfo: part of github PR #74
   - sg_inq: update version descriptors to T10 table 20230814
@@ -43,6 +44,8 @@ Changelog for pre-release sg3_utils-1.49 [20260701] [svn: r1130]
     https://github.com/doug-gilbert/sg3_utils/issues/45
   - sg_map: handle LUNs > 255
   - sg_opcodes: fix rwcdl/cdlp fields handling D. Le Moal
+  - sg_rem_rest_elem: add support for REMOVE ELEMENT AND
+  - MODIFY ZONES command, Damien Le Moal
   - sg_requests: improve buffer truncation
   - sg_ses: restore some help text, github PR #79 Paul Evans
   - sg_stream_ctl: add --hex, --inhex=, --json= and --raw
