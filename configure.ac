@@ -38,7 +38,6 @@ AC_CHECK_FUNCS(posix_fadvise)
 AC_CHECK_FUNCS(posix_memalign)
 AC_CHECK_FUNCS(gettimeofday)
 AC_CHECK_FUNCS(sysconf)
-AC_CHECK_FUNCS(lseek64)
 AC_CHECK_FUNCS(srand48_r)
 SAVED_LIBS=$LIBS
 AC_SEARCH_LIBS([pthread_create], [pthread])
@@ -153,6 +152,8 @@ case "${host}" in
 		# AC_CHECK_HEADERS([nvme.h], [AC_DEFINE_UNQUOTED(HAVE_NVME, 1, [Found NVMe])], [], [])
 		AC_DEFINE_UNQUOTED(HAVE_NVME, 1, [Found NVMe])
 		check_for_getrandom
+		AC_CHECK_FUNCS(setmode)
+		AC_CHECK_FUNCS(_setmode)
                 CFLAGS="$CFLAGS -D__USE_MINGW_ANSI_STDIO";;
         *-*-linux-gnu* | *-*-linux* | *-*-uclinux-gnu* | *-*-uclinux*)
                 AC_DEFINE_UNQUOTED(SG_LIB_LINUX, 1, [sg3_utils on Linux])

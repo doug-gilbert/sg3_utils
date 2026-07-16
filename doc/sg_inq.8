@@ -1,4 +1,4 @@
-.TH SG_INQ "8" "2026-06-02" "sg3_utils\-1.49" SG3_UTILS
+.TH SG_INQ "8" "2026-07-13" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_inq \- issue SCSI INQUIRY command and/or decode its response
 .SH SYNOPSIS
@@ -68,11 +68,18 @@ The options are arranged in alphabetical order based on the long
 option name.
 .TP
 \fB\-a\fR, \fB\-\-ata\fR
+This option is only available in Linux.
 Assume given \fIDEVICE\fR is an ATA or ATAPI device which can receive ATA
 commands from the host operating system. Skip the SCSI INQUIRY command and
 use either the ATA IDENTIFY DEVICE command (for non\-packet devices) or the
-ATA IDENTIFY PACKET DEVICE command. To show the response in hex, add
-a '\-\-verbose' option. This option is only available in Linux.
+ATA IDENTIFY PACKET DEVICE command. Additionally to show the response in
+hex (512 bytes or 256 words long), add \fI\-\-long\fR or \fI\-\-verbose\fR
+option.
+.br
+\fIDEVICE\fR must be a block device (i.e. not a pass\-through like /dev/sg3)
+and be directly connected (i.e. not via SAS infrastructure). If \fIDEVICE\fR
+is connected via SAS infrastructure then this option should not be used,
+this utility will report using the SCSI to ATA Translation (SAT) layer.
 .TP
 \fB\-B\fR, \fB\-\-block\fR=\fI0|1\fR
 this option controls how the file handle to the \fIDEVICE\fR is opened. If
@@ -196,7 +203,7 @@ length" field in the response indicates that more than 36 bytes is available.
 .br
 If \fILEN\fR is greater than 0 then only one INQUIRY command is performed.
 This means that the Serial Number (obtained from the Serial Number VPD
-pgae (0x80)) is not fetched and therefore not printed.
+page (0x80)) is not fetched and therefore not printed.
 See the NOTES section below about "36 byte INQUIRYs".
 .TP
 \fB\-L\fR, \fB\-\-long\fR
@@ -245,12 +252,13 @@ EDOM is returned. To bypass this check use the \fI\-\-force\fR option.
 suppress the amount of decoding and error output.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-in the absence of \fI\-\-inhex=FN\fR then the output response is in binary.
-The output should be piped to a file or another utility when this option is
-used. The binary is sent to stdout, and errors are sent to stderr.
+in the absence of the \fI\-\-inhex=FN\fR option, the response is output in
+binary. The output should be piped to a file or another utility when this
+option is used. The binary is sent to stdout, and any error messages are
+sent to stderr.
 .br
-If used with \fI\-\-inhex=FN\fR then the contents of \fIFN\fR is treated as
-binary.
+If used with the \fI\-\-inhex=FN\fR option, then the contents of \fIFN\fR is
+treated as binary.
 .TP
 \fB\-Q\fR, \fB\-\-sinq_inraw\fR=\fIRFN\fR
 where \fIRFN\fR is a filename containing binary standard INQUIRY response

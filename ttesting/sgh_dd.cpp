@@ -2,7 +2,7 @@
  * A utility program for copying files. Specialised for "files" that
  * represent devices that understand the SCSI command set.
  *
- * Copyright (C) 2018-2023 D. Gilbert
+ * Copyright (C) 2018-2026 D. Gilbert
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
@@ -36,7 +36,7 @@
  * renamed [20181221]
  */
 
-static const char * version_str = "2.25 20231016";
+static const char * version_str = "2.26 20260715";
 
 #define _XOPEN_SOURCE 600
 #ifndef _GNU_SOURCE
@@ -1927,8 +1927,8 @@ normal_in_rd(Rq_elem * rep, int blocks)
     if (! same_fds) {   /* each has own file pointer, so we need to move it */
         int64_t pos = rep->iblk * rep->bs;
 
-        if (lseek64(rep->infd, pos, SEEK_SET) < 0) {    /* problem if pipe! */
-            pr2serr_lk("%s: tid=%d: >> lseek64(%" PRId64 "): %s\n", __func__,
+        if (lseek(rep->infd, pos, SEEK_SET) < 0) {    /* problem if pipe! */
+            pr2serr_lk("%s: tid=%d: >> lseek(%" PRId64 "): %s\n", __func__,
                        rep->id, pos, safe_strerror(errno));
             stop_both(clp);
             return true;
@@ -4565,7 +4565,7 @@ main(int argc, char * argv[])
                 off64_t offset = clp->skip;
 
                 offset *= clp->bs;       /* could exceed 32 here! */
-                if (lseek64(clp->infd, offset, SEEK_SET) < 0) {
+                if (lseek(clp->infd, offset, SEEK_SET) < 0) {
                     err = errno;
                     snprintf(ebuff, EBUFF_SZ, "%scouldn't skip to required "
                              "position on %s", my_name, inf);
@@ -4632,7 +4632,7 @@ main(int argc, char * argv[])
                 off64_t offset = clp->seek;
 
                 offset *= clp->bs;       /* could exceed 32 bits here! */
-                if (lseek64(clp->outfd, offset, SEEK_SET) < 0) {
+                if (lseek(clp->outfd, offset, SEEK_SET) < 0) {
                     err = errno;
                     snprintf(ebuff, EBUFF_SZ, "%scouldn't seek to required "
                              "position on %s", my_name, outf);
@@ -4692,7 +4692,7 @@ main(int argc, char * argv[])
                 off64_t offset = clp->seek;
 
                 offset *= clp->bs;       /* could exceed 32 bits here! */
-                if (lseek64(clp->out2fd, offset, SEEK_SET) < 0) {
+                if (lseek(clp->out2fd, offset, SEEK_SET) < 0) {
                     err = errno;
                     snprintf(ebuff, EBUFF_SZ, "%scouldn't seek to required "
                              "position on %s", my_name, out2f);

@@ -4067,7 +4067,7 @@ sg_memalign(uint32_t num_bytes, uint32_t align_to, uint8_t ** buff_to_free,
         uint8_t * res;
         sg_uintptr_t align_1 = psz - 1;
 
-        wrkBuff = (uint8_t *)calloc(num_bytes + psz, 1);
+        wrkBuff = (uint8_t *)calloc(1, num_bytes + psz);
         if (NULL == wrkBuff) {
             if (buff_to_free)
                 *buff_to_free = NULL;
@@ -4220,6 +4220,24 @@ sg_lib_version()
    failure. */
 
 #include <fcntl.h>
+#include <io.h>
+
+#ifdef HAVE__SETMODE
+int
+sg_set_text_mode(int fd)
+{
+    return _setmode(fd, _O_TEXT);
+}
+
+/* Set binary mode on fd. Does nothing in Unix. Returns negative number on
+   failure. */
+int
+sg_set_binary_mode(int fd)
+{
+    return _setmode(fd, _O_BINARY);
+}
+
+#elif defined(HAVE_SETMODE)
 
 int
 sg_set_text_mode(int fd)
@@ -4234,6 +4252,10 @@ sg_set_binary_mode(int fd)
 {
     return setmode(fd, O_BINARY);
 }
+
+#else
+#error "Can't find setmode() or _setmode() in MinGW"
+#endif /* HAVE__SETMODE */
 
 #else
 /* For Unix the following functions are dummies. */

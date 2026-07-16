@@ -84,7 +84,7 @@ fi
 %{_libdir}/*.a
 
 %changelog
-* Wed Jul 01 2026 - dgilbert at interlog dot com
+* Wed Jul 15 2026 - dgilbert at interlog dot com
 - track t10 changes
   * sg3_utils-1.48.9
 

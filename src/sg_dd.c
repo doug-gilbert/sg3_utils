@@ -78,7 +78,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"              /* used to get to SNTL for NVMe devices */
 
-static const char * version_str = "6.52 20260620";
+static const char * version_str = "6.53 20260715";
 
 static const char * my_name = "sg_dd: ";
 
@@ -1698,26 +1698,17 @@ open_if(struct opts_t * op)
             if (vb)
                 pr2serr("        open input, flags=0x%x\n", flags);
             if (op->skip > 0) {
-#ifdef HAVE_LSEEK64
-                off64_t offset = op->skip;
-#else
                 off_t offset = op->skip;
-#endif
 
                 offset *= op->blk_sz;   /* could exceed 32 bits here! */
-#ifdef HAVE_LSEEK64
-                if (lseek64(infd, offset, SEEK_SET) < 0)
-#else
-                if (lseek(infd, offset, SEEK_SET) < 0)
-#endif
-                {
+                if (lseek(infd, offset, SEEK_SET) < 0) {
                     snprintf(ebuff, EBUFF_SZ, "%scouldn't skip to required "
                              "position on %s", my_name, inf);
                     perror(ebuff);
                     goto file_err;
                 }
                 if (vb)
-                    pr2serr("  >> skip: lseek64 SEEK_SET, byte offset=0x%"
+                    pr2serr("  >> skip: lseek(SEEK_SET), byte offset=0x%"
                             PRIx64 "\n", (uint64_t)offset);
             }
 #ifdef HAVE_POSIX_FADVISE
@@ -1898,26 +1889,17 @@ open_of(struct opts_t * op)
 #endif
         }
         if (op->seek > 0) {
-#ifdef HAVE_LSEEK64
-            off64_t offset = op->seek;
-#else
             off_t offset = op->seek;
-#endif
 
             offset *= op->blk_sz;       /* could exceed 32 bits here! */
-#ifdef HAVE_LSEEK64
-            if (lseek64(outfd, offset, SEEK_SET) < 0)
-#else
-            if (lseek(outfd, offset, SEEK_SET) < 0)
-#endif
-            {
+            if (lseek(outfd, offset, SEEK_SET) < 0) {
                 snprintf(ebuff, EBUFF_SZ, "%scouldn't seek to required "
                          "position on %s", my_name, outf);
                 perror(ebuff);
                 goto file_err;
             }
             if (vb)
-                pr2serr("   >> seek: lseek64 SEEK_SET, byte offset=0x%" PRIx64
+                pr2serr("   >> seek: lseek(SEEK_SET), byte offset=0x%" PRIx64
                         "\n", (uint64_t)offset);
         }
     }
@@ -2898,32 +2880,23 @@ main(int argc, char * argv[])
             } else if (FT_DEV_NULL & ofp->file_type)
                 ;
             else {
-#ifdef HAVE_LSEEK64
-                off64_t offset = (off64_t)blocks * bs;
-                off64_t off_res;
-#else
                 off_t offset = (off_t)blocks * bs;
                 off_t off_res;
-#endif
 
                 if (op->verbose > 2)
                     pr2serr("sparse bypassing write: seek=%" PRId64 ", rel "
                             "offset=%" PRId64 "\n", (op->seek * bs),
                             (int64_t)offset);
-#ifdef HAVE_LSEEK64
-                off_res = lseek64(op->outfd, offset, SEEK_CUR);
-#else
                 off_res = lseek(op->outfd, offset, SEEK_CUR);
-#endif
                 if (off_res < 0) {
                     pr2serr("sparse tried to bypass write: seek=%" PRId64
                             ", rel offset=%" PRId64 " but ...\n",
                             (op->seek * bs), (int64_t)offset);
-                    perror("lseek64 on output");
+                    perror("lseek() on output");
                     ret = SG_LIB_FILE_ERROR;
                     break;
                 } else if (op->verbose > 4)
-                    pr2serr("oflag=sparse lseek64 result=%" PRId64 "\n",
+                    pr2serr("oflag=sparse lseek() result=%" PRId64 "\n",
                             (int64_t)off_res);
                 out_sparse_num += blocks;
             }

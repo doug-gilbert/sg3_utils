@@ -63,7 +63,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.43 20260620";
+static const char * version_str = "1.44 20260715";
 
 #define DEF_BLOCK_SIZE 512
 #define DEF_BLOCKS_PER_TRANSFER 128
@@ -702,19 +702,10 @@ main(int argc, char * argv[])
         if (verbose)
             pr2serr("Opened %s for Unix reads with flags=0x%x\n", inf, flags);
         if (skip > 0) {
-#ifdef HAVE_LSEEK64
-            off64_t offset = skip;
-#else
             off_t offset = skip;
-#endif
 
             offset *= bs;       /* could exceed 32 bits here! */
-#ifdef HAVE_LSEEK64
-            if (lseek64(infd, offset, SEEK_SET) < 0)
-#else
-            if (lseek(infd, offset, SEEK_SET) < 0)
-#endif
-            {
+            if (lseek(infd, offset, SEEK_SET) < 0) {
                 err = errno;
                 snprintf(ebuff,  EBUFF_SZ,
                     ME "couldn't skip to required position on %s", inf);
@@ -823,19 +814,10 @@ main(int argc, char * argv[])
             }
         } else {
             if (iters > 0) { /* subsequent iteration reset skip position */
-#ifdef HAVE_LSEEK64
-                off64_t offset = skip;
-#else
                 off_t offset = skip;
-#endif
 
                 offset *= bs;       /* could exceed 32 bits here! */
-#ifdef HAVE_LSEEK64
-                if (lseek64(infd, offset, SEEK_SET) < 0)
-#else
-                if (lseek(infd, offset, SEEK_SET) < 0)
-#endif
-                {
+                if (lseek(infd, offset, SEEK_SET) < 0) {
                     perror(ME "could not reset skip position");
                     break;
                 }

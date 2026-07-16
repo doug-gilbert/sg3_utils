@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2014-2023 Hannes Reinecke, SUSE Linux GmbH.
+ * Copyright (c) 2014-2026 Hannes Reinecke, SUSE Linux GmbH.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +20,7 @@
 #endif
 
 #include "sg_lib.h"
+#include "sg_lib_data.h"
 #include "sg_cmds_basic.h"
 #include "sg_cmds_extra.h"
 #include "sg_unaligned.h"
@@ -64,7 +63,7 @@
 
 #define MAX_LAR_LIST_ELEMS 8
 
-static const char * version_str = "1.30 20230622";
+static const char * version_str = "1.31 20260713";
 
 struct opts_t {
     bool ck_cond;
@@ -100,6 +99,85 @@ static const struct option long_options[] = {
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
+};
+
+static const char * const reserv_s = "Reserved";
+
+/* taken from ACS-7 draft (T13/BSR INCITS 590 Revision 3) */
+static struct sg_lib_simple_value_name_t addr2logname[] = {
+    {0x0, "Log directory"},
+    {0x1, "Summary SMART error log"},
+    {0x2, "Comprehensive SMART error log"},
+    {0x3, "Extented comprehensive SMART error log"},
+    {0x4, "Device statistics"},
+    {0x5, "Reserved for CFA"},
+    {0x6, "SMART self-test log (obsolete)"},
+    {0x7, "Extended SMART self-test log (obsolete)"},
+    {0x8, "Power conditions"},
+    {0x9, "Selective self-test log"},
+    {0xa, "Device statistics notification log"},
+    {0xb, "Reserved for CFA"},
+    {0xc, "Pending defects log"},
+    {0xd, "LPS mis-alignment log"},
+    {0xe, "Reserved for ZAC-2"},
+    {0xf, "Sense data for successful NCQ commands log"},
+    {0x10, "NCQ commands error log"},
+    {0x11, "SATA phy event counters log"},
+    {0x12, "SATA NCQ non-data log"},
+    {0x13, "SATA NCQ send and receive log"},
+    {0x14, "Hybrid information log (obsolete)"},
+    {0x15, "Rebuild assist log"},
+    {0x16, "Out of band management control log"},
+    {0x17, "Reserved for serial ATA"},
+    {0x18, "Command duration limits log"},
+    {0x19, "LBA status"},
+    {0x1a, reserv_s},
+    {0x1b, reserv_s},
+    {0x1c, reserv_s},
+    {0x1d, reserv_s},
+    {0x1e, reserv_s},
+    {0x1f, reserv_s},
+    {0x20, "Obsolete"},  /* since at least 2002 */
+    {0x21, "Write stream error log (obsolete)"},
+    {0x22, "Read stream error log (obsolete)"},
+    {0x23, "Obsolete"},  /* since at least 2002 */
+    {0x24, "Current device internal status data log"},
+    {0x25, "Saved device internal status data log"},
+    {0x26, reserv_s},
+    {0x27, reserv_s},
+    {0x28, reserv_s},
+    {0x29, reserv_s},
+    {0x2a, reserv_s},
+    {0x2b, reserv_s},
+    {0x2c, reserv_s},
+    {0x2d, reserv_s},
+    {0x2e, reserv_s},
+    {0x2f, "Set sector configuration"},
+    {0x30, "IDENTIFY device data"},
+/* N.B. <= 0x30 are all defined so log address can be used as an index */
+
+    {0x42, "Mutate configurations log"},
+
+    {0x47, "Concurrent positioning ranges log"},
+
+    {0x53, "Sense data log"},
+
+    {0x59, "Power consumption control log"},
+
+    {0x61, "Capacity/Model number mapping log"},
+
+    /* 0x62 to 0x7f are reserved */
+
+    /* 0x80 to 0x9f are Host specific */
+
+    /* 0xa0 to 0xdf are Device vendor specific */
+
+    {0xe0, "SCT command/status"},
+    {0xe1, "SCT data transfer"},
+
+    /* 0xe2 to 0xff are reserved */
+
+    {0xFFFF, NULL},     /* trailing sentinel */
 };
 
 
@@ -154,10 +232,39 @@ usage()
            DEF_PPT);
 }
 
+static const char *
+get_name_by_log_addr(int log_addr)
+{
+    const struct sg_lib_simple_value_name_t * log_addr_elemp;
+    const char * cp;
+
+    if ((log_addr < 0x0) || (log_addr > 0xff))
+        return "bad log address";
+    if (log_addr <= 0x30) /* in this range, log_addr can be used as index */
+        return addr2logname[log_addr].name;
+    for (int k = 0x31; ; ++k) {
+        log_addr_elemp = &addr2logname[k];
+        cp = log_addr_elemp->name;
+        if (NULL == cp)
+            break;
+        if (log_addr == log_addr_elemp->value)
+            return cp;
+    }
+    if (log_addr < 0x80)
+        return "Reserved";
+    if (log_addr < 0xa0)
+        return "Host specific";
+    if (log_addr < 0xe0)
+        return "Device vendor specific";
+    if (log_addr < 0x100)
+        return "Reserved";
+    return "get_name_by_log_addr: logic error";
+}
+
 static void
 show_x_log_directory(int ata_cmd, const uint8_t * buff, int num_bytes)
 {
-    int k;
+    int k, la;
     const char * ccp = (ATA_SMART_READ_LOG == ata_cmd) ?
                                 "SMART" : "General purpose";
     uint16_t w;
@@ -168,9 +275,13 @@ show_x_log_directory(int ata_cmd, const uint8_t * buff, int num_bytes)
         w = sg_get_unaligned_le16(buff + k);
         if (0 == k)
             printf("  %s logging version: %xh\n", ccp, w);
-        else if (w > 0)
-            printf("    Number of log pages at log address %02xh: %u\n",
-                   k >> 1, w);
+        else if (w > 0) {
+            la = k >> 1;
+            printf("  Log address: %02xh [%u page%s]: %s\n", la, w,
+                   (w > 1 ? "s" : ""), get_name_by_log_addr(la));
+            // printf("    Number of log pages at log address %02xh: %u\n",
+                   // k >> 1, w);
+        }
     }
 }
 

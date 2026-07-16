@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 Douglas Gilbert.
+ * Copyright (c) 2004-2026 Douglas Gilbert.
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -20,6 +20,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include "sg_lib.h"
 #include "sg_cmds_basic.h"
 #include "sg_unaligned.h"
@@ -33,7 +34,7 @@
  * and decodes the response.
  */
 
-static const char * version_str = "1.59 20260620";      /* spc6r08 */
+static const char * version_str = "1.60 20260711";      /* spc6r08 */
 
 #define MY_NAME "sg_luns"
 

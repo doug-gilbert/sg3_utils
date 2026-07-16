@@ -3,9 +3,9 @@ some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-Changelog for pre-release sg3_utils-1.49 [20260701] [svn: r1131]
+Changelog for pre-release sg3_utils-1.49 [20260715] [svn: r1132]
   Utility specific changes:
-  - rescan-scsi-bus.sh: fix multipath resize without update 
+  - rescan-scsi-bus.sh: fix multipath resize without update
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
     and 44.diff
     - fix for github.com/doug-gilbert/sg3_utils/issues/46
@@ -21,6 +21,7 @@ Changelog for pre-release sg3_utils-1.49 [20260701] [svn: r1131]
   - sg_get_lba_status: additional LBA accessibility values
   - sginfo: part of github PR #74
   - sg_inq: update version descriptors to T10 table 20230814
+    - re-introduce the --ata option, hidden since rel 1.43
   - sg_inq+sg_vpd: show depopulation time in hours and
     minutes as well as its raw form: seconds
     - add RSCS field to Block limits ext. vpage [sbc5r5]
@@ -47,6 +48,7 @@ Changelog for pre-release sg3_utils-1.49 [20260701] [svn: r1131]
   - sg_rem_rest_elem: add support for REMOVE ELEMENT AND
   - MODIFY ZONES command, Damien Le Moal
   - sg_requests: improve buffer truncation
+  - sg_sat_read_gplog: list names of supported GP log addresses
   - sg_ses: restore some help text, github PR #79 Paul Evans
   - sg_stream_ctl: add --hex, --inhex=, --json= and --raw
     options; additions in sbc5r05 (perm and relative_lifetime
@@ -76,6 +78,8 @@ Changelog for pre-release sg3_utils-1.49 [20260701] [svn: r1131]
       are shared objects (e.g. libc.so)
     - github PR #84 by Paul Evans to fix cpack generated
       Debian dev library path, needed by sdparm and ddpt
+  - retire all uses of lseek64() as _FILE_OFFSET_BITS=64
+    compile define should take care of older 32 bit cases
   - fixes so musl-gcc builds clean
   - start complying with T10 23-047r1 "Broadcom SNT Reference"
     document assuming T10 SNT drafts are coming
@@ -226,7 +230,7 @@ Changelog for released sg3_utils-1.48 [20230801] [svn: r1042]
   - inhex/logs_last_n.hex: new, tests for the 4 "Last n ..."
     log (sub)pages
   - sg_lib: add sg_pdt_s_eq() to cope with ZBC disks which may
-    be either PDT_ZBC (if host managed) or PDT_DISK 
+    be either PDT_ZBC (if host managed) or PDT_DISK
     - add hex2fp(), similar to hex2str() but outputs to FILE
     - add sg_has_control_char(), true when < 0x20 or DEL
     - add sg_first_non_printable() based on 7 bit ASCII

@@ -30,7 +30,7 @@
  *
  */
 
-static const char * version_str = "1.47 20260502";
+static const char * version_str = "1.48 20260715";
 
 #define _XOPEN_SOURCE 600
 #ifndef _GNU_SOURCE
@@ -1945,9 +1945,9 @@ normal_in_rd(Rq_elem * rep, int64_t lba, int blocks, int d_boff)
         int64_t pos = lba * rep->bs;
 
         if (rep->in_follow_on != pos) {
-            if (lseek64(rep->infd, pos, SEEK_SET) < 0) {
+            if (lseek(rep->infd, pos, SEEK_SET) < 0) {
                 err = errno;
-                pr2serr_lk("[%d] %s: >> lseek64(%" PRId64 "): %s\n", id,
+                pr2serr_lk("[%d] %s: >> lseek(%" PRId64 "): %s\n", id,
                            __func__, pos, safe_strerror(err));
                 return -err;
             }
@@ -2003,9 +2003,9 @@ normal_out_wr(Rq_elem * rep, int64_t lba, int blocks, int d_boff)
         int64_t pos = lba * rep->bs;
 
         if (rep->out_follow_on != pos) {
-            if (lseek64(rep->outfd, pos, SEEK_SET) < 0) {
+            if (lseek(rep->outfd, pos, SEEK_SET) < 0) {
                 err = errno;
-                pr2serr_lk("[%d] %s: >> lseek64(%" PRId64 "): %s\n", id,
+                pr2serr_lk("[%d] %s: >> lseek(%" PRId64 "): %s\n", id,
                            __func__, pos, safe_strerror(err));
                 return -err;
             }

@@ -37,7 +37,6 @@
 #cmakedefine HAVE_SYS_RANDOM_H 1
 #cmakedefine HAVE_GETTIMEOFDAY 1
 #cmakedefine HAVE_SYSCONF 1
-#cmakedefine HAVE_LSEEK64 1
 #cmakedefine HAVE_SRAND48_R 1
 #cmakedefine HAVE_STDATOMIC_H 1
 #cmakedefine HAVE_PTHREAD_CANCEL 1
@@ -59,6 +58,7 @@
 #cmakedefine NEED_GETOPT_LONG 1
 #cmakedefine IGNORE_LINUX_BSG 1
 #cmakedefine HAVE_SETMODE 1
+#cmakedefine HAVE__SETMODE 1
 #cmakedefine WIN32_SPT_DIRECT 1
 
 #define BUILD_TIME "@BUILD_TIME@"

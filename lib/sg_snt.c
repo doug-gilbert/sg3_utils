@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2023-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  *
@@ -743,7 +741,7 @@ sg_snt_resp_rep_opcodes(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
     a_len = pg_sz - 72;
     arr = sg_memalign(pg_sz, pg_sz, &free_arr, false);
     if (NULL == arr) {
-        pr2ws("%s: calloc() failed to get memory\n", __func__);
+        pr2ws("%s: sg_memalign() failed to get memory\n", __func__);
         return sg_convert_errno(ENOMEM);
     }
     switch (reporting_opts) {

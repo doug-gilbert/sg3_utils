@@ -311,7 +311,7 @@ sgj_start_r(const char * util_name, const char * ver_str, int argc,
                                          "plain_text_output",
                                         json_array_new(0));
         if (jsp->pr_leadin && (jsp->verbose > 3)) {
-            char * bp = (char *)calloc(4096, 1);
+            char * bp = (char *)calloc(1, 4096);
 
             if (bp) {
                 sg_json_usage(0, bp, 4096);
@@ -370,7 +370,7 @@ sgj_js2file_estr(sgj_state * jsp, sgj_opaque_p jop, int exit_status,
         fprintf(fp, "%s: serialization length: %zu bytes\n", __func__, len);
 #endif
     }
-    b = (char *)calloc(len, 1);
+    b = (char *)calloc(1, len);
     if (NULL == b) {
         if (jsp->verbose > 3) {
 #if defined(SG_LIB_WIN32)
@@ -895,7 +895,7 @@ sgj_js_nv_hex_bytes(sgj_state * jsp, sgj_opaque_p jop, const char * name_so_s,
 
     if ((NULL == jsp) || (! jsp->pr_as_json))
         return;
-    bp = (char *)calloc(blen + 4, 1);
+    bp = (char *)calloc(1, blen + 4);
     if (bp) {
         h2str(byte_arr, num_bytes, 0, bp, blen);
         sgj_js_nv_s(jsp, jop, name_so_s, bp);
@@ -1432,7 +1432,7 @@ sgj_haj_vs_hex_bytes_nex(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
     char * bp = b;
 
     if (blen >= max_fixed_len) {
-        bp = (char *)calloc(blen + 4, 1);
+        bp = (char *)calloc(1, blen + 4);
     }
     if (bp) {
         json_value * jvp;
