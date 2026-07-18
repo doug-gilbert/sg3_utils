@@ -1,8 +1,10 @@
 cmake_minimum_required ( VERSION 3.10 )
 
-project(sg3_utils VERSION 1.48.9 LANGUAGES C)
+project(sg3_utils VERSION 1.49 LANGUAGES C)
+# releases have one decimal point (e.g. 1.49)
+# correction and pre-release versions have two decimal points
 # Use version number: x.y.9 to indicate pre-release of x.(y+1)
-# Example: VERSION 1.48.9 is pre-release of 1.49
+# Example: VERSION 1.49.9 is pre-release of 1.50
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)

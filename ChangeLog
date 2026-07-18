@@ -1,9 +1,9 @@
 Each utility has its own version number, date of last change and
-some description at the top of its ".c" file. All utilities in the main
+some description at the top of its ".c" file. All utilities in the src
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-Changelog for pre-release sg3_utils-1.49 [20260715] [svn: r1132]
+ChangeLog for release sg3_utils-1.49 [20260718] [svn: r1133]
   Utility specific changes:
   - rescan-scsi-bus.sh: fix multipath resize without update
     https://github.com/doug-gilbert/sg3_utils/pull/43.diff
@@ -24,7 +24,7 @@ Changelog for pre-release sg3_utils-1.49 [20260715] [svn: r1132]
     - re-introduce the --ata option, hidden since rel 1.43
   - sg_inq+sg_vpd: show depopulation time in hours and
     minutes as well as its raw form: seconds
-    - add RSCS field to Block limits ext. vpage [sbc5r5]
+    - add RSCS field to Block limits extension vpd page [sbc5r5]
     - translation of NVMe FR field uses sg_last_n_non_blank()
     - add NVMe Information VPD page
     - clean up ATA Information VPD page
@@ -35,12 +35,12 @@ Changelog for pre-release sg3_utils-1.49 [20260715] [svn: r1132]
     - sg_lib.[hc] add sg_strscpy() to replace strncpy()
     - sg_json.c fixes from lsscsi project pull #15
     - sg_json.[hc] add sgj_haj_vs_hex_bytes_nex() for
-      outputing IDs as ASCII hex strings
+      outputting IDs as ASCII hex strings
     - sg_json.[hc] add sgj_haj_vs_len()
     - sg_json.[hc] add sgj_haj_vs_nex()
     - sg_json_sg_lib.[hc] sgj_js_designation_descriptor()
       changed to sgj_haj_designation_descriptor()
-  - sg_logs: correct tape Device statisitics lpage [0x14]
+  - sg_logs: correct tape Device statistics lpage [0x14]
     serial number parameters [0x40 and 0x41] per
     https://github.com/doug-gilbert/sg3_utils/issues/45
   - sg_map: handle LUNs > 255
@@ -104,7 +104,7 @@ Changelog for pre-release sg3_utils-1.49 [20260715] [svn: r1132]
      - still no real pass-through, using sg_dummy instead
   - getopt_long directory contents -> lib directory
   - JSON: make output more consistent so most command
-    responses have a *_paramter_data or similar sub-object
+    responses have a *_parameter_data or similar sub-object
   - apply https://github.com/doug-gilbert/sg3_utils/pull/39
     and its revision [20230807] mainly for Android
 
@@ -566,7 +566,7 @@ Changelog for sg3_utils-1.43 [20180911] [svn: r789]
       command responses
   - sg_inq+sg_vpd: update Extended inquiry data vpd
     page (spc5r09 and 17-142r5)
-    - block limits and block limit extension VPD pages:
+    - block limits and block limits extension VPD pages:
       add extra info about corner cases
     - add maximum inquiry|mode_page change logs fields
       to extended inquiry vpd page (spc5r17)

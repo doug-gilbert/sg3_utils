@@ -1,4 +1,4 @@
-.TH SG3_UTILS "8" "2026-07-15" "sg3_utils\-1.49" SG3_UTILS
+.TH SG3_UTILS "8" "2026-07-18" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg3_utils \- a package of utilities for sending SCSI commands
 .SH SYNOPSIS
@@ -86,6 +86,12 @@ and permit copying data at the level of SCSI READ and WRITE commands. sg_dd
 is tightly bound to Linux and hence is not ported to other OSes. A more
 generic utility (than sg_dd) called ddpt in a package of the same name has
 been ported to other OSes.
+.SH COMMAND DESCRIPTOR BLOCK
+This term is often used when describing SCSI commands, usually abbreviated to
+CDB. SCSI commands such as READ(16) refer to the 16 byte CDB used to fetch
+data from a storage device. Typical CDB lengths are 6, 10, 12, 16 and 32
+bytes long. Any integers in a CDB that are longer than 8 bits (i.e. 1 byte)
+use a big endian repesentation.
 .SH ENVIRONMENT VARIABLES
 The SG3_UTILS_OLD_OPTS environment variable is explained in the previous
 section. It is only for backward compatibility of the command line options
