@@ -13,7 +13,7 @@ include(CMakePackageConfigHelpers)
 set ( CMAKE_C_STANDARD 99 )
 set ( CMAKE_C_STANDARD_REQUIRED ON )
 set ( CMAKE_C_EXTENSIONS OFF )
-set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -Wall -W" )
+set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -W" )
 
 add_compile_definitions ( _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64 HAVE_CONFIG_H )
 
@@ -22,7 +22,7 @@ add_compile_definitions ( _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64 HAVE_CONFIG_H
 # section of the project() statement above. Additionally see the C++
 # comments in the CMakeLists.txt scripts in the lib and src directories.
 # set ( CMAKE_CXX_STANDARD 23 )
-# set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -Wall -W" )
+# set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -W" )
 
 string(TIMESTAMP BUILD_TIME "%Y%m%d %H:%M:%S")
 

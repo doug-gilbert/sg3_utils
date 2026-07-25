@@ -1,11 +1,7 @@
 
 MESSAGE( STATUS ">> Entering doc/CMakeLists.txt" )
 
-
 set(SG3_UTILS
-	rescan-scsi-bus.sh
-	scsi-rescan
-	scsi_logging_level
 	scsi_mandat
 	scsi_readcap
 	scsi_ready
@@ -17,10 +13,7 @@ set(SG3_UTILS
 	sg3_utils_json
 	sg_bg_ctl
 	sg_compare_and_write
-	sg_copy_results
-	sg_dd
 	sg_decode_sense
-	sg_emc_trespass
 	sg_format
 	sg_get_config
 	sg_get_elem_status
@@ -29,16 +22,12 @@ set(SG3_UTILS
 	sg_inq
 	sg_logs
 	sg_luns
-	sg_map
-	sg_map26
 	sg_modes
 	sg_opcodes
 	sg_persist
 	sg_prevent
 	sg_raw
-	sg_rbuf
 	sg_rdac
-	sg_read
 	sg_read_attr
 	sg_read_block_limits
 	sg_read_buffer
@@ -51,7 +40,6 @@ set(SG3_UTILS
 	sg_rep_pip
 	sg_rep_zones
 	sg_requests
-	sg_reset
 	sg_reset_wp
 	sg_rmsn
 	sg_rtpg
@@ -70,7 +58,6 @@ set(SG3_UTILS
 	sg_stpg
 	sg_stream_ctl
 	sg_sync
-	sg_test_rwbuf
 	sg_timestamp
 	sg_turs
 	sg_unmap
@@ -83,13 +70,31 @@ set(SG3_UTILS
 	sg_write_same
 	sg_write_verify
 	sg_write_x
-	sg_xcopy
 	sg_z_act_query
 	sg_zone
+)
+
+if (OS_LINUX)
+    set(SG3_UTILS
+	${SG3_UTILS}
+	rescan-scsi-bus.sh
+	scsi-rescan
+	scsi_logging_level
+	sg_copy_results
+	sg_dd
+	sg_emc_trespass
+	sg_map
+	sg_map26
+	sg_rbuf
+	sg_read
+	sg_reset
+	sg_test_rwbuf
+	sg_xcopy
 	sginfo
 	sgm_dd
 	sgp_dd
-)
+   )
+endif (OS_LINUX)
 
 foreach(util ${SG3_UTILS})
 
