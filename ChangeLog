@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the src
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-ChangeLog for pre-release sg3_utils-1.49.5 [20260725] [svn: r1136]
+ChangeLog for pre-release sg3_utils-1.49.5 [20260725] [svn: r1137]
   Start with 3 part version number at .5 to leave room for any
   serious bug fixes to use .1 through .4
   - bump version numbers for important files like configure.ac
