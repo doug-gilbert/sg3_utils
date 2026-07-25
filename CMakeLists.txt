@@ -1,7 +1,8 @@
 cmake_minimum_required ( VERSION 3.10 )
 
-project(sg3_utils VERSION 1.49 LANGUAGES C)
+project(sg3_utils VERSION 1.49.5 LANGUAGES C)
 # releases have one decimal point (e.g. 1.49)
+# start new additions after release at '.5' (e.g. 1.49.5)
 # correction and pre-release versions have two decimal points
 # Use version number: x.y.9 to indicate pre-release of x.(y+1)
 # Example: VERSION 1.49.9 is pre-release of 1.50

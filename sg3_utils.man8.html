@@ -4,8 +4,8 @@ Content-type: text/html; charset=UTF-8
 <HTML><HEAD><TITLE>Man page of SG3_UTILS</TITLE>
 </HEAD><BODY>
 <H1>SG3_UTILS</H1>
-Section: SG3_UTILS (8)<BR>Updated: May 2026<BR><A HREF="#index">Index</A>
-<A HREF="/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+Section: SG3_UTILS (8)<BR>Updated: 2026-07-18<BR><A HREF="#index">Index</A>
+<A HREF="../index.html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
@@ -111,6 +111,14 @@ is tightly bound to Linux and hence is not ported to other OSes. A more
 generic utility (than sg_dd) called ddpt in a package of the same name has
 been ported to other OSes.
 <A NAME="lbAE">&nbsp;</A>
+<H2>COMMAND DESCRIPTOR BLOCK</H2>
+
+This term is often used when describing SCSI commands, usually abbreviated to
+CDB. SCSI commands such as READ(16) refer to the 16 byte CDB used to fetch
+data from a storage device. Typical CDB lengths are 6, 10, 12, 16 and 32
+bytes long. Any integers in a CDB that are longer than 8 bits (i.e. 1 byte)
+use a big endian repesentation.
+<A NAME="lbAF">&nbsp;</A>
 <H2>ENVIRONMENT VARIABLES</H2>
 
 The SG3_UTILS_OLD_OPTS environment variable is explained in the previous
@@ -151,7 +159,7 @@ times. Due to an interface problem (a 32 bit integer that should be 64 bits
 with the benefit of hindsight) the maximum duration that can be represented
 in nanoseconds is about 4.2 seconds. If longer durations may occur then
 don't define this environment variable (or undefine it).
-<A NAME="lbAF">&nbsp;</A>
+<A NAME="lbAG">&nbsp;</A>
 <H2>LINUX DEVICE NAMING</H2>
 
 Most disk block devices have names like /dev/sda, /dev/sdb, /dev/sdc, etc.
@@ -188,7 +196,7 @@ kernel 2.6 series, any device name can be used by these utilities.
 
 Very little has changed in Linux device naming in the Linux kernel 3
 and 4 series.
-<A NAME="lbAG">&nbsp;</A>
+<A NAME="lbAH">&nbsp;</A>
 <H2>WINDOWS DEVICE NAMING</H2>
 
 Storage and related devices can have several device names in Windows.
@@ -236,7 +244,7 @@ each backslash may need to be typed twice.
 
 The sg_scan utility within this package lists out Windows device names in
 a form that is suitable for other utilities in this package to use.
-<A NAME="lbAH">&nbsp;</A>
+<A NAME="lbAI">&nbsp;</A>
 <H2>FREEBSD DEVICE NAMING</H2>
 
 SCSI disks have block names of the form /dev/da&lt;num&gt; where &lt;num&gt; is an
@@ -265,7 +273,7 @@ subsystem. Then in FreeBSD release 12 a new nda driver was added that is
 CAM (and GEOM) based for NVMe namespaces; it has names like &quot;/dev/nda0&quot;.
 The preferred device nodes for this package are &quot;/dev/nvme0&quot; for NVMe
 controllers and &quot;/dev/nda0&quot; for NVMe namespaces.
-<A NAME="lbAI">&nbsp;</A>
+<A NAME="lbAJ">&nbsp;</A>
 <H2>SOLARIS DEVICE NAMING</H2>
 
 SCSI device names below the /dev directory have a form like: c5t4d3s2
@@ -307,7 +315,7 @@ the 'format' command&quot; advice works but seems a very dangerous way to list
 devices. [It does prompt again before doing any damage.] 'devfsadm -Cv'
 cleans out the clutter in the /dev/rdsk directory, only leaving what
 is &quot;live&quot;. The &quot;cfgadm -v&quot; command looks promising.
-<A NAME="lbAJ">&nbsp;</A>
+<A NAME="lbAK">&nbsp;</A>
 <H2>NVME SUPPORT</H2>
 
 NVMe (or NVM Express) is a relatively new storage transport and command
@@ -359,7 +367,7 @@ RECEIVE DIAGNOSTIC RESULTS, REQUEST SENSE, REPORT LUNS, REPORT SUPPORTED
 OPERATION CODES, REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS, SEND
 DIAGNOSTICS, START STOP UNIT, SYNCHRONIZE CACHE(10,16), TEST UNIT READY,
 VERIFY(10,16), WRITE(10,16) and WRITE SAME(10,16).
-<A NAME="lbAK">&nbsp;</A>
+<A NAME="lbAL">&nbsp;</A>
 <H2>EXIT STATUS</H2>
 
 To aid scripts that call these utilities, the exit status is set to indicate
@@ -696,7 +704,7 @@ not happen; given here for completeness.
 Most of the error conditions reported above will be repeatable (an example
 of one that is not is &quot;unit attention&quot;) so the utility can be run again with
 the '-v' option (or several) to obtain more information.
-<A NAME="lbAL">&nbsp;</A>
+<A NAME="lbAM">&nbsp;</A>
 <H2>COMMON OPTIONS</H2>
 
 Arguments to long options are mandatory for short options as well. In the
@@ -812,7 +820,7 @@ utilities take into account. The maximum response length is typically
 specified in the 'allocation length' field of the cdb. In the absence of
 this option, several utilities use a default allocation length (sometimes
 recommended in the SCSI draft standards) or a &quot;double fetch&quot; strategy.
-See <A HREF="/cgi-bin/man/man2html?8+sg_logs">sg_logs</A>(8) for its description of a &quot;double fetch&quot; strategy. These
+See <A HREF="../man8/sg_logs.8.html">sg_logs</A>(8) for its description of a &quot;double fetch&quot; strategy. These
 techniques are imperfect and in the presence of faulty SCSI targets can
 cause problems (e.g. some USB mass storage devices freeze if they receive
 an INQUIRY allocation length other than 36). Also use of this option
@@ -881,7 +889,7 @@ an option. This becomes important if and when a filename starts with a '-'
 character. Doing that is not a good idea but fingers slip and bad things
 happens.
 </DL>
-<A NAME="lbAM">&nbsp;</A>
+<A NAME="lbAN">&nbsp;</A>
 <H2>NUMERIC ARGUMENTS</H2>
 
 Many utilities have command line options that take numeric arguments. These
@@ -938,7 +946,7 @@ in the C programming language. The second hexadecimal representation is a
 trailing &quot;h&quot; or &quot;H&quot; as found in (storage) standards. When hex numbers are
 given, multipliers cannot be used. For example the decimal value &quot;256&quot; can
 be given as &quot;0x100&quot; or &quot;100h&quot;.
-<A NAME="lbAN">&nbsp;</A>
+<A NAME="lbAO">&nbsp;</A>
 <H2>HEX, BINARY AND JSON FORMATS</H2>
 
 Both hexadecimal (ASCII) and binary can be used as low level output of SCSI
@@ -948,7 +956,7 @@ a high level output that may be parsed by some other tool. No utilities
 in sg3_utils can parse JSON as input.
 <P>
 
-JSON output is outlined in its own manpage, see: <A HREF="/cgi-bin/man/man2html?8+sg3_utils_json">sg3_utils_json</A>(8).
+JSON output is outlined in its own manpage, see: <A HREF="../man8/sg3_utils_json.8.html">sg3_utils_json</A>(8).
 <P>
 
 Binary and especially hexadecimal output can have two roles: for viewing
@@ -1005,7 +1013,7 @@ To convert a binary file into a hexadecimal form that can be given as input
 to various sg3_utils utilities, the sg_decode_sense utility can also be
 used with these options: &quot;<I>--binary=BFN --nodecode -HHH</I>&quot; and the
 hex output will be sent to the console (stdout).
-<A NAME="lbAO">&nbsp;</A>
+<A NAME="lbAP">&nbsp;</A>
 <H2>MICROCODE AND FIRMWARE</H2>
 
 There are two standardized methods for downloading microcode (i.e. device
@@ -1013,7 +1021,7 @@ firmware) to a SCSI device. The more general way is with the SCSI WRITE
 BUFFER command, see the sg_write_buffer utility. SCSI enclosures have
 their own method based on the Download microcode control/status diagnostic
 page, see the sg_ses_microcode utility.
-<A NAME="lbAP">&nbsp;</A>
+<A NAME="lbAQ">&nbsp;</A>
 <H2>SCRIPTS, EXAMPLES and UTILS</H2>
 
 There are several bash shell scripts in the 'scripts' subdirectory that
@@ -1036,7 +1044,7 @@ Windows may open a file in text rather than binary mode).
 
 Some utilities that the author has found useful have been placed in
 the 'utils' subdirectory.
-<A NAME="lbAQ">&nbsp;</A>
+<A NAME="lbAR">&nbsp;</A>
 <H2>DEBUGGING</H2>
 
 Each utility and most scripts have a <I>--verbose</I> option (short
@@ -1090,7 +1098,7 @@ Modern laptops do not have real serial ports and many server machines
 don't either (or it is an optional extra). In Linux the netconsole module
 does a pretty good job by sending log entries to another machine (on the
 same sub-net)) using the UDP (&quot;fire and forget&quot;) network protocol .
-<A NAME="lbAR">&nbsp;</A>
+<A NAME="lbAS">&nbsp;</A>
 <H2>WEB SITE</H2>
 
 There is a web page discussing this package at
@@ -1105,16 +1113,16 @@ of this via the subversion revision number which is an ascending integer
 periodically from the author's repository. Depending on the time of
 update, the above Downloads section at sg.danny.cz may be more up to
 date than the github mirror.
-<A NAME="lbAS">&nbsp;</A>
+<A NAME="lbAT">&nbsp;</A>
 <H2>AUTHORS</H2>
 
 Written by Douglas Gilbert. Some utilities have been contributed, see the
 CREDITS file and individual source files (in the 'src' directory).
-<A NAME="lbAT">&nbsp;</A>
+<A NAME="lbAU">&nbsp;</A>
 <H2>REPORTING BUGS</H2>
 
 Report bugs to &lt;dgilbert at interlog dot com&gt;.
-<A NAME="lbAU">&nbsp;</A>
+<A NAME="lbAV">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 Copyright &#169; 1999-2026 Douglas Gilbert
@@ -1126,12 +1134,12 @@ that are common to almost all utilities and thus contain the most reusable
 code, namely sg_lib.[hc], sg_cmds_basic.[hc] and sg_cmds_extra.[hc] are
 under a BSD-2-Clause license. There is NO warranty; not even for
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-<A NAME="lbAV">&nbsp;</A>
+<A NAME="lbAW">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
 <B>sg3_utils_json, sg_decode_sense(sg3_utils), sdparm(sdparm), ddpt(ddpt),</B>
 
-<B>lsscsi(lsscsi), <A HREF="/cgi-bin/man/man2html?1+dmesg">dmesg</A>(1), <A HREF="/cgi-bin/man/man2html?1+mt">mt</A>(1), hdparm(hdparm), hexdump(util-linux)</B>
+<B>lsscsi(lsscsi), <A HREF="../man1/dmesg.1.html">dmesg</A>(1), <A HREF="../man1/mt.1.html">mt</A>(1), hdparm(hdparm), hexdump(util-linux)</B>
 
 <BR>
 
@@ -1145,29 +1153,30 @@ or &lt;utility_name&gt;(&lt;manpage_section_number_containing_utility&gt;) .
 <DT><A HREF="#lbAB">NAME</A><DD>
 <DT><A HREF="#lbAC">SYNOPSIS</A><DD>
 <DT><A HREF="#lbAD">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAE">ENVIRONMENT VARIABLES</A><DD>
-<DT><A HREF="#lbAF">LINUX DEVICE NAMING</A><DD>
-<DT><A HREF="#lbAG">WINDOWS DEVICE NAMING</A><DD>
-<DT><A HREF="#lbAH">FREEBSD DEVICE NAMING</A><DD>
-<DT><A HREF="#lbAI">SOLARIS DEVICE NAMING</A><DD>
-<DT><A HREF="#lbAJ">NVME SUPPORT</A><DD>
-<DT><A HREF="#lbAK">EXIT STATUS</A><DD>
-<DT><A HREF="#lbAL">COMMON OPTIONS</A><DD>
-<DT><A HREF="#lbAM">NUMERIC ARGUMENTS</A><DD>
-<DT><A HREF="#lbAN">HEX, BINARY AND JSON FORMATS</A><DD>
-<DT><A HREF="#lbAO">MICROCODE AND FIRMWARE</A><DD>
-<DT><A HREF="#lbAP">SCRIPTS, EXAMPLES and UTILS</A><DD>
-<DT><A HREF="#lbAQ">DEBUGGING</A><DD>
-<DT><A HREF="#lbAR">WEB SITE</A><DD>
-<DT><A HREF="#lbAS">AUTHORS</A><DD>
-<DT><A HREF="#lbAT">REPORTING BUGS</A><DD>
-<DT><A HREF="#lbAU">COPYRIGHT</A><DD>
-<DT><A HREF="#lbAV">SEE ALSO</A><DD>
+<DT><A HREF="#lbAE">COMMAND DESCRIPTOR BLOCK</A><DD>
+<DT><A HREF="#lbAF">ENVIRONMENT VARIABLES</A><DD>
+<DT><A HREF="#lbAG">LINUX DEVICE NAMING</A><DD>
+<DT><A HREF="#lbAH">WINDOWS DEVICE NAMING</A><DD>
+<DT><A HREF="#lbAI">FREEBSD DEVICE NAMING</A><DD>
+<DT><A HREF="#lbAJ">SOLARIS DEVICE NAMING</A><DD>
+<DT><A HREF="#lbAK">NVME SUPPORT</A><DD>
+<DT><A HREF="#lbAL">EXIT STATUS</A><DD>
+<DT><A HREF="#lbAM">COMMON OPTIONS</A><DD>
+<DT><A HREF="#lbAN">NUMERIC ARGUMENTS</A><DD>
+<DT><A HREF="#lbAO">HEX, BINARY AND JSON FORMATS</A><DD>
+<DT><A HREF="#lbAP">MICROCODE AND FIRMWARE</A><DD>
+<DT><A HREF="#lbAQ">SCRIPTS, EXAMPLES and UTILS</A><DD>
+<DT><A HREF="#lbAR">DEBUGGING</A><DD>
+<DT><A HREF="#lbAS">WEB SITE</A><DD>
+<DT><A HREF="#lbAT">AUTHORS</A><DD>
+<DT><A HREF="#lbAU">REPORTING BUGS</A><DD>
+<DT><A HREF="#lbAV">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAW">SEE ALSO</A><DD>
 </DL>
 <HR>
 This document was created by
 <A HREF="/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 14:48:11 GMT, May 08, 2026
+Time: 01:03:13 GMT, July 22, 2026
 </BODY>
 </HTML>
