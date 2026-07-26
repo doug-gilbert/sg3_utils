@@ -39,7 +39,7 @@
  * commands tailored for SES (enclosure) devices.
  */
 
-static const char * version_str = "2.88 20260526";    /* ses4r05 */
+static const char * version_str = "2.89 20260725";    /* ses4r05 */
 
 #define MY_NAME "sg_ses"
 
@@ -2318,19 +2318,12 @@ static char *
 etype_str(int elem_type_code, char * b, int mlen_b)
 {
     const struct element_type_t * etp;
-    int len;
 
     if ((NULL == b) || (mlen_b < 1))
         return b;
     for (etp = element_type_arr; etp->desc; ++etp) {
         if (elem_type_code == etp->elem_type_code) {
-            len = strlen(etp->desc);
-            if (len < mlen_b)
-                strcpy(b, etp->desc);
-            else {
-                sg_strscpy(b, etp->desc, mlen_b - 1);
-                b[mlen_b - 1] = '\0';
-            }
+            sg_strscpy(b, etp->desc, mlen_b);
             return b;
         } else if (elem_type_code < etp->elem_type_code)
             break;

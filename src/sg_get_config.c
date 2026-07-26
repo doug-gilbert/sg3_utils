@@ -31,7 +31,7 @@
 
 */
 
-static const char * version_str = "0.52 20260620";    /* mmc6r02 */
+static const char * version_str = "0.53 20260725";    /* mmc6r02 */
 
 #define MX_ALLOC_LEN 8192
 #define NAME_BUFF_SZ 64
@@ -780,12 +780,13 @@ decode_feature(int feature, uint8_t * bp, int len)
         printf("    version=%d, persist=%d, current=%d [0x%x]\n",
                ((bp[2] >> 2) & 0xf), !!(bp[2] & 0x2), !!(bp[2] & 0x1),
                feature);
-        num = len - 4;
-        n = sizeof(buff) - 1;
-        n = ((num < n) ? num : n);
-        sg_strscpy(buff, (const char *)(bp + 4), n);
-        buff[n] = '\0';
-        printf("      Drive serial number: %s\n", buff);
+        if (len >= 4) {
+            num = len - 4;
+            n = ((num < (int)sizeof(buff)) ? num + 1 : (int)sizeof(buff));
+            sg_strscpy(buff, (const char *)(bp + 4), n);
+            printf("      Drive serial number: %s\n", buff);
+        } else
+            printf("      Drive serial number: <too short>\n");
         break;
     /* case 0x109:    Media serial number -> see 0x1d entry */
     case 0x10a:    /* Disc control blocks */

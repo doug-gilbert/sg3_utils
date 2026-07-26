@@ -34,7 +34,7 @@
 
 #include "sg_pt.h"
 
-static const char * version_str = "1.05 20260701";    /* spc6r11 */
+static const char * version_str = "1.06 20260725";    /* spc7r05 */
 
 #define MY_NAME "sg_opcodes"
 
@@ -511,7 +511,7 @@ new_parse_cmd_line(struct opts_t * op, int argc, char * argv[])
             cp = strchr(optarg, ',');
             if (cp) {
                 memset(b, 0, sizeof(b));
-                sg_strscpy(b, optarg, cp - optarg);
+                sg_strscpy(b, optarg, cp + 1 - optarg);
                 n = sg_get_num(b);
                 if ((n < 0) || (n > 255)) {
                     pr2serr("bad OP argument to '--opcode'\n");
