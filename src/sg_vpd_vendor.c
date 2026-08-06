@@ -207,8 +207,9 @@ decode_vpd_c0_hp3par(uint8_t * buff, int len)
 {
     int rev;
     long offset;
+    uint32_t slen;
 
-    if (len < 24) {
+    if (len < 28) {
         pr2serr("HP/3PAR vendor specific VPD page length too short=%d\n",
                 len);
         return;
@@ -223,32 +224,6 @@ decode_vpd_c0_hp3par(uint8_t * buff, int len)
     printf("  ATS supported: %s\n", (buff[5] & 0x10) ? "yes" : "no");
     printf("  XCopy supported: %s\n", (buff[5] & 0x20) ? "yes" : "no");
 
-    if (rev > 3) {
-        printf("  VV ID: %" PRIu64 "\n", sg_get_unaligned_be64(buff + 28));
-        offset = 44;
-        printf("  Volume name: %s\n", &buff[offset]);
-
-        printf("  Domain ID: %d\n", sg_get_unaligned_be32(buff + 36));
-
-        offset += sg_get_unaligned_be32(buff + offset - 4) + 4;
-        printf("  Domain Name: %s\n", &buff[offset]);
-
-        offset += sg_get_unaligned_be32(buff + offset - 4) + 4;
-        printf("  User CPG: %s\n", &buff[offset]);
-
-        offset += sg_get_unaligned_be32(buff + offset - 4) + 4;
-        printf("  Snap CPG: %s\n", &buff[offset]);
-
-        offset += sg_get_unaligned_be32(buff + offset - 4);
-
-        printf("  VV policies: %s,%s,%s,%s\n",
-                (buff[offset + 3] & 0x01) ? "stale_ss" : "no_stale_ss",
-                (buff[offset + 3] & 0x02) ? "one_host" : "no_one_host",
-                (buff[offset + 3] & 0x04) ? "tp_bzero" : "no_tp_bzero",
-                (buff[offset + 3] & 0x08) ? "zero_detect" : "no_zero_detect");
-
-    }
-
     if (buff[5] & 0x04) {
         printf("  Allocation unit: %d\n", sg_get_unaligned_be32(buff + 8));
 
@@ -258,6 +233,55 @@ decode_vpd_c0_hp3par(uint8_t * buff, int len)
         printf("  Space allocated: %" PRIu64 "\n",
                sg_get_unaligned_be64(buff + 20));
     }
+
+    if (rev > 3) {
+        if (len < 44) {
+            pr2serr("  HP/3PAR VPD page truncated before dynamic fields\n");
+            return;
+        }
+        
+        printf("  VV ID: %" PRIu64 "\n", sg_get_unaligned_be64(buff + 28));
+        printf("  Domain ID: %d\n", sg_get_unaligned_be32(buff + 36));
+
+        offset = 44;
+        slen = sg_get_unaligned_be32(buff + 40);
+        
+        if (slen > (uint32_t)(len - offset)) goto truncated;
+        printf("  Volume name: %.*s\n", (int)slen, &buff[offset]);
+        offset += slen;
+
+        if ((len - offset) < 4) goto truncated;
+        slen = sg_get_unaligned_be32(buff + offset);
+        offset += 4;
+        if (slen > (uint32_t)(len - offset)) goto truncated;
+        printf("  Domain Name: %.*s\n", (int)slen, &buff[offset]);
+        offset += slen;
+
+        if ((len - offset) < 4) goto truncated;
+        slen = sg_get_unaligned_be32(buff + offset);
+        offset += 4;
+        if (slen > (uint32_t)(len - offset)) goto truncated;
+        printf("  User CPG: %.*s\n", (int)slen, &buff[offset]);
+        offset += slen;
+
+        if ((len - offset) < 4) goto truncated;
+        slen = sg_get_unaligned_be32(buff + offset);
+        offset += 4;
+        if (slen > (uint32_t)(len - offset)) goto truncated;
+        printf("  Snap CPG: %.*s\n", (int)slen, &buff[offset]);
+        offset += slen;
+
+        if ((len - offset) < 4) goto truncated;
+        printf("  VV policies: %s,%s,%s,%s\n",
+                (buff[offset + 3] & 0x01) ? "stale_ss" : "no_stale_ss",
+                (buff[offset + 3] & 0x02) ? "one_host" : "no_one_host",
+                (buff[offset + 3] & 0x04) ? "tp_bzero" : "no_tp_bzero",
+                (buff[offset + 3] & 0x08) ? "zero_detect" : "no_zero_detect");
+    }
+    return;
+
+truncated:
+    pr2serr("  HP/3PAR VPD page dynamic fields truncated\n");
     return;
 }
 
