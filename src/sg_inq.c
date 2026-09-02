@@ -1723,7 +1723,7 @@ export_dev_ids(uint8_t * buff, int len, int verbose)
             }
 
             printf("SCSI_IDENT_%s_NAME=", assoc_str);
-            for (m = 0; m < i_len; ++m) {
+            for (m = 0; m < i_len && ip[m]; ++m) {
                 if ((ip[m] >= '0' && ip[m] <= '9') ||
                     (ip[m] >= 'A' && ip[m] <= 'Z') ||
                     (ip[m] >= 'a' && ip[m] <= 'z') ||
