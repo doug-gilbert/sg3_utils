@@ -2,7 +2,7 @@
 #define SG_UNALIGNED_H
 
 /*
- * Copyright (c) 2014-2018 Douglas Gilbert.
+ * Copyright (c) 2014-2026 Douglas Gilbert.
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-2-Clause

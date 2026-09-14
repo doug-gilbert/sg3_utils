@@ -42,7 +42,7 @@
 
 */
 
-static const char * version_str = "2.10 20260813";  /* spc7r05 + sbc6r02 */
+static const char * version_str = "2.11 20260913";  /* spc7r05 + sbc6r02 */
 
 #define MY_NAME "sg_vpd"
 
@@ -1255,7 +1255,7 @@ svpd_decode_t10(struct sg_pt_base * ptvp, struct opts_t * op,
             if (vb)
                 pr2serr("Given %s not in supported list, use --force to "
                         "override this check\n", vpd_pg_s);
-            return sg_convert_errno(EDOM);
+            return sg_convert_errno(op->matched_page_name ? ENOSYS : EDOM);
         }
     }
     pdt = rp[0] & PDT_MASK;
@@ -2833,6 +2833,7 @@ main(int argc, char * argv[])
                     }
                 }
             }
+            op->matched_page_name = true;
             op->vpd_pn = vnp->value;
             op->orig_vpd_pn = op->vpd_pn;
             subvalue = vnp->subvalue;

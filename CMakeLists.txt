@@ -24,6 +24,7 @@ option ( DISABLE_LINUX_SGV4 "for Linux sg driver avoid v4 interface even if avai
 option ( DISABLE_LINUXBSG "option ignored, this is placeholder" OFF)
 option ( DISABLE_LIBSGUTILS "Library code compiled in directly" OFF)
 option ( IGNORE_LOCAL_LIB "Utilities will look in system library directories" OFF)
+option ( USE_CXX "Compile C code with C++ compiler for testing" OFF)
 
 # The intention is to support both cmake _and_ GNU Autotools build systems.
 # To this end (and to shorten the actual compile line) a dynamic config.h
@@ -272,13 +273,25 @@ else ()
     add_compile_definitions ( _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64 HAVE_CONFIG_H )
 endif ()
 
+function ( l_set_cxx_compilation util_name )
+    if(TARGET ${util_name})
+        get_target_property(sources ${util_name} SOURCES)
+        if(sources)
+            set_source_files_properties( ${sources} PROPERTIES LANGUAGE CXX )
+        endif()
+    else()
+        set_source_files_properties( ${util_name} PROPERTIES LANGUAGE CXX )
+    endif()
+endfunction ( l_set_cxx_compilation )
+
 function ( l_set_compile_options util_name )
 
     # For testing it can be useful to compile C code with a C++ compiler.
     # That can be done by expanding the project() cmake command at the top of
-    # this file to: project( ...... LANGUAGES C CXX) and uncommenting
-    # the following line:
-    set_source_files_properties( ${util_name} PROPERTIES LANGUAGE CXX )
+    # this file to: project( ...... LANGUAGES C CXX) .
+    if ( USE_CXX )
+        l_set_cxx_compilation ( ${util_name} )
+    endif ( USE_CXX )
 
     if ( ENABLE_DEBUG )
         target_compile_definitions(${util_name} PRIVATE DEBUG)

@@ -57,7 +57,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.67 20260902";  /* spc7r05, sbc6r02 */
+static const char * version_str = "2.69 20260913";  /* spc7r05, sbc6r02 */
 
 #define MY_NAME "sg_inq"
 

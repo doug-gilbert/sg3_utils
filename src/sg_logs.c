@@ -40,7 +40,7 @@
 
 #include "sg_logs.h"
 
-static const char * version_str = "2.37 20231026";    /* spc6r10 + sbc5r05 */
+static const char * version_str = "2.38 20260913";    /* spc6r10 + sbc5r05 */
 
 #define MY_NAME "sg_logs"
 
@@ -1369,7 +1369,7 @@ old_parse_cmd_line(struct opts_t * op, int argc, char * argv[])
                     char b[80];
                     static const int b_len = sizeof(b);
 
-                    if (strlen(ccp) >= (b_len - 1)) {
+                    if ((int)strlen(ccp) >= (b_len - 1)) {
                         pr2serr("argument to '-p=' is too long\n");
                         return SG_LIB_SYNTAX_ERROR;
                     }
@@ -9569,7 +9569,7 @@ decode_pg_arg(struct opts_t * op)
         char b[80];
         static const int b_len = sizeof(b);
 
-        if (strlen(op->pg_arg) >= (b_len - 1)) {
+        if ((int)strlen(op->pg_arg) >= (b_len - 1)) {
             pr2serr("argument to '--page=' is too long\n");
             return SG_LIB_SYNTAX_ERROR;
         }

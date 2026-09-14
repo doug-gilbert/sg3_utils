@@ -25,8 +25,12 @@ extern "C" {
 
 
 /* Following macro for sgj_pr_hr() which takes printf() like arguments */
-#if defined(__USE_MINGW_ANSI_STDIO) && (__USE_MINGW_ANSI_STDIO - 0 == 1)
-    #define __printf(a, b) __attribute__((__format__(gnu_printf, a, b)))
+#if defined(__USE_MINGW_ANSI_STDIO)
+    #if (__USE_MINGW_ANSI_STDIO - 0 == 1)
+        #define __printf(a, b) __attribute__((__format__(gnu_printf, a, b)))
+    #else
+        #define __printf(a, b)
+    #endif
 #elif defined(__GNUC__) || defined(__clang__)
     #define __printf(a, b) __attribute__((__format__(printf, a, b)))
 #else

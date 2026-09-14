@@ -138,8 +138,10 @@ extern "C" {
 #define SG_LIB_UNBOUNDED_32BIT 0xffffffffU
 #define SG_LIB_UNBOUNDED_64BIT 0xffffffffffffffffULL
 
-#if defined(__cplusplus) || (__STDC_VERSION__ >= 199901L)  /* C99 or later */
+#if defined( __cplusplus )
     typedef uintptr_t sg_uintptr_t;
+#elif defined( __STDC_VERSION__ ) && ( __STDC_VERSION__ >= 199901L)
+    typedef uintptr_t sg_uintptr_t;     /* C99 or later */
 #else
     typedef unsigned long sg_uintptr_t;
 #endif

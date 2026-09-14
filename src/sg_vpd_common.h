@@ -144,6 +144,7 @@ struct opts_t {
     bool version_given;         /* sg_inq + sg_vpd */
     bool do_vpd;                /* sg_inq */
     bool std_inq_a_valid;       /* sg_inq + sg_vpd */
+    bool matched_page_name;     /* sg_vpd */
 #ifdef SG_SCSI_STRINGS
     bool opt_new;               /* sg_inq */
 #endif
