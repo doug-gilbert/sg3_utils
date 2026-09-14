@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the src
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-ChangeLog for pre-release sg3_utils-1.49.5 [20260914] [svn: r1145]
+ChangeLog for pre-release sg3_utils-1.49.5 [20260914] [svn: r1146]
   Start with 3 part version number at .5 to leave room for any
   serious bug fixes to use .1 through .4
   - bump version numbers for important files like configure.ac
@@ -12,6 +12,8 @@ ChangeLog for pre-release sg3_utils-1.49.5 [20260914] [svn: r1145]
       directory, utilities will search system lib directories
   - revisit sg_strscpy() invocations, associated fixes to
     sg_get_config, sg_opcodes and sg_ses
+  - rescan-scsi-bus.sh: manpage correction and new DESCRIPTION
+    and EXAMPLES sections added; from Paul Evans github PR #96
   - sg_inq: avoid including 0-bytes in SCSI name strings
     Martin Wilck github PR #95
   - sg_logs: correct man page read-only option. From Chris

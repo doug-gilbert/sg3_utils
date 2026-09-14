@@ -327,13 +327,6 @@ set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -W" )
 set ( CMAKE_CXX_STANDARD 23 )
 set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -W" )
 
-## function(l_language_choice items)
-##     foreach(it IN LISTS items)
-##          # Comment out the next line for C compiler, uncomment it for C++
-##          set_source_files_properties( ${it} PROPERTIES LANGUAGE CXX )
-##     endforeach()
-## endfunction (l_language_choice)
-
 configure_file( ${CMAKE_SOURCE_DIR}/config.h.in.cmake ${CMAKE_BINARY_DIR}/config.h )
 
 

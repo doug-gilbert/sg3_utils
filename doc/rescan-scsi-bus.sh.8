@@ -1,4 +1,4 @@
-.TH RESCAN\-SCSI\-BUS.SH "8" "2026-06-01" "rescan\-scsi\-bus.sh" "User Commands"
+.TH RESCAN\-SCSI\-BUS.SH "8" "2026-09-14" "rescan\-scsi\-bus.sh" "User Commands"
 .SH NAME
 rescan\-scsi\-bus.sh \- script to add and remove SCSI devices without rebooting
 .SH SYNOPSIS
@@ -11,10 +11,16 @@ rescan\-scsi\-bus.sh \- script to add and remove SCSI devices without rebooting
 [\fI\-I SECS\fR] [\fI\-l\fR] [\fI\-L NUM\fR] [\fI\-\-largelun\fR]
 [\fI\-\-luns=LLIST\fR] [\fI\-m\fR] [\fI\-\-multipath\fR]
 [\fI\-\-no\-lip\-scan\fR] [\fI\-\-nooptscan\fR] [\fI\-\-nosync\fR]
-[\fI\-\-remove\fR] [\fI\-\-removelun2\fR] [\fI\-\-resize\fR]
+[\fI\-\-remove\fR] [\fI\-\-reportlun2\fR] [\fI\-\-resize\fR]
 [\fI\-\-sparselun\fR] [\fI\-\-sync\fR] [\fI\-\-timeout=SECS\fR]
 [\fI\-\-update\fR] [\fI\-\-version\fR] [\fI\-\-wide\fR]
 [\fIHOST1 \fR[\fIHOST2 \fR...]]
+.SH DESCRIPTION
+This script, which is part of the sg3_utils package, can automatically update
+the logical unit configuration of the host as needed (e.g. after a device has
+been added to, or removed from, the system) without the need for a reboot. On
+supported (e.g. FibreChannel) devices it can also perform an issue_lip (loop
+initialization primitive).
 .SH OPTIONS
 Option are ordered by their long name. Those without a long name are ordered
 as if their single letter was a long name.
@@ -128,8 +134,65 @@ form:
 .PP
 which is a comma separated list of single values and/or ranges (no spaces
 allowed).
-.SH SEE ALSO
-There is a brief description here:
-https://fibrevillage.com/storage/585\-rescan\-scsi\-bus\-sh\-script\-for\-adding\-and\-removing\-scsi\-devices\-without\-rebooting
+.SH EXAMPLES
+By default the script scans the SCSI subsystem for new devices:
 .PP
+.RS
+# rescan\-scsi\-bus.sh
+.RE
+.PP
+Typical output resembles the following (abridged):
+.PP
+.RS
+.nf
+Scanning SCSI subsystem for new devices
+Scanning host 0 for  SCSI target IDs  0 1 2 3 4 5 6 7, all LUNs
+ Calling udevadm settle (can take a while)
+ Scanning for device 0 0 0 0 ...
+OLD: Host: scsi0 Channel: 00 Id: 00 Lun: 00
+      Vendor: ServeRA  Model: 8k\-l Mirror      Rev: V1.0
+      Type:   Direct\-Access                    ANSI SCSI revision: 02
+ Scanning for device 0 1 0 0 ...
+NEW: Host: scsi0 Channel: 01 Id: 00 Lun: 00
+2 new or changed device(s) found.
+    [0:1:0:0]
+    [0:1:1:0]
+0 remapped or resized device(s) found.
+0 device(s) removed.
+.fi
+.RE
+.PP
+To scan all targets, not just those that currently exist, use the
+\fB\-\-alltargets\fR (\fB\-a\fR) option:
+.PP
+.RS
+# rescan\-scsi\-bus.sh \-a
+.RE
+.PP
+To enable debug (verbose) output, which is handy when diagnosing a SCSI
+subsystem problem, use the \fB\-d\fR option:
+.PP
+.RS
+# rescan\-scsi\-bus.sh \-d
+.RE
+.PP
+To flush failed multipath devices, use the \fB\-\-flush\fR (\fB\-f\fR) option:
+.PP
+.RS
+# rescan\-scsi\-bus.sh \-f
+.RE
+.PP
+To look for resized disks, use the \fB\-\-resize\fR (\fB\-s\fR) option:
+.PP
+.RS
+# rescan\-scsi\-bus.sh \-s
+.RE
+.PP
+To issue a FibreChannel LIP reset, use the \fB\-\-issue\-lip\fR (\fB\-i\fR)
+option:
+.PP
+.RS
+# rescan\-scsi\-bus.sh \-i
+.RE
+.SH SEE ALSO
 \fBsg3_utils\fR Homepage: \fBhttps://sg.danny.cz/sg\fR
