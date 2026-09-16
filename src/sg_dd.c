@@ -2313,7 +2313,7 @@ parse_cmd_line(int argc, char * argv[], struct opts_t * op)
         else if ((0 == strncmp(key, "--help", 6)) ||
                  (0 == strcmp(key, "-?"))) {
             usage();
-            return 0;
+            return SG_LIB_OK_FALSE;
         } else if ((0 == strncmp(key, "--nc", 4)) ||
                    (0 == strncmp(key, "--nocopy", 8)))
             op->nocopy = true;
