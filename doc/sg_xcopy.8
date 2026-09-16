@@ -273,10 +273,7 @@ to overwrite the existing file (if it exists); this is the default.
 See the 'append' flag.
 .SH NOTES
 Copying data behind an Operating System's back can cause problems. In the
-case of Linux, users should look at this link:
-  https://linux\-mm.org/Drop_Caches
-.PP
-This command sequence may be useful:
+case of Linux, this command sequence may be useful:
   sync; echo 3 > /proc/sys/vm/drop_caches
 .PP
 Various numeric arguments (e.g. \fISKIP\fR) may include multiplicative
@@ -369,7 +366,7 @@ The lmbench package contains
 .B lmdd
 which is also interesting. For moving data to and from tapes see
 .B dt
-which is found at https://www.scsifaq.org/RMiller_Tools/index.html
+(part of Robin Miller's RMiller_Tools).
 .PP
 To change mode parameters that effect a SCSI device's caching and error
 recovery see
