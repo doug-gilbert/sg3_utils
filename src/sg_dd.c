@@ -78,7 +78,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"              /* used to get to SNTL for NVMe devices */
 
-static const char * version_str = "6.54 20260821";
+static const char * version_str = "6.55 20260917";
 
 static const char * my_name = "sg_dd: ";
 
@@ -2313,7 +2313,7 @@ parse_cmd_line(int argc, char * argv[], struct opts_t * op)
         else if ((0 == strncmp(key, "--help", 6)) ||
                  (0 == strcmp(key, "-?"))) {
             usage();
-            return 0;
+            return SG_LIB_OK_FALSE;
         } else if ((0 == strncmp(key, "--nc", 4)) ||
                    (0 == strncmp(key, "--nocopy", 8)))
             op->nocopy = true;
