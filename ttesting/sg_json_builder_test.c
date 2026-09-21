@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 	jsonw_pretty(wr, true);
 	jsonw_name(wr, "Vyatta");
 	jsonw_start_object(wr);
-	jsonw_string_field(wr, "url", "http://vyatta.com");
+	jsonw_string_field(wr, "url", "http://example.com");
 	jsonw_uint_field(wr, "downloads", 2000000ul);
 	jsonw_float_field(wr, "stock", 8.16);
 
