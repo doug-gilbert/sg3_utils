@@ -1,4 +1,4 @@
-.TH SG_DECODE_SENSE "8" "May 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SG_DECODE_SENSE "8" "2026-09-18" "sg3_utils\-1.48" SG3_UTILS
 .SH NAME
 sg_decode_sense \- decode SCSI sense and related data
 .SH SYNOPSIS
@@ -6,8 +6,9 @@ sg_decode_sense \- decode SCSI sense and related data
 [\fI\-\-binary=BFN\fR] [\fI\-\-cdb\fR] [\fI\-\-err=ES\fR] [\fI\-\-file=HFN\fR]
 [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-inhex=HFN\fR]
 [\fI\-\-ignore\-first\fR] [\fI\-\-json[=JO]\fR] [\fI\-\-js\-file=JFN\fR]
-[\fI\-\-nodecode\fR] [\fI\-\-nospace\fR] [\fI\-\-status=SS\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-write=WFN\fR] [H1 H2 H3 ...]
+[\fI\-\-nodecode\fR] [\fI\-\-nospace\fR] [\fI\-\-smartctl=EC\fR]
+[\fI\-\-status=SS\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+[\fI\-\-write=WFN\fR] [H1 H2 H3 ...]
 .SH DESCRIPTION
 .\" Add any additional description here
 This utility takes SCSI sense data in binary or as a sequence of ASCII
@@ -136,6 +137,19 @@ On the command line, spaces (or other whitespace characters) between
 sequences of hexadecimal digits are ignored; the maximum command line
 hex string is 1023 characters long.
 .TP
+\fB\-S\fR, \fB\-\-smartctl\fR=\fIEC\fR
+this option arose due to a <sense_key ASC ASCQ> tuple in the output from a
+disk's self\-test log. That tuple is usually '\- \- \- ' which is equivalent
+to '0 0 0' and means that no error was detected. If other numbers are output
+(usually in hexadecimal, prefixed by '0x') the next question is what do they
+mean. This option takes that tuple as its argument, with either comma or
+space separators. If space is used as a separator then the tuple needs to be
+surrounded by quotes so the shell understands thay are a single argument.
+.br
+Despite its name, this option is general purpose. If the sense_key is not
+available, use 0. The third element does not need to be given, it defaults
+to 0 .
+.TP
 \fB\-s\fR, \fB\-\-status\fR=\fISS\fR
 where \fISS\fR is a SCSI status byte value, given in hexadecimal. The
 SCSI status byte is related to, but distinct from, sense data.
@@ -211,6 +225,15 @@ also be used to convert from arbitrary hex to binary with:
 Note that tools like hexdump and od place a counter (i.e. an index starting
 at 0) at the beginning of each line which is a pain when parsing hex.
 The '\-HHH' option(s) does not output that leading counter on each line.
+.PP
+  sg_decode_sense \-S '0xb 0x44 0x0'
+ Sense key: Aborted Command
+ Additional sense: Internal target failure
+.PP
+The above is a copy+paste from 'smartctl \-a <disk>' self\-test log report
+of a possibly broken SSD. The three part error numeric string is in single
+quotes so that the shell treats them as a single argument to the
+\-S (\-\-smartctl=) option.
 .SH EXIT STATUS
 The exit status of sg_decode_sense is 0 when it is successful. Otherwise
 see the sg3_utils(8) man page.
@@ -219,9 +242,9 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2010\-2022 Douglas Gilbert
+Copyright \(co 2010\-2026 Douglas Gilbert
 .br
 This software is distributed under a BSD\-2\-Clause license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B sg_requests,sg_raw(sg3_utils)
+.B sg_requests,sg_raw(sg3_utils),smartctl(smartmontools)

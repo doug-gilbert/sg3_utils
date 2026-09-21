@@ -31,7 +31,7 @@
 #include "sg_unaligned.h"
 
 
-static const char * version_str = "1.46 20260406";
+static const char * version_str = "1.47 20260917";
 
 #define MY_NAME "sg_decode_sense"
 
@@ -58,6 +58,7 @@ static const struct option long_options[] = {
     {"nodecode", no_argument, 0, 'N'},
     {"nospace", no_argument, 0, 'n'},
     {"status", required_argument, 0, 's'},
+    {"smartctl", required_argument, 0, 'S'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {"write", required_argument, 0, 'w'},
@@ -89,6 +90,7 @@ struct opts_t {
     const char * json_arg;
     const char * js_file;
     const char * no_space_str;
+    const char * smartctl_str;
     sgj_state json_st;
     uint8_t sense[MAX_SENSE_LEN + 4];
 };
@@ -153,6 +155,10 @@ usage()
           "pairs of\n"
           "                          hex digits (e.g. '3132330A')\n"
           "    --status=SS |-s SS    SCSI status value in hex\n"
+          "    --smartctl=EC |-S EC    decodes SK,ASC,ASQ codes from "
+          "'smartctl -a'\n"
+          "                            SMART self-test log. '-,-,-' means "
+          "no error\n"
           "    --verbose|-v          increase verbosity\n"
           "    --version|-V          print version string then exit\n"
           "    --write=WFN |-w WFN    write sense data in binary to WFN, "
@@ -227,7 +233,7 @@ parse_cmd_line(struct opts_t *op, int argc, char *argv[])
     char * endptr;
 
     while (1) {
-        c = getopt_long(argc, argv, "^b:ce:f:hHi:Ij::J:lnNs:vVw:",
+        c = getopt_long(argc, argv, "^b:ce:f:hHi:Ij::J:lnNs:S:vVw:",
                         long_options, NULL);
         if (c == -1)
             break;
@@ -339,6 +345,13 @@ parse_cmd_line(struct opts_t *op, int argc, char *argv[])
             }
             op->do_status = true;
             op->sstatus = ui;
+            break;
+        case 'S':
+            if (op->smartctl_str) {
+                pr2serr("no more than one '--smartctl=EC' option allowed\n");
+                return SG_LIB_SYNTAX_ERROR;
+            }
+            op->smartctl_str = optarg;
             break;
         case 'v':
             op->verbose_given = true;
@@ -540,10 +553,56 @@ main(int argc, char *argv[])
     }
     as_json = jsp->pr_as_json;
 
-
     if (op->do_status) {
         sg_get_scsi_status_str(op->sstatus, blen, b);
         printf("SCSI status: %s\n", b);
+    }
+    if (op->smartctl_str) {
+        uint8_t sk, asc;
+        uint8_t ascq = 0;
+        int n;
+        const char *ccp;
+        const char *cc2p;
+        char separator = strchr(op->smartctl_str, ' ') ? ' ' : ',';
+
+        ccp = strchr(op->smartctl_str, separator);
+        if (NULL == ccp) {
+            pr2serr("--smartctl= expected number followed by a comma or "
+                    "space\n");
+            ret = SG_LIB_SYNTAX_ERROR;
+            goto fini;
+        }
+        n = sg_get_num_nomult(op->smartctl_str);
+        if ((n < 0) || (n > 255)) {
+            pr2serr("--smartctl= expected number from 0 to 255 inclusive\n");
+            ret = SG_LIB_SYNTAX_ERROR;
+            goto fini;
+        }
+        sk = (uint8_t)n;
+        printf("Sense key: %s\n", sg_get_sense_key_str(sk, sizeof(b), b));
+
+        cc2p = strchr(ccp + 1, separator);
+        n = sg_get_num_nomult(ccp + 1);
+        if ((n < 0) || (n > 255)) {
+            pr2serr("--smartctl= expects three comma (or space) separated "
+                    "numbers\n");
+            ret = SG_LIB_SYNTAX_ERROR;
+            goto fini;
+        }
+        asc = (uint8_t)n;
+        if (cc2p) {    /* third number is optional, defaults to 0 */
+            n = sg_get_num_nomult(cc2p + 1);
+            if ((n < 0) || (n > 255)) {
+                pr2serr("--smartctl= expects three comma (or space) separated "
+                        "numbers\n");
+                ret = SG_LIB_SYNTAX_ERROR;
+                goto fini;
+            }
+            ascq = (uint8_t)n;
+        }
+        printf("%s\n", sg_get_asc_ascq_str(asc, ascq, sizeof(b), b));
+        ret = 0;
+        goto fini;	/* ignore many other options */
     }
 
     if ((0 == op->sense_len) && op->no_space_str) {
