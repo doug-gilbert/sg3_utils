@@ -2051,7 +2051,7 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
             sgj_pr_hr(jsp, " Inquiry response length=%d, no vendor, product "
                       "or revision data\n", len);
     } else {
-        int i;
+        int i, m;
 
         memcpy(xtra_buff, &rp[8], 8);
         xtra_buff[8] = '\0';
@@ -2062,7 +2062,16 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
         if (op->do_export) {
             int vlen = encode_whitespaces((uint8_t *)xtra_buff, 8);
             if (vlen > 0) {
-                printf("SCSI_VENDOR=%s\n", xtra_buff);
+                printf("SCSI_VENDOR=");
+                /* escape '/' so it cannot be taken as a path separator when
+                 * the value is used to build a /dev/disk/by-id symlink name */
+                for (m = 0; m < vlen; ++m) {
+                    if ('/' == xtra_buff[m])
+                        printf("\\x2f");
+                    else
+                        printf("%c", xtra_buff[m]);
+                }
+                printf("\n");
                 encode_string(xtra_buff, &rp[8], 8);
                 printf("SCSI_VENDOR_ENC=%s\n", xtra_buff);
             }
@@ -2077,7 +2086,16 @@ std_inq_decode(const uint8_t * rp, int len, struct opts_t * op,
             if (op->do_export) {
                 int mlen = encode_whitespaces((uint8_t *)xtra_buff, 16);
                 if (mlen > 0) {
-                    printf("SCSI_MODEL=%s\n", xtra_buff);
+                    printf("SCSI_MODEL=");
+                    /* escape '/' so it cannot be taken as a path separator when
+                     * the value is used to build a /dev/disk/by-id symlink name */
+                    for (m = 0; m < mlen; ++m) {
+                        if ('/' == xtra_buff[m])
+                            printf("\\x2f");
+                        else
+                            printf("%c", xtra_buff[m]);
+                    }
+                    printf("\n");
                     encode_string(xtra_buff, &rp[16], 16);
                     printf("SCSI_MODEL_ENC=%s\n", xtra_buff);
                 }
