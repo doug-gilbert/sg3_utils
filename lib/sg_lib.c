@@ -2579,7 +2579,7 @@ sg_get_nvme_opcode_name(uint8_t cmd_byte0, bool admin, int buff_len,
  * descriptor; returns -1 if normal end condition and -2 for an abnormal
  * termination. Matches association, designator_type and/or code_set when
  * any of those values are >= 0. m_assoc=-1 means match all associations,
- * dito for m_desig_type and m_desig_type. If all the m_* arguments are -1
+ * ditto for m_desig_type and m_desig_type. If all the m_* arguments are -1
  * then iterates through all descriptors in the order they appear, starting
  * at initial_desig_desc . Does NOT re-order. */
 int
@@ -3681,7 +3681,7 @@ sg_get_llnum_nomult(const char * buf)
 /* Read ASCII hex bytes or binary from fname (a file named '-' taken as
  * stdin). If reading ASCII hex then there should be either one entry per
  * line or a comma, space, hyphen or tab separated list of bytes. If no_space
- * is set then a string of ACSII hex digits is expected, 2 per byte.
+ * is set then a string of ASCII hex digits is expected, 2 per byte.
  * Everything from and including a '#' on a line is ignored. Returns 0 if ok,
  * or an error code. If the error code is SG_LIB_LBA_OUT_OF_RANGE then mp_arr
  * would be exceeded and both mp_arr and mp_arr_len are written to.

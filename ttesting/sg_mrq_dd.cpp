@@ -485,7 +485,7 @@ usage(int pg_num)
             "                  [thr=THR] [time=0|1|2[,TO]] [verbose=VERB] "
             "[--dry-run]\n"
             "                  [--pre-fetch] [--verbose] [--version]\n\n"
-            "  where: operands have the form name=value and are pecular to "
+            "  where: operands have the form name=value and are peculiar to "
             "'dd'\n"
             "         style commands, and options start with one or "
             "two hyphens;\n"

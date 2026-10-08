@@ -589,7 +589,7 @@ const char * const sg_lib_tapealert_strs[] = {
     "Cleaning requested",
     "Expired cleaning media",
     "Invalid cleaning tape",
-    "Retension requested",                      /* 0x18 */
+    "Retention requested",                      /* 0x18 */
     "Dual port interface error",
     "Cooling fan failing",
     "Power supply failure",
@@ -1523,7 +1523,7 @@ const struct sg_lib_asc_ascq_t sg_lib_asc_ascq[] =
     {0x74,0x04,"Cryptographic integrity validation failed"},
     {0x74,0x05,"Error decrypting data"},
     {0x74,0x06,"Unknown signature verification key"},
-    {0x74,0x07,"Encryption parameters not useable"},
+    {0x74,0x07,"Encryption parameters not usable"},
     {0x74,0x08,"Digital signature validation failure"},
     {0x74,0x09,"Encryption mode mismatch on read"},
     {0x74,0x0a,"Encrypted block not raw read enabled"},

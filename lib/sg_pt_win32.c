@@ -139,7 +139,7 @@ struct sg_pt_handle {
     struct sg_snt_dev_state_t dev_stat;        // owner
 };
 
-/* Start zeroed but need to zeroed before use because could be re-use */
+/* Zeroed at start but needs to be zeroed before use due to reuse */
 static struct sg_pt_handle handle_arr[MAX_OPEN_SIMULT];
 
 struct sg_pt_win32_scsi {

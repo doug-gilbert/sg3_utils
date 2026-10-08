@@ -2572,7 +2572,7 @@ configuration_sdp(const uint8_t * resp, int resp_len, struct opts_t * op,
     last_bp = resp + resp_len - 1;
     as_json = jsp->pr_as_json;
     if (as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(cf_dp, b, blen));
         sgj_js_nv_ihexstr(jsp, jop, pc_sn, CONFIGURATION_DPC, NULL, cf_dp);
@@ -3937,7 +3937,7 @@ enc_status_sdp(const struct th_es_t * tesp, uint32_t ref_gen_code,
               !!(es1 & 0x10), !!(es1 & 0x8), !!(es1 & 0x4), !!(es1 & 0x2),
               !!(es1 & 0x1));
     if (as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(es_dp, b, blen));
         sgj_js_nv_ihexstr_nex(jsp, jop, "invop", !!(es1 & 0x10), false,
@@ -4099,7 +4099,7 @@ array_status_sdp(const struct th_es_t * tesp, uint32_t ref_gen_code,
               !!(as1 & 0x10), !!(as1 & 0x8), !!(as1 & 0x4), !!(as1 & 0x2),
               !!(as1 & 0x1));
     if (as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(as_dp, b, blen));
         sgj_js_nv_ihexstr_nex(jsp, jop, "invop", !!(as1 & 0x10), false,
@@ -4428,7 +4428,7 @@ threshold_sdp(const struct th_es_t * tesp, uint32_t ref_gen_code,
         goto truncated;
     as_json = jsp->pr_as_json;
     if (as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(ti_dp, b, blen));
         sgj_js_nv_ihexstr(jsp, jop, pc_sn, THRESHOLD_DPC, NULL, ti_dp);
@@ -4590,7 +4590,7 @@ element_desc_sdp(const struct th_es_t * tesp, uint32_t ref_gen_code,
         goto truncated;
     as_json = jsp->pr_as_json;
     if (as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(ed_dp, b, blen));
         sgj_js_nv_ihexstr_nex(jsp, jop, pc_sn, ELEM_DESC_DPC, true, NULL,
@@ -5297,7 +5297,7 @@ additional_elem_sdp(const struct th_es_t * tesp, uint32_t ref_gen_code,
     last_bp = resp + resp_len - 1;
     as_json = jsp->pr_as_json;
     if (as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(aes_dp, b, blen));
         sgj_js_nv_ihexstr(jsp, jop, pc_sn, ADD_ELEM_STATUS_DPC, NULL, aes_dp);
@@ -5524,7 +5524,7 @@ subenc_help_sdp(const uint8_t * resp, int resp_len, struct opts_t * op,
     num_subs = resp[1] + 1;  /* number of subenclosures (add 1 for primary) */
     last_bp = resp + resp_len - 1;
     if (jsp->pr_as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(sht_dp, b, blen));
         sgj_js_nv_ihexstr(jsp, jop, pc_sn, SUBENC_NICKNAME_DPC, NULL, sht_dp);
@@ -5584,7 +5584,7 @@ subenc_string_sdp(const uint8_t * resp, int resp_len, struct opts_t * op,
     num_subs = resp[1] + 1;  /* number of subenclosures (add 1 for primary) */
     last_bp = resp + resp_len - 1;
     if (jsp->pr_as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(ssi_dp, b, blen));
         sgj_js_nv_ihexstr(jsp, jop, pc_sn, SUBENC_NICKNAME_DPC, NULL, ssi_dp);
@@ -5653,7 +5653,7 @@ subenc_nickname_sdp(const uint8_t * resp, int resp_len, struct opts_t * op,
     num_subs = resp[1] + 1;  /* number of subenclosures (add 1 for primary) */
     last_bp = resp + resp_len - 1;
     if (jsp->pr_as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(sns_dp, b, blen));
         sgj_js_nv_ihexstr(jsp, jop, pc_sn, SUBENC_NICKNAME_DPC, NULL, sns_dp);
@@ -5724,7 +5724,7 @@ supported_pages_both_sdp(bool is_ssp, const uint8_t * resp, int resp_len,
     ccp = is_ssp ? ssp : sdp;
     sgj_pr_hr(jsp, "%s:\n", ccp);
     if (as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(ccp, b, blen));
         sgj_js_nv_ihexstr(jsp, jop, pc_sn, (is_ssp ? 0xd : 0x0), NULL, ccp);
@@ -5816,7 +5816,7 @@ download_code_sdp(const uint8_t * resp, int resp_len, struct opts_t * op,
     num_subs = resp[1] + 1;  /* number of subenclosures (add 1 for primary) */
     last_bp = resp + resp_len - 1;
     if (jsp->pr_as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop,
                                     sgj_convert2snake(dm_dp, b, blen));
         sgj_js_nv_ihexstr(jsp, jop, pc_sn, DOWNLOAD_MICROCODE_DPC, NULL,
@@ -6206,7 +6206,7 @@ process_status_dpage(struct sg_pt_base * ptvp, int page_code, uint8_t * resp,
     case HELP_TEXT_DPC:         /* <"ht"> */
         sgj_pr_hr(jsp, "%s (for primary subenclosure):\n", ht_dp);
         if (jsp->pr_as_json) {
-            /* re-use (overwrite) passed jop argument */
+            /* reuse (overwrite) passed jop argument */
             jop = sgj_named_subobject_r(jsp, jop,
                                         sgj_convert2snake(ht_dp, e, elen));
             sgj_js_nv_ihexstr(jsp, jop, pc_sn, HELP_TEXT_DPC, NULL, ht_dp);
@@ -6223,7 +6223,7 @@ process_status_dpage(struct sg_pt_base * ptvp, int page_code, uint8_t * resp,
         snprintf(b, blen, "String In %s", dp_s);
         sgj_pr_hr(jsp, "%s (for primary subenclosure):\n", b);
         if (jsp->pr_as_json) {
-            /* re-use (overwrite) passed jop argument */
+            /* reuse (overwrite) passed jop argument */
             jop = sgj_named_subobject_r(jsp, jop,
                                         sgj_convert2snake(b, e, elen));
             sgj_js_nv_ihexstr(jsp, jop, pc_sn, STRING_DPC, NULL, b);
@@ -6719,7 +6719,7 @@ join_array_display(struct th_es_t * tesp, struct opts_t * op,
         return;
     }
     if (jsp->pr_as_json) {
-        /* re-use (overwrite) passed jop argument */
+        /* reuse (overwrite) passed jop argument */
         jop = sgj_named_subobject_r(jsp, jop, "join_of_diagnostic_pages");
         jap = sgj_named_subarray_r(jsp, jop, "element_list");
     }
@@ -7459,7 +7459,7 @@ ses_cgs(struct sg_pt_base * ptvp, const struct tuple_acronym_val * tavp,
         found = true;
     }
     if (! found) {
-        pr2serr("acroynm %s %s (try '-ee' option)\n", tavp->acron, nf_s);
+        pr2serr("acronym %s %s (try '-ee' option)\n", tavp->acron, nf_s);
         return -1;
     }
     if (false == join_done) {
@@ -7549,7 +7549,7 @@ ses_cgs(struct sg_pt_base * ptvp, const struct tuple_acronym_val * tavp,
     return 0;
 
 inconsistent:
-    pr2serr("acroynm %s inconsistent with page_code=0x%x\n", tavp->acron,
+    pr2serr("acronym %s inconsistent with page_code=0x%x\n", tavp->acron,
             op->page_code);
     return -1;
 }

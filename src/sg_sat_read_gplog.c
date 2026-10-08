@@ -108,7 +108,7 @@ static struct sg_lib_simple_value_name_t addr2logname[] = {
     {0x0, "Log directory"},
     {0x1, "Summary SMART error log"},
     {0x2, "Comprehensive SMART error log"},
-    {0x3, "Extented comprehensive SMART error log"},
+    {0x3, "Extended comprehensive SMART error log"},
     {0x4, "Device statistics"},
     {0x5, "Reserved for CFA"},
     {0x6, "SMART self-test log (obsolete)"},

@@ -878,7 +878,7 @@ do_scsi_pt(struct sg_pt_base * vp, int dev_han, int time_secs, int vb)
         return SCSI_PT_DO_BAD_PARAMS;
     }
 
-    if (NULL == ptp->ccb) {     /* re-use if we have one already */
+    if (NULL == ptp->ccb) {     /* reuse if we have one already */
         if (! (ccb = cam_getccb(fdc_p->cam_dev))) {
             if (vb)
                 pr2ws("cam_getccb: failed\n");
@@ -1493,7 +1493,7 @@ cam_nvme:
         struct ccb_nvmeio *nviop;
         FILE * ferrp = sg_warnings_strm ? sg_warnings_strm : stderr;
 
-        if (NULL == ptp->ccb) {     /* re-use if we have one already */
+        if (NULL == ptp->ccb) {     /* reuse if we have one already */
             if (! (ccb = cam_getccb(fdc_p->cam_dev))) {
                 if (vb)
                     pr2ws("%s: cam_getccb: failed\n", __func__);

@@ -2963,7 +2963,7 @@ main(int argc, char * argv[])
                     op->dio_incomplete_count++;
             }
         } else if (FT_DEV_NULL & ofp->file_type) {
-            ; /* previosuly did: out_full += blocks; */
+            ; /* previously did: out_full += blocks; */
         } else {
             while (((res = write(op->outfd, wrkPos, blocks * bs)) < 0) &&
                    ((EINTR == errno) || (EAGAIN == errno) ||

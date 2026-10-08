@@ -972,7 +972,7 @@ sg_ll_log_select(int sg_fd, bool pcr, bool sp, int pc, int pg_code,
  * various SG_LIB_CAT_* positive values or -1 -> other errors.
  * SBC-3 and MMC partially overlap on the power_condition_modifier(sbc) and
  * format_layer_number(mmc) fields. They also overlap on the noflush(sbc)
- * and fl(mmc) one bit field. This is the cause of the awkardly named
+ * and fl(mmc) one bit field. This is the cause of the awkwardly named
  * pc_mod__fl_num and noflush__fl arguments to this function.
  *  */
 static int

@@ -1456,7 +1456,7 @@ sgj_haj_vs_hex_bytes_nex(sgj_state * jsp, sgj_opaque_p jop, int leadin_sp,
  * '"' need to be escaped with a preceding '\'. These C escape codes are used
  * in JSON: '\b', '\f', '\n', '\r' and '\t'. Other control characters, and DEL
  * are encoded as '\x<hh>' where <hh> is two hex digits. So the DEL and
- * null ACSII characters in the input will appear as '\x7f' and '\x00'
+ * null ASCII characters in the input will appear as '\x7f' and '\x00'
  * respectively in the output. The output serializer will expand those
  * two to '\\x7f' and '\\x00'. Note that the JSON form of '\u<hhhh>' is
  * _not_ used. The input is pointed to by 'cup' which is 'ulen' bytes long.

@@ -75,7 +75,7 @@ static const char * linux_host_bytes[] = {
 };
 
 /* These where made obsolete around lk 5.12.0 . Only DRIVER_SENSE [0x8] is
- * defined in scsi/sg.h for backward comaptibility */
+ * defined in scsi/sg.h for backward compatibility */
 static const char * linux_driver_bytes[] = {
     "DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT", "DRIVER_MEDIA",
     "DRIVER_ERROR", "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD",
