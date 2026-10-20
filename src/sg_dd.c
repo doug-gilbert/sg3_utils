@@ -70,6 +70,8 @@
 #ifdef HAVE_GETRANDOM
 #include <sys/random.h>         /* for getrandom() system call */
 #endif
+
+#include "sg_dd.h"
 #include "sg_lib.h"
 #include "sg_cmds_basic.h"
 #include "sg_cmds_extra.h"
@@ -78,7 +80,7 @@
 #include "sg_pr2serr.h"
 #include "sg_pt.h"              /* used to get to SNTL for NVMe devices */
 
-static const char * version_str = "6.55 20260917";
+static const char * version_str = "6.56 20261019";
 
 static const char * my_name = "sg_dd: ";
 
@@ -98,8 +100,6 @@ static const char * my_name = "sg_dd: ";
 #define DEF_BLOCKS_PER_2048TRANSFER 32
 #define DEF_SCSI_CDBSZ 10
 #define MAX_SCSI_CDBSZ 16
-#define MAX_BPT_VALUE (1 << 24)         /* used for maximum bs as well */
-#define MAX_COUNT_SKIP_SEEK (1LL << 48) /* coverity wants upper bound */
 
 #define DEF_MODE_CDB_SZ 10
 #define DEF_MODE_RESP_LEN 252
@@ -2805,7 +2805,7 @@ main(int argc, char * argv[])
             }
             bytes_read = res;
             in_full += blocks;
-        } else {
+        } else {     /* Regular file or block device */
             while (((res = read(op->infd, wrkPos, blocks * bs)) < 0) &&
                    ((EINTR == errno) || (EAGAIN == errno) ||
                     (EBUSY == errno)))
@@ -2818,7 +2818,8 @@ main(int argc, char * argv[])
                          my_name, op->skip);
                 perror(ebuff);
                 ret = -1;
-                break;
+                /* coe > 0 ignored for regular files and block devices */
+                break;          /* out of main loop */
             } else if (res < blocks * bs) {
                 op->dd_count = 0;
                 blocks = res / bs;
@@ -2832,7 +2833,7 @@ main(int argc, char * argv[])
         }
 
         if (0 == blocks)
-            break;      /* nothing read so leave loop */
+            break;      /* nothing to write so leave loop */
 
         if (op->out2fd >= 0) {
             while (((res = write(op->out2fd, wrkPos, blocks * bs)) < 0) &&

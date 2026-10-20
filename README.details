@@ -296,7 +296,7 @@ With cmake 'make clean' does the same thing as it does in Autotools. There is
 no 'make distclean' so a cmake build leaves a lot of garbage "on the floor".
 The ./cmake_del_artifacts.sh.sh scripts clean up most of that.
 To build static executable(s) instead of 'cmake .' use
-    # cmake . -DBUILD_SHARED_LIBS=OFF
+    # cmake -B build -DBUILD_SHARED_LIBS=OFF
 
 The following invocation places the executable in the /usr/bin directory, the
 man pages in the /usr/share/man/man8 directory, and other documentation in
@@ -308,7 +308,7 @@ install_manifest.txt file that can be used to remove the files installed like th
     # xargs rm < install_manifest.txt
 
 Options can be requested like this in the first step of a cmake build:
-    # cmake . -DENABLE_DEBUG=ON
+    # cmake -B build -DENABLE_DEBUG=ON
 
 [The available options can be viewed with 'cmake -LH .' . For this
  package it can be seen that ENABLE_DEBUG is default OFF .]

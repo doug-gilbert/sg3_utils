@@ -531,7 +531,7 @@ usage(int pg_num)
     return;
 page2:
     pr2serr("Syntax:  sgh_dd [operands] [options]\n\n"
-            "  where: operands have the form name=value and are pecular to "
+            "  where: operands have the form name=value and are peculiar to "
             "'dd'\n"
             "         style commands, and options start with one or "
             "two hyphens;\n"

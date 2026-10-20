@@ -142,7 +142,7 @@ usage(int num)
     return;
 page2:
     pr2serr("sg_sat_datetime examples:\n"
-            "Per ATA standard, the date and time statisic is equivalent to\n"
+            "Per ATA standard, the date and time statistic is equivalent to\n"
             "the millisecond equivalent of the POH value or the date and "
             "time\nvalue set by the SET DATE & TIME EXT command.  If a "
             "power-on\nreset occurs after date and time are set, the date "

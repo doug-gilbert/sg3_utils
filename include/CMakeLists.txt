@@ -30,6 +30,7 @@ if (OS_LINUX)
 	    sg_linux_inc.h
 	    sg_io_linux.h
 	    sg_pt_linux.h
+	    sg_pt_linux_missing.h
 	DESTINATION
 	    ${CMAKE_INSTALL_INCLUDEDIR}/scsi
 	COMPONENT development

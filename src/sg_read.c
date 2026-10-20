@@ -57,6 +57,7 @@
 #include "sg_pt_linux_missing.h"
 #endif
 
+#include "sg_dd.h"
 #include "sg_lib.h"
 #include "sg_io_linux.h"
 #include "sg_unaligned.h"
@@ -69,8 +70,6 @@ static const char * version_str = "1.44 20260715";
 #define DEF_BLOCKS_PER_TRANSFER 128
 #define DEF_SCSI_CDBSZ 10
 #define MAX_SCSI_CDBSZ 16
-#define MAX_BPT_VALUE (1 << 24)         /* used for maximum bs as well */
-#define MAX_COUNT_SKIP_SEEK (1LL << 48) /* coverity wants upper bound */
 
 #define ME "sg_read: "
 

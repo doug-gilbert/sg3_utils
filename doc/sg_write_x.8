@@ -1,4 +1,4 @@
-.TH SG_WRITE_X "8" "May 2023" "sg3_utils\-1.48" SG3_UTILS
+.TH SG_WRITE_X "8" "2026-10-16" "sg3_utils\-1.48" SG3_UTILS
 .SH NAME
 sg_write_x \- SCSI WRITE normal/ATOMIC/SAME/SCATTERED/STREAM, ORWRITE commands
 .SH SYNOPSIS
@@ -372,7 +372,7 @@ given then \fISF\fR is assumed to contain both the parameter list header (32
 bytes of zeros) followed by zero or more LBA range descriptors which are
 also 32 bytes long each. These components are as defined by SBC\-4 (i.e.
 in binary with integers in big endian format). If the \fI\-\-scat\-raw\fR
-option is not given then a file of ACSII hexadecimal is expected as described
+option is not given then a file of ASCII hexadecimal is expected as described
 in the SCATTERED FILE ASCII FORMAT section below.
 .br
 If this option is given with the \fI\-\-combined=DOF\fR option then this

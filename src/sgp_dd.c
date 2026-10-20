@@ -87,6 +87,7 @@
 #endif
 #endif
 
+#include "sg_dd.h"
 #include "sg_lib.h"
 #include "sg_cmds_basic.h"
 #include "sg_io_linux.h"
@@ -94,15 +95,13 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "5.99 20260821";
+static const char * version_str = "6.00 20261015";
 
 #define DEF_BLOCK_SIZE 512
 #define DEF_BLOCKS_PER_TRANSFER 128
 #define DEF_BLOCKS_PER_2048TRANSFER 32
 #define DEF_SCSI_CDBSZ 10
 #define MAX_SCSI_CDBSZ 16
-#define MAX_BPT_VALUE (1 << 24)         /* used for maximum bs as well */
-#define MAX_COUNT_SKIP_SEEK (1LL << 48) /* coverity wants upper bound */
 
 
 #define SENSE_BUFF_LEN 64       /* Arbitrary, could be larger */

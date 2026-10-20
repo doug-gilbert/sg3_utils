@@ -69,6 +69,7 @@
 #include "sg_pt_linux_missing.h"
 #endif
 
+#include "sg_dd.h"
 #include "sg_lib.h"
 #include "sg_cmds_basic.h"
 #include "sg_io_linux.h"
@@ -76,7 +77,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.33 20260821";
+static const char * version_str = "1.34 20261015";
 
 static const char * my_name = "sgm_dd: ";
 
@@ -85,9 +86,6 @@ static const char * my_name = "sgm_dd: ";
 #define DEF_BLOCKS_PER_2048TRANSFER 32
 #define DEF_SCSI_CDBSZ 10
 #define MAX_SCSI_CDBSZ 16
-#define MAX_BPT_VALUE (1 << 24)         /* used for maximum bs as well */
-#define MAX_COUNT_SKIP_SEEK (1LL << 48) /* coverity wants upper bound */
-
 
 
 #ifndef SG_FLAG_MMAP_IO

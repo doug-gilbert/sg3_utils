@@ -251,6 +251,7 @@ sg_z_act_query_LDADD = ../lib/libsgutils2.la
 EXTRA_DIST = \
 	sg_logs.h \
 	sg_vpd_common.h \
+	sg_dd.h \
 	BSD_LICENSE
 
 distclean-local:
