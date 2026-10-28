@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the src
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-ChangeLog for pre-release sg3_utils-1.49.5 [20261019] [svn: r1152]
+ChangeLog for pre-release sg3_utils-1.49.5 [20261027] [svn: r1153]
   Start with 3 part version number at .5 to leave room for any
   serious bug fixes to use .1 through .4
   - bump version numbers for important files like configure.ac
@@ -24,9 +24,13 @@ ChangeLog for pre-release sg3_utils-1.49.5 [20261019] [svn: r1152]
   - sg_logs: correct man page read-only option. From Chris
     Dinneen, github PR #94
   - sg_modes: suggest adding --dbd after illegal request
+  - sg_vpd: correct naming of NVMe Information VPD page
+    - partially implement NVMe Information page (snt-r05)
   - sg_vpd_vendor: decode_vpd_c0_hp3par: add bounds checks and
     safe string printing, github #93
   - lib/getopt.h: add extern "C" {} guard
+  - lib/sg_snt.c: improve SCSI Inquiry SNT processing including
+     device identification VPD page
   - cmake: add USE_CXX option (default OFF)
   - clang/clang++ inspired warning fixes (lots of them)
   - codespell cleanup
@@ -209,7 +213,7 @@ Changelog for released sg3_utils-1.48 [20230801] [svn: r1042]
   - sg_inq, sg_vpd: merge VPD page processing for T10
     defined pages, VS pages still differ
     - add Capacity/Product identification mapping VPD page
-    - Device Identication VPD page, change
+    - Device Identification VPD page, change
       "IEEE Company_id" to "AOI" as per spc6r06.pdf
     - add support for Hitachi/HP open-v ldev names
   - sg_inq: add (many) version descriptors as per spc6r08

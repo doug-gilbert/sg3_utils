@@ -42,7 +42,7 @@
 
 */
 
-static const char * version_str = "2.11 20260913";  /* spc7r05 + sbc6r02 */
+static const char * version_str = "2.12 20261027";  /* spc7r05 + sbc6r02 */
 
 #define MY_NAME "sg_vpd"
 
@@ -1656,7 +1656,7 @@ svpd_decode_t10(struct sg_pt_base * ptvp, struct opts_t * op,
         }
         break;
     case VPD_NVME_INFO:    /* 0x8e ["nvmei"] */
-        np = psm_vpdp;
+        np = nvmei_vpdp;
         if (allow_name)
             sgj_pr_hr(jsp, "%s%s\n", pre, np);
         res = vpd_fetch_page(ptvp, rp, pn, op->maxlen, qt, vb, &len);

@@ -56,11 +56,11 @@ const char * eid_vpdp = "Extended inquiry data VPD page";
 const char * mpp_vpdp = "Mode page policy VPD page";
 const char * sp_vpdp = "SCSI ports VPD page";
 const char * ai_vpdp = "ATA information VPD page";
-const char * nvmei_vpdp = "NVMe information VPD page";
 const char * pc_vpdp = "Power condition VPD page";
 const char * dc_vpdp = "Device constituents VPD page";
 const char * cpi_vpdp = "CFA profile information VPD page";
 const char * psm_vpdp = "Power consumption VPD page";
+const char * nvmei_vpdp = "NVMe Information VPD page";
 const char * tpc_vpdp = "Third party copy VPD page";
 const char * pslu_vpdp = "Protocol-specific logical unit information VPD "
                          "page";
@@ -1724,7 +1724,7 @@ decode_block_limits_vpd(const uint8_t * buff, int len, struct opts_t * op,
             sgj_haj_vi_nex(jsp, jop, 2, mabs, SGJ_SEP_COLON_1_SPACE,
                            u, true, "unit: LB");
     }
-    if (len > 64) {	/* added in sbc6r02 */
+    if (len > 64) {     /* added in sbc6r02 */
         uint16_t s;
 
         s = sg_get_unaligned_be16(buff + 64);

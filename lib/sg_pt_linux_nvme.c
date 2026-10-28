@@ -468,15 +468,19 @@ sg_nvme_check_enclosure_override(struct sg_pt_linux_scsi * ptp, int vb)
 }
 
 static int
-sg_nvme_do_identify(struct sg_pt_linux_scsi * ptp, int cns, int nsid,
-                    int time_secs, int u_len, uint8_t * up, int vb)
+sg_nvme_do_identify(struct sg_pt_linux_scsi * ptp, uint32_t nsid,
+                    uint32_t dw10 /* usually CNS */, uint32_t dw11,
+                    uint32_t dw14, int time_secs, int u_len, uint8_t * up,
+                    int vb)
 {
     struct sg_nvme_passthru_cmd cmd;
 
     memset(&cmd, 0, sizeof(cmd));
     cmd.opcode = SG_NVME_AD_IDENTIFY;
     cmd.nsid = nsid;
-    cmd.cdw10 = cns;
+    cmd.cdw10 = dw10;
+    cmd.cdw11 = dw11;
+    cmd.cdw14 = dw14;
     cmd.addr = (uint64_t)(sg_uintptr_t)up;
     cmd.data_len = u_len;
     return sg_nvme_admin_cmd_f(ptp, &cmd, up, true, time_secs, vb);
@@ -498,8 +502,8 @@ sg_nvme_cache_identify_ctl(struct sg_pt_linux_scsi * ptp, int time_secs,
         pr2ws("%s: sg_memalign() failed to get memory\n", __func__);
         return sg_convert_errno(ENOMEM);
     }
-    ret = sg_nvme_do_identify(ptp, 0x1 /* CNS */, 0 /* nsid */, time_secs,
-                              pg_sz, up, vb);
+    ret = sg_nvme_do_identify(ptp, 0 /* nsid */, 0x1 /* CNS */, 0 /* dw11 */,
+                              0 /* dw14 */, time_secs, pg_sz, up, vb);
     if (0 == ret)
        sg_nvme_check_enclosure_override(ptp, vb);
     return (ret < 0) ? sg_convert_errno(-ret) : ret;
@@ -608,13 +612,15 @@ sg_ln_snt_inq(struct sg_pt_linux_scsi * ptp, const uint8_t * cdbp,
     }
     evpd = !!(0x1 & cdbp[1]);
     pg_cd = cdbp[2];
-    if (evpd && (0x83 == pg_cd)) {
+    if (evpd && ((0x83 == pg_cd) || (SG_NVME_VPD_T10_INFO == pg_cd))) {
         if ((ptp->nvme_nsid > 0) &&
             (ptp->nvme_nsid < SG_NVME_BROADCAST_NSID)) {
             nvme_id_nsp = sg_memalign(pg_sz, pg_sz, &free_nvme_id_nsp, false);
             if (nvme_id_nsp) {   /* CNS=0x0 Identify namespace */
-                 res = sg_nvme_do_identify(ptp, 0x0, ptp->nvme_nsid,
-                                           time_secs, pg_sz, nvme_id_nsp, vb);
+                res = sg_nvme_do_identify(ptp, ptp->nvme_nsid,
+                                          0x0 /* [CNS] */, 0 /* dw11 */,
+                                          0 /* dw14 */, time_secs,
+                                           pg_sz, nvme_id_nsp, vb);
                 if (SG_LIB_NVME_STATUS == res) {
                     mk_sense_from_nvme_status(ptp, vb);
                     return 0;
@@ -1082,7 +1088,8 @@ sg_snt_readcap(struct sg_pt_linux_scsi * ptp, const uint8_t * cdbp,
         pr2ws("%s: sg_memalign() failed to get memory\n", __func__);
         return sg_convert_errno(ENOMEM);
     }
-    res = sg_nvme_do_identify(ptp, 0x0 /* CNS */, ptp->nvme_nsid, time_secs,
+    res = sg_nvme_do_identify(ptp, ptp->nvme_nsid, 0x0 /* CNS */,
+                              0 /* dw11 */, 0 /* dw14 */, time_secs,
                               pg_sz, up, vb);
     if (res < 0) {
         res = sg_convert_errno(-res);

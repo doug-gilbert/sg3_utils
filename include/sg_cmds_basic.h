@@ -201,7 +201,7 @@ int sg_ll_request_sense_pt(struct sg_pt_base * ptp, bool desc, void * resp,
  * -1 -> other failure
  * SBC-3 and MMC partially overlap on the power_condition_modifier(sbc) and
  * format_layer_number(mmc) fields. They also overlap on the noflush(sbc)
- * and fl(mmc) one bit field. This is the cause of the awkardly named
+ * and fl(mmc) one bit field. This is the cause of the awkwardly named
  * pc_mod__fl_num and noflush__fl arguments to this function.  */
 int sg_ll_start_stop_unit(int sg_fd, bool immed, int pc_mod__fl_num,
                           int power_cond, bool noflush__fl, bool loej,

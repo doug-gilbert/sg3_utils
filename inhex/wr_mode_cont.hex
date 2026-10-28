@@ -12,7 +12,7 @@
 # 08 12 14 00 ff ff 00 00  ff ff ff ff 80 14 00 00
 # 00 00 00 00
 #
-# This is the new cotents we want (byte 2 changes from 14 to 10 (hex)):
+# This is the new contents we want (byte 2 changes from 14 to 10 (hex)):
 08 12 10 00 ff ff 00 00  ff ff ff ff 80 14 00 00
 00 00 00 00
 #

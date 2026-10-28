@@ -8,7 +8,7 @@
  * SNT has since become a T10 project:
  *  SCSI / NVMe Translation (SNT) T10/BSR INCITS 584
  * The intention is to converge this code to comply with
- * that draft; the most recent draft is snt-r04.pdf . 
+ * that draft; the most recent draft is snt-r05.pdf .
  */
 
 #include <stdio.h>
@@ -41,8 +41,13 @@
 #define INVALID_FIELD_IN_PARAM_LIST 0x26
 #define PARAMETER_LIST_LENGTH_ERR 0x1a
 
+static const char * sg_snt_rev_s = "0101";      /* N.B. keep 4 bytes long */
 
 static const char * nvme_scsi_vendor_str = "NVMe    ";
+
+static const char * sg_snt_vend_s = "SG3_UTIL";         /* 8 bytes long */
+static const char * sg_snt_prod_s = "SNT in sg3_utils"; /* 16 bytes long */
+static const char * sg_snt_t10_prod_s = "T10 SNT snt-r05 "; /* 16 bytes long */
 
 /* Table of SCSI operation code (opcodes) supported by SNTL */
 static struct sg_opcode_info_t sg_opcode_info_arr[] =
@@ -114,6 +119,13 @@ static struct sg_opcode_info_t sg_opcode_info_arr[] =
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
 };
 
+
+const char *
+sg_snt_get_rev_level_str()
+{
+    return sg_snt_rev_s;
+}
+
 /* Returns pointer to array of struct sg_opcode_info_t of SCSI commands
  * translated to NVMe. */
 const struct sg_opcode_info_t *
@@ -166,28 +178,32 @@ sg_snt_mk_sense_invalid_fld(struct sg_snt_result_t * resp, bool in_cdb,
  * N.B. Does not write total VPD page length into dip[2:3] . */
 int
 sg_make_vpd_devid_for_nvme(const uint8_t * nvme_id_ctl_p,
-                           const uint8_t * nvme_id_ns_p, int pdt,
-                           int tproto, uint8_t * dip, int max_di_len)
+                           const uint8_t * nvme_id_ns_p /* can be NULL */,
+                           int pdt, int tproto, uint8_t * dip, int max_di_len)
 {
-    bool have_nguid, have_eui64;
+    const bool have_fguid = ! sg_all_zeros(nvme_id_ctl_p + 112, 16);
     int k, n;
-    char b[4];
 
     if ((NULL == nvme_id_ctl_p) || (NULL == dip) || (max_di_len < 56))
         return 0;
 
+    /* Build a "T10 Vendor ID based designator" (desig_id=1) for controller */
     memset(dip, 0, max_di_len);
     dip[0] = 0x1f & pdt;  /* (PQ=0)<<5 | (PDT=pdt); 0 or 0xd (SES) */
     dip[1] = 0x83;      /* Device Identification VPD page number */
-    /* Build a T10 Vendor ID based designator (desig_id=1) for controller */
+    /* dip[2:3]  is the VPD page length and must be written by _caller_ */
     if (tproto >= 0) {
-        dip[4] = ((0xf & tproto) << 4) | 0x2;
+        dip[4] = ((0xf & tproto) << 4) | 0x2;  /* code_set=2 (ASCII) */
         dip[5] = 0xa1; /* PIV=1, ASSOC=2 (target device), desig_id=1 */
     } else {
         dip[4] = 0x2;  /* Prococol id=0, code_set=2 (ASCII) */
         dip[5] = 0x21; /* PIV=0, ASSOC=2 (target device), desig_id=1 */
     }
     memcpy(dip + 8, nvme_scsi_vendor_str, 8); /* N.B. this is "NVMe    " */
+    /* Next is the "Vendor specific identifier" which is the model number
+     * (MN) and product serial number (SN) concaternated together, separated
+     * by a '_'. This is not mandated or even suggested by snt-r05 but does
+     * help with the "visibility" of the response.  */
     memcpy(dip + 16, nvme_id_ctl_p + 24, 40);  /* MN */
     for (k = 40; k > 0; --k) {
         if (' ' == dip[15 + k])
@@ -211,36 +227,33 @@ sg_make_vpd_devid_for_nvme(const uint8_t * nvme_id_ctl_p,
     if (0 != (n % 4))
         n = ((n / 4) + 1) * 4;  /* round up to next modulo 4 */
     dip[7] = n - 8;
-    if (NULL == nvme_id_ns_p)
-        return n;
 
-    /* Look for NGUID (16 byte identifier) or EUI64 (8 byte) fields in
-     * NVME Identify for namespace. If found form a EUI and a SCSI string
-     * descriptor for non-zero NGUID or EUI64 (prefer NGUID if both). */
-    have_nguid = ! sg_all_zeros(nvme_id_ns_p + 104, 16);
-    have_eui64 = ! sg_all_zeros(nvme_id_ns_p + 120, 8);
-    if ((! have_nguid) && (! have_eui64))
-        return n;
-    if (have_nguid) {
+    if (have_fguid) {
+        if (tproto >= 0) {
+            dip[n + 0] = ((0xf & tproto) << 4) | 0x1;  /* code_set=binary */
+            dip[n + 1] = 0xa3; /* PIV=1, ASSOC=2 (target dev), desig_id=3 */
+        } else {
+            dip[n + 0] = 0x1;  /* Prococol id=0, code_set=1 (binary) */
+            dip[n + 1] = 0x23; /* PIV=0, ASSOC=2 (target dev), desig_typ=3 */
+        }
+        dip[n + 3] = 16;
+        memcpy(dip + n + 4, nvme_id_ctl_p + 112, 16);
+        n += 20;
+    }
+
+    /* Look for NGUID (16 byte identifier) in NVME Identify (namespace) */
+    if (nvme_id_ns_p && (! sg_all_zeros(nvme_id_ns_p + 104, 16))) {
         if (max_di_len < (n + 20))
             return n;
         dip[n + 0] = 0x1;  /* Prococol id=0, code_set=1 (binary) */
-        dip[n + 1] = 0x02; /* PIV=0, ASSOC=0 (lu), desig_id=2 (eui) */
+        dip[n + 1] = 0x02; /* PIV=0, ASSOC=0 (lu), desig_typ=2 (eui) */
         dip[n + 3] = 16;
         memcpy(dip + n + 4, nvme_id_ns_p + 104, 16);
         n += 20;
-        if (max_di_len < (n + 40))
-            return n;
-        dip[n + 0] = 0x3;  /* Prococol id=0, code_set=3 (utf8) */
-        dip[n + 1] = 0x08; /* PIV=0, ASSOC=0 (lu), desig_id=8 (scsi string) */
-        dip[n + 3] = 36;
-        memcpy(dip + n + 4, "eui.", 4);
-        for (k = 0; k < 16; ++k) {
-            snprintf(b, sizeof(b), "%02X", nvme_id_ns_p[104 + k]);
-            memcpy(dip + n + 8 + (2 * k), b, 2);
-        }
-        return n + 40;
-    } else {    /* have_eui64 is true, 8 byte identifier */
+    }
+
+    /* Look for EUI64 (8 byte) field in NVME Identify (namespace) */
+    if (nvme_id_ns_p && (! sg_all_zeros(nvme_id_ns_p + 120, 8))) {
         if (max_di_len < (n + 12))
             return n;
         dip[n + 0] = 0x1;  /* Prococol id=0, code_set=1 (binary) */
@@ -248,18 +261,104 @@ sg_make_vpd_devid_for_nvme(const uint8_t * nvme_id_ctl_p,
         dip[n + 3] = 8;
         memcpy(dip + n + 4, nvme_id_ns_p + 120, 8);
         n += 12;
-        if (max_di_len < (n + 24))
-            return n;
-        dip[n + 0] = 0x3;  /* Prococol id=0, code_set=3 (utf8) */
-        dip[n + 1] = 0x08; /* PIV=0, ASSOC=0 (lu), desig_id=8 (scsi string) */
-        dip[n + 3] = 20;
-        memcpy(dip + n + 4, "eui.", 4);
-        for (k = 0; k < 8; ++k) {
-            snprintf(b, sizeof(b), "%02X", nvme_id_ns_p[120 + k]);
-            memcpy(dip + n + 8 + (2 * k), b, 2);
-        }
-        return n + 24;
     }
+
+    /* Look for SUBNQN field in the NVME Identify (controller) */
+    if (! sg_all_zeros(nvme_id_ns_p + 768, 256)) {
+        if (max_di_len < (n + 259))
+            return n;
+        if (tproto >= 0) {
+            dip[n + 0] = ((0xf & tproto) << 4) | 0x3;  /* code_set=utf8 */
+            dip[n + 1] = 0xa8; /* PIV=1, ASSOC=2 (target dev), desig_typ=8 */
+        } else {
+            dip[n + 0] = 0x3;  /* Prococol id=0, code_set=3 (utf-8) */
+            dip[n + 1] = 0x28; /* PIV=0, ASSOC=2 (target dev), desig_typ=8 */
+        }
+        dip[n + 3] = 16;
+        memcpy(dip + n + 4, nvme_id_ctl_p + 768, 255);
+        n += 255 + 4;
+    }
+    /* there is a UUID descriptor to be added */
+    /* there is a SES descriptor to be added */
+
+    return n;
+}
+
+/* Subset of what is required for the NVMe Information VPD page (see
+ * snt-r05 at www.t10.org). See the in-code comment about PCI Device ID
+ * and friends. VPD page code is 0x8e .
+ */
+int
+sg_make_vpd_nvme_info(const uint8_t * nvme_id_ctlp,
+                      const uint8_t * nvme_id_nsp, int pdt,
+                      uint8_t * dip, int max_di_len)
+{
+    bool have_nguid, have_eui64;
+    uint16_t x16;
+    // uint32_t x32;
+
+    if ((NULL == nvme_id_ctlp) || (NULL == dip) || (max_di_len < 56))
+        return 0;
+
+    memset(dip, 0, max_di_len);
+    dip[0] = 0x1f & pdt;  /* (PQ=0)<<5 | (PDT=pdt); 0 or 0xd (SES) */
+    dip[1] = SG_NVME_VPD_T10_INFO; /* page code: 0x8e */
+    /* caller expected to populate dip[2:3] which is page length */
+    memcpy(dip + 8, sg_snt_vend_s, 8);
+    memcpy(dip + 16, sg_snt_t10_prod_s, 16);
+    memcpy(dip + 32, sg_snt_rev_s, 4);
+
+    memcpy(dip + 36, nvme_id_ctlp + 24, 40); /* MN */
+    memcpy(dip + 76, nvme_id_ctlp + 4, 20);  /* Serial Number [SN] */
+    memcpy(dip + 96, nvme_id_ctlp + 64, 8);  /* Firmware Revision [FR] */
+    x16 = sg_get_unaligned_le16(nvme_id_ctlp + 0);
+    sg_put_unaligned_be16(x16, dip + 104);   /* PCI Vendor ID [VID] */
+    // memcpy(dip + 104, nvme_id_ctlp + 0, 2);
+    x16 = sg_get_unaligned_le16(nvme_id_ctlp + 2);
+    sg_put_unaligned_be16(x16, dip + 106);   /* Sub-system VID [SSVID] */
+    // memcpy(dip + 106, nvme_id_ctlp + 2, 2);
+
+    // The Linux NVMe subsystem hides following PCI information. There are
+    // no system calls to resolve this (and PCI may not be involved if
+    // NVMe fabric or NVMe over USB). That leaves procfs or sysfs data
+    // mining or libpci. That is too complex for this page which should
+    // add a ValidPCIDev bit in byte 123 .
+    //
+    // memcpy(inq_din + 108, /* PCI Device ID */, 2);
+    // memcpy(inq_din + 110, /* PCI Subsystem Device ID */, 2);
+    // memcpy(inq_din + 112, /* PCI Device Serial Number */, 8);
+
+    x16 = sg_get_unaligned_le16(nvme_id_ctlp + 78);
+    sg_put_unaligned_be16(x16, dip + 120);           /* [CNTLID] */
+    // memcpy(dip + 120, nvme_id_ctlp + 78, 2);  /* [CNTLID] */
+
+    if (nvme_id_nsp) {
+        have_eui64 = ! sg_all_zeros(nvme_id_nsp + 120, 8);
+        have_nguid = ! sg_all_zeros(nvme_id_nsp + 104, 16);
+        have_nguid = ! sg_all_zeros(nvme_id_nsp + 104, 16);
+
+        if (have_eui64) {
+            memcpy(dip + 124, nvme_id_nsp + 120, 8);  /* [EUI64] */
+            dip[123] |= 0x1;
+        }
+        if (have_nguid) {
+            memcpy(dip + 132, nvme_id_nsp + 104, 16);  /* [NGUID] */
+            dip[123] |= 0x2;
+        }
+        /* NVM Command set version */
+        memcpy(dip + 184, nvme_id_nsp + 80, 4);
+    }
+    /* Firmware Upgrade Granularity [FWUG] */
+    memcpy(dip + 172, nvme_id_ctlp + 319, 1);
+
+    /* NVMe Base Version */
+    // x32 = sg_get_unaligned_le32(nvme_id_ctlp + 80);
+    // sg_put_unaligned_be32(x32, dip + 180);           /* [VER] */
+    memcpy(dip + 180, nvme_id_ctlp + 80, 4);
+
+// xxxxx
+
+    return 0xc0;
 }
 
 /* Disconnect-Reconnect page for mode_sense */
@@ -407,13 +506,20 @@ sg_snt_init_dev_stat(struct sg_snt_dev_state_t * dsp)
 
 static uint16_t std_inq_vers_desc[] = {
     0x00C2,             /* SAM-6 INCITS 546-2021 */
-    0x05C2,             /* SPC-5 INCITS 502-2019 */
+    0x0700,             /* SPC-7 (no version claimed) */
     0x1f60,             /* SNT (no version claimed) */
     UINT16_MAX,         /* end sentinel */
 };
 
+int
+sg_snt_std_inq(const uint8_t * nvme_id_ctlp, uint8_t pdt, bool enc_serv,
+               uint8_t * inq_dip)
+{
+    return sg_snt_std_inq2(nvme_id_ctlp, NULL, pdt, enc_serv, inq_dip);
+}
+
 static const uint16_t inq_resp_len = 74;        /* want version descriptors */
-static const uint16_t disk_vers_desc = 0x0602;  /* SBC-4 INCITS 506-2021 */
+static const uint16_t disk_vers_desc = 0x0720;/* SBC-6 (no version claimed) */
 static const uint16_t ses_vers_desc = 0x0682;   /* SES-4 INCITS 555-2020 */
 
 /* Assumes 'inq_dip' points to an array that is at least 74 bytes long
@@ -424,8 +530,8 @@ static const uint16_t ses_vers_desc = 0x0682;   /* SES-4 INCITS 555-2020 */
  *   2) not recommended since violation causes UB but not necessarily
  *      a compile error so it gives a false sense of security */
 int
-sg_snt_std_inq(const uint8_t * nvme_id_ctlp, uint8_t pdt, bool enc_serv,
-               uint8_t * inq_dip)
+sg_snt_std_inq2(const uint8_t * nvme_id_ctlp, const uint8_t * nvme_id_nsp,
+                uint8_t pdt, bool enc_serv, uint8_t * inq_dip)
 {
     bool skip_rest = false;
     uint16_t vd;
@@ -439,10 +545,15 @@ sg_snt_std_inq(const uint8_t * nvme_id_ctlp, uint8_t pdt, bool enc_serv,
     /* pdt=0 --> disk; pdt=0xd --> SES; pdt=3 --> processor (safte) */
     inq_dip[0] = (0x1f & pdt);  /* (PQ=0)<<5 */
     /* inq_dip[1] = (RMD=0)<<7 | (LU_CONG=0)<<6 | (HOT_PLUG=0)<<4; */
-    inq_dip[2] = 7;   /* version: SPC-5 */
-    inq_dip[3] = 2;   /* NORMACA=0, HISUP=0, response data format: 2 */
+    inq_dip[2] = 0xe; /* version: SPC-7 */
+    inq_dip[3] = 0x12; /* NORMACA=0, HISUP=1, response data format: 2 */
     inq_dip[4] = inq_resp_len - 5;  /* response length this_field+4+1 */
+    if (nvme_id_nsp)
+        inq_dip[5] = (nvme_id_nsp[28] & 0x7) ? 1 : 0;  // Protect bit */
+
     inq_dip[6] = enc_serv ? 0x40 : 0;
+    if (nvme_id_ctlp[76] & 0x1)
+        inq_dip[6] |= 0x10;     /* MPORT bit set --> MultiP bit set */
     if (0x1 & nvme_id_ctlp[76]) /* is bit 0 of the ctl::CMIC field set? */
         inq_dip[6] |= 0x10;    /* then set SCSI MultiP bit */
     inq_dip[7] = 0x2;    /* CMDQUE=1 */
@@ -865,10 +976,6 @@ sg_snt_resp_rep_tmfs(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
     return len;
 }
 
-static const char * sg_snt_vend_s = "SG3_UTIL";         /* 8 bytes long */
-static const char * sg_snt_prod_s = "SNT in sg3_utils"; /* 16 bytes long */
-static const char * sg_snt_rev_s = "0100";              /* 4 bytes long */
-
 int
 sg_snt_resp_inq(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
                 const uint8_t * nvme_id_ctlp, const uint8_t * nvme_id_nsp,
@@ -877,7 +984,7 @@ sg_snt_resp_inq(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
     bool evpd;
     uint16_t alloc_len, pg_cd;
     int n = 0;
-    uint8_t inq_din[256];
+    uint8_t inq_din[600];
     static const int inq_din_sz = sizeof(inq_din);
 
     if (0x2 & cdbp[1]) {        /* Reject CmdDt=1 */
@@ -895,15 +1002,16 @@ sg_snt_resp_inq(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
         case 0:
             /* inq_din[0] = (PQ=0)<<5 | (PDT=0); prefer pdt=0xd --> SES */
             inq_din[1] = pg_cd;
-            n = 12;
+            n = 13;
             sg_put_unaligned_be16(n - 4, inq_din + 2);
             inq_din[4] = 0x0;
             inq_din[5] = 0x80;
             inq_din[6] = 0x83;
             inq_din[7] = 0x86;
             inq_din[8] = 0x87;
-            inq_din[9] = 0x92;
-            inq_din[10] = 0xb1;
+            inq_din[9] = SG_NVME_VPD_T10_INFO;     /* 0x8e */
+            inq_din[10] = 0x92;
+            inq_din[11] = 0xb1;
             inq_din[n - 1] = SG_NVME_VPD_NICR;     /* last VPD number */
             break;
         case 0x80:
@@ -914,8 +1022,10 @@ sg_snt_resp_inq(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
             memcpy(inq_din + 4, nvme_id_ctlp + 4, 20);    /* SN */
             break;
         case 0x83:
+            /* will be long, the "SUBNQN-based Target Device Designation
+             * descriptor" alone is 259 bytes long */
             n = sg_make_vpd_devid_for_nvme(nvme_id_ctlp, nvme_id_nsp,
-                                           dsp->pdt, -1 /*tproto */,
+                                           dsp->pdt, 0xb /* PCIe */,
                                            inq_din, inq_din_sz);
             if (n > 3)
                 sg_put_unaligned_be16(n - 4, inq_din + 2);
@@ -936,6 +1046,12 @@ sg_snt_resp_inq(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
             inq_din[5] = 0xff;         /*     and their sub-pages */
             inq_din[6] = 0x80;         /* MLUS=1, policy=shared */
             break;
+        case SG_NVME_VPD_T10_INFO:  /* 0x8e, see SNT-R05 at www.t10.org */
+            n = sg_make_vpd_nvme_info(nvme_id_ctlp, nvme_id_nsp, dsp->pdt,
+                                      inq_din, inq_din_sz);
+            inq_din[1] = pg_cd;
+            sg_put_unaligned_be16(SG_NVME_VPD_T10_INFO_PL, inq_din + 2);
+            break;
         case 0x92:      /* SCSI Feature set: only SPC Discovery 2016 */
             inq_din[1] = pg_cd;
             n = 10;
@@ -946,7 +1062,7 @@ sg_snt_resp_inq(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
             inq_din[1] = pg_cd;
             n = 64;
             sg_put_unaligned_be16(n - 4, inq_din + 2);
-            inq_din[3] = 0x3c;
+            /* inq_din[3] = 0x3c; */
             inq_din[5] = 0x01;
             break;
         case SG_NVME_VPD_NICR:  /* 0xde (vendor (sg3_utils) specific) */
@@ -976,7 +1092,8 @@ sg_snt_resp_inq(struct sg_snt_dev_state_t * dsp, const uint8_t * cdbp,
             }
         }
     } else {            /* Standard INQUIRY response */
-        n = sg_snt_std_inq(nvme_id_ctlp, dsp->pdt, dsp->enc_serv, inq_din);
+        n = sg_snt_std_inq2(nvme_id_ctlp, nvme_id_nsp, dsp->pdt,
+                            dsp->enc_serv, inq_din);
         if (alloc_len > 0) {
             n = (alloc_len < n) ? alloc_len : n;
             n = (n < mx_di_len) ? n : mx_di_len;

@@ -155,6 +155,10 @@ __packed;
 #define SG_NVME_BROADCAST_NSID 0xffffffff       /* all namespaces */
 #define SG_NVME_CTL_NSID 0x0            /* the "controller's" namespace */
 
+/* T10 SNT-r05 NVMe VPD pages */
+#define SG_NVME_VPD_T10_INFO 0x8e   /* NVME Information VPD page code */
+#define SG_NVME_VPD_T10_INFO_PL 0xc0  /* NVME Information VPD page length */
+
 /* Vendor specific (sg3_utils) VPD pages */
 #define SG_NVME_VPD_NICR 0xde   /* NVME Identify controller response */
 

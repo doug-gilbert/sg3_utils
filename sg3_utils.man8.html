@@ -4,8 +4,8 @@ Content-type: text/html; charset=UTF-8
 <HTML><HEAD><TITLE>Man page of SG3_UTILS</TITLE>
 </HEAD><BODY>
 <H1>SG3_UTILS</H1>
-Section: SG3_UTILS (8)<BR>Updated: 2026-07-18<BR><A HREF="#index">Index</A>
-<A HREF="../index.html">Return to Main Contents</A><HR>
+Section: SG3_UTILS (8)<BR>Updated: 2026-10-19<BR><A HREF="#index">Index</A>
+<A HREF="/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
@@ -117,7 +117,7 @@ This term is often used when describing SCSI commands, usually abbreviated to
 CDB. SCSI commands such as READ(16) refer to the 16 byte CDB used to fetch
 data from a storage device. Typical CDB lengths are 6, 10, 12, 16 and 32
 bytes long. Any integers in a CDB that are longer than 8 bits (i.e. 1 byte)
-use a big endian repesentation.
+use a big endian representation.
 <A NAME="lbAF">&nbsp;</A>
 <H2>ENVIRONMENT VARIABLES</H2>
 
@@ -820,7 +820,7 @@ utilities take into account. The maximum response length is typically
 specified in the 'allocation length' field of the cdb. In the absence of
 this option, several utilities use a default allocation length (sometimes
 recommended in the SCSI draft standards) or a &quot;double fetch&quot; strategy.
-See <A HREF="../man8/sg_logs.8.html">sg_logs</A>(8) for its description of a &quot;double fetch&quot; strategy. These
+See <A HREF="/cgi-bin/man/man2html?8+sg_logs">sg_logs</A>(8) for its description of a &quot;double fetch&quot; strategy. These
 techniques are imperfect and in the presence of faulty SCSI targets can
 cause problems (e.g. some USB mass storage devices freeze if they receive
 an INQUIRY allocation length other than 36). Also use of this option
@@ -956,7 +956,7 @@ a high level output that may be parsed by some other tool. No utilities
 in sg3_utils can parse JSON as input.
 <P>
 
-JSON output is outlined in its own manpage, see: <A HREF="../man8/sg3_utils_json.8.html">sg3_utils_json</A>(8).
+JSON output is outlined in its own manpage, see: <A HREF="/cgi-bin/man/man2html?8+sg3_utils_json">sg3_utils_json</A>(8).
 <P>
 
 Binary and especially hexadecimal output can have two roles: for viewing
@@ -1139,7 +1139,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 <B>sg3_utils_json, sg_decode_sense(sg3_utils), sdparm(sdparm), ddpt(ddpt),</B>
 
-<B>lsscsi(lsscsi), <A HREF="../man1/dmesg.1.html">dmesg</A>(1), <A HREF="../man1/mt.1.html">mt</A>(1), hdparm(hdparm), hexdump(util-linux)</B>
+<B>lsscsi(lsscsi), <A HREF="/cgi-bin/man/man2html?1+dmesg">dmesg</A>(1), <A HREF="/cgi-bin/man/man2html?1+mt">mt</A>(1), hdparm(hdparm), hexdump(util-linux)</B>
 
 <BR>
 
@@ -1177,6 +1177,6 @@ or &lt;utility_name&gt;(&lt;manpage_section_number_containing_utility&gt;) .
 This document was created by
 <A HREF="/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 01:03:13 GMT, July 22, 2026
+Time: 16:44:47 GMT, October 24, 2026
 </BODY>
 </HTML>
