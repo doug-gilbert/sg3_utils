@@ -57,7 +57,7 @@
 
 #include "sg_vpd_common.h"  /* for shared VPD page processing with sg_vpd */
 
-static const char * version_str = "2.71 20261027";  /* spc7r05, sbc6r02 */
+static const char * version_str = "2.71 20261101";  /* spc7r05, sbc6r02 */
 
 #define MY_NAME "sg_inq"
 
@@ -171,7 +171,7 @@ static const struct svpd_values_name_t t10_vpd_pg[] = {
     {VPD_MAN_NET_ADDR, 0, -1, "mna", "Management network addresses"},
     {VPD_MODE_PG_POLICY, 0, -1, "mpp", "Mode page policy"},
     {SG_NVME_VPD_NICR, 0, -1, "nicr",
-     "NVMe Identify Controller Response (sg3_utils before SNT)"},
+     "sg3_utils NVMe Information (Identify Controller Response)"},
     {VPD_NVME_INFO, 0, -1, "nvmei", "NVMe Informationn (SNT)"},
     {VPD_POWER_CONDITION, 0, -1, "po", "Power condition"},/* "pc" in sg_vpd */
     {VPD_POWER_CONSUMPTION, 0, -1, "psm", "Power consumption"},

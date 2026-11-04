@@ -692,7 +692,7 @@ void hex2stderr(const uint8_t * b_str, int len, int no_ascii);
 /* Read ASCII hex bytes or binary from fname (a file named '-' taken as
  * stdin). If reading ASCII hex then there should be either one entry per
  * line or a comma, space, hyphen or tab separated list of bytes. If no_space
- * is set then a string of ACSII hex digits is expected, 2 per byte.
+ * is set then a string of ASCII hex digits is expected, 2 per byte.
  * Everything from and including a '#' on a line is ignored. Returns 0 if ok,
  * or an error code. If the error code is SG_LIB_LBA_OUT_OF_RANGE then mp_arr
  * would be exceeded and both mp_arr and mp_arr_len are written to.

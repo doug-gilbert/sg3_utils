@@ -2,7 +2,7 @@
 #define SG_NVME_H
 
 /*
- * Copyright (c) 2017-2019 Douglas Gilbert.
+ * Copyright (c) 2017-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -159,8 +159,8 @@ __packed;
 #define SG_NVME_VPD_T10_INFO 0x8e   /* NVME Information VPD page code */
 #define SG_NVME_VPD_T10_INFO_PL 0xc0  /* NVME Information VPD page length */
 
-/* Vendor specific (sg3_utils) VPD pages */
-#define SG_NVME_VPD_NICR 0xde   /* NVME Identify controller response */
+/* sg3_utils NVMe Information (Identify Controller Response) VPD page */
+#define SG_NVME_VPD_NICR 0xde   /* vendor specific (sg3_utils) */
 
 
 #ifdef __cplusplus

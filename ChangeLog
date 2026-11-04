@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the src
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-ChangeLog for pre-release sg3_utils-1.49.5 [20261027] [svn: r1153]
+ChangeLog for pre-release sg3_utils-1.49.5 [20261104] [svn: r1154]
   Start with 3 part version number at .5 to leave room for any
   serious bug fixes to use .1 through .4
   - bump version numbers for important files like configure.ac
@@ -26,6 +26,8 @@ ChangeLog for pre-release sg3_utils-1.49.5 [20261027] [svn: r1153]
   - sg_modes: suggest adding --dbd after illegal request
   - sg_vpd: correct naming of NVMe Information VPD page
     - partially implement NVMe Information page (snt-r05)
+    - use 'sg3_utils NVMe Information (Identify Controller
+      Response)' VPD page [0xde] consistently
   - sg_vpd_vendor: decode_vpd_c0_hp3par: add bounds checks and
     safe string printing, github #93
   - lib/getopt.h: add extern "C" {} guard

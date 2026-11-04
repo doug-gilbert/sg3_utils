@@ -87,8 +87,11 @@ const char * fp_vpdp = "Format presets VPD page";
 const char * cpr_vpdp = "Concurrent positioning ranges VPD page";
 const char * cap_vpdp = "Capacity/Product identification mapping VPD page";
 
-const char * snt_vpdp = "SNT NVMe information VPD page";
+const char * nicr_vpdp = "sg3_utils NVMe information VPD page";
 
+static const char * snt_vendor_s = "SNT Vendor identification";
+static const char * snt_product_s = "SNT Product identification";
+static const char * snt_revision_s = "SNT Product revision level";
 static const char * const y_s = "yes";
 static const char * const n_s = "no";
 static const char * const nl_s = "no limit";
@@ -1039,30 +1042,27 @@ decode_nvme_info_vpd(const uint8_t * buff, int len, struct opts_t * op,
     bool bv;
     sgj_state * jsp = &op->json_st;
     char b[512];
-    static const char * snt_vip = "SNT Vendor identification";
-    static const char * snt_pip = "SNT Product identification";
-    static const char * snt_prlp = "SNT Product revision level";
 
     if (len < 36) {
-        pr2serr("%s length too short=%d\n", ai_vpdp, len);
+        pr2serr("%s length too short=%d\n", nvmei_vpdp, len);
         return;
     }
     if (op->do_hex > 0) {
         if (op->do_hex > 2)
-            named_hhh_output(ai_vpdp, buff, len, op);
+            named_hhh_output(nvmei_vpdp, buff, len, op);
         else
             hex2stdout(buff, len, no_ascii_4hex(op));
         return;
     }
     memcpy(b, buff + 8, 8);
     b[8] = '\0';
-    sgj_haj_vs(jsp, jop, 2, snt_vip, SGJ_SEP_COLON_1_SPACE, b);
+    sgj_haj_vs(jsp, jop, 2, snt_vendor_s, SGJ_SEP_COLON_1_SPACE, b);
     memcpy(b, buff + 16, 16);
     b[16] = '\0';
-    sgj_haj_vs(jsp, jop, 2, snt_pip, SGJ_SEP_COLON_1_SPACE, b);
+    sgj_haj_vs(jsp, jop, 2, snt_product_s, SGJ_SEP_COLON_1_SPACE, b);
     memcpy(b, buff + 32, 4);
     b[4] = '\0';
-    sgj_haj_vs(jsp, jop, 2, snt_prlp, SGJ_SEP_COLON_1_SPACE, b);
+    sgj_haj_vs(jsp, jop, 2, snt_revision_s, SGJ_SEP_COLON_1_SPACE, b);
     if (len < 56)
         return;
     memcpy(b, buff + 36, 40);
@@ -2518,7 +2518,7 @@ decode_format_presets_vpd(const uint8_t * buff, int len, struct opts_t * op,
     }
 }
 
-/* VPD_CON_POS_RANGE  0xb9 (added sbc5r01) */
+/* VPD_CON_POS_RANGE  0xb9 ["cpr"] (added sbc5r01) */
 void
 decode_con_pos_range_vpd(const uint8_t * buff, int len, struct opts_t * op,
                          sgj_opaque_p jap)
@@ -3253,7 +3253,7 @@ again:
     }
 }
 
-/* VPD_LB_PROTECTION 0xb5 (SSC)  [added in ssc5r02a] */
+/* VPD_LB_PROTECTION 0xb5 ["lbpro"] (SSC)  [added in ssc5r02a] */
 void
 decode_lb_protection_vpd(const uint8_t * buff, int len, struct opts_t * op,
                          sgj_opaque_p jap)
@@ -3877,23 +3877,20 @@ decode_nicr_vpd(uint8_t * buff, int len, struct opts_t * op, sgj_opaque_p jop)
     sgj_opaque_p jo2p = NULL;
     char b[128];
     static const int blen = sizeof(b);
-    static const char * snt_vendor_s = "SNT vendor identification";
-    static const char * snt_product_s = "SNT product identification";
-    static const char * snt_revision_s = "SNT product revision level";
 
     if (op->do_hex > 0) {
         if (op->do_hex > 2)
-            named_hhh_output(snt_vpdp, buff, len, op);
+            named_hhh_output(nicr_vpdp, buff, len, op);
         else
             hex2stdout(buff, len, no_ascii_4hex(op));
         return;
     }
     if (len < 36) {
-        pr2serr("%s length too short=%d\n", snt_vpdp, len);
+        pr2serr("%s length too short=%d\n", nicr_vpdp, len);
         return;
     }
     if (jsp->pr_as_json)
-        jo2p = sg_vpd_js_hdr(jsp, jop, snt_vpdp, buff);
+        jo2p = sg_vpd_js_hdr(jsp, jop, nicr_vpdp, buff);
     snprintf(b, blen, "%.8s", buff + 8);
     sgj_haj_vs(jsp, jo2p, 2, snt_vendor_s, SGJ_SEP_COLON_1_SPACE, b);
     snprintf(b, blen, "%.16s", buff + 16);
@@ -3902,7 +3899,7 @@ decode_nicr_vpd(uint8_t * buff, int len, struct opts_t * op, sgj_opaque_p jop)
     sgj_haj_vs(jsp, jo2p, 2, snt_revision_s, SGJ_SEP_COLON_1_SPACE, b);
     if (len < NICR_RSP_OFF) {
         pr2serr("%s length too short=%dto show NVMe Identify Controller "
-                "Response\n", snt_vpdp, len);
+                "Response\n", nicr_vpdp, len);
         return;
     }
     n = len - NICR_RSP_OFF;

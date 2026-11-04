@@ -125,7 +125,7 @@ check_function_exists(srand48_r HAVE_SRAND48_R)
 check_function_exists(pthread_cancel HAVE_PTHREAD_CANCEL)
 check_function_exists(pthread_kill HAVE_PTHREAD_KILL)
 
-# Locate platform's thread support, and set complier linker flags. See
+# Locate platform's thread support, and set compiler linker flags. See
 # /usr/share/doc/cmake-data/html/module/FindThreads.html when
 # cmake-doc package is installed.
 find_package(Threads)

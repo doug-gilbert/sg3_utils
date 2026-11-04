@@ -42,7 +42,7 @@
 
 */
 
-static const char * version_str = "2.12 20261027";  /* spc7r05 + sbc6r02 */
+static const char * version_str = "2.13 20261101";  /* spc7r05 + sbc6r02 */
 
 #define MY_NAME "sg_vpd"
 
@@ -154,7 +154,7 @@ static const struct svpd_values_name_t standard_vpd_pg[] = {
     {VPD_MAN_NET_ADDR, 0, -1, "mna", "Management network addresses"},
     {VPD_MODE_PG_POLICY, 0, -1, "mpp", "Mode page policy"},
     {SG_NVME_VPD_NICR, 0, -1, "nicr",
-     "NVMe Identify Controller Response (sg3_utils for SNT)"},
+     "sg3_utils NVMe Information (Identify Controller Response)"},
     {VPD_NVME_INFO, 0, -1, "nvmei", "NVMe information (SNT)"},
     {VPD_OSD_INFO, 0, 0x11, "oi", "OSD information"},
     {VPD_POWER_CONDITION, 0, -1, "pc", "Power condition"},/* "po" in sg_inq */
