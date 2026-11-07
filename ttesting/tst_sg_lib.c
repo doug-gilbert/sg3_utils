@@ -59,6 +59,7 @@ static struct option long_options[] = {
         {"byteswap",  required_argument, 0, 'b'},
         {"blank",  required_argument, 0, 'B'},
         {"exit", no_argument, 0, 'e'},
+        {"getnum", no_argument, 0, 'g'},
         {"help", no_argument, 0, 'h'},
         {"hex2",  no_argument, 0, 'H'},
         {"json", optional_argument, 0, 'j'},
@@ -167,11 +168,11 @@ static void
 usage()
 {
     fprintf(stderr,
-            "Usage: tst_sg_lib [--blank=N] [--byteswap=W] [--exit] [--help] "
-            "[--hex2]\n"
-            "                  [--leadin=STR] [--printf] [--sense] "
-            "[--unaligned]\n"
-            "                  [--verbose] [--version]\n"
+            "Usage: tst_sg_lib [--blank=N] [--byteswap=W] [--exit] "
+            "[--getnum] [--help]\n"
+            "                  [--hex2] [--leadin=STR] [--num=NUM] "
+            "[--printf] [--sense]\n"
+            "                  [--unaligned] [--verbose] [--version]\n"
             "  where:\n"
 #if defined(__GNUC__) && ! defined(SG_LIB_FREEBSD)
             "    --blank=N|-B N    where N non-blank characters taken "
@@ -185,6 +186,7 @@ usage()
 #else
             "    --exit|-e          test exit status strings\n"
 #endif
+            "    --getnum|-g        test get numbers, sg_get_llnum\n"
             "    --help|-h          print out usage message\n"
             "    --hex2|-H          test hex2* variants\n"
             "    --leadin=STR|-l STR    every line output by --sense "
@@ -236,6 +238,7 @@ main(int argc, char * argv[])
     bool ok;
     int k, c, n, len;
     int byteswap_sz = 0;
+    int do_getnum = 0;
     int do_hex2 = 0;
     int do_num = 1;
     int do_printf = 0;
@@ -255,7 +258,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "b:B:ehHj::l:n:psuvV", long_options,
+        c = getopt_long(argc, argv, "b:B:eghHj::l:n:psuvV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -275,6 +278,9 @@ main(int argc, char * argv[])
             break;
         case 'e':
             do_exit_status = true;
+            break;
+        case 'g':
+            ++do_getnum;
             break;
         case 'h':
         case '?':
@@ -801,6 +807,48 @@ main(int argc, char * argv[])
         count64 = 0;
     }
 #endif
+
+    if (do_getnum > 0) {
+        const char * one234 = "1234";
+        const char * one234U = "1234U";
+        const char * one234Z = "1234Z";
+        const char * one2345678 = "12345678";
+        const char * one2345678901 = "12345678901";
+        const char * minus1 = "-1";
+        const char * minus2 = "-2";
+        const char * hex_one234 = "0x1234";
+        const char * one234_hex = "1234h";
+        const char * onemb = "1MB";
+        const char * onemb_u = "1MBU";
+        const char * onemib = "1MiB";
+
+        ++did_something;
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               one234, sg_get_llnum(one234));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               one2345678, sg_get_llnum(one2345678));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               one2345678901, sg_get_llnum(one2345678901));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               one234U, sg_get_llnum(one234U));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               one234Z, sg_get_llnum(one234Z));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               minus1, sg_get_llnum(minus1));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               minus2, sg_get_llnum(minus2));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               hex_one234, sg_get_llnum(hex_one234));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               one234_hex, sg_get_llnum(one234_hex));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               onemb, sg_get_llnum(onemb));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               onemib, sg_get_llnum(onemib));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               onemb_u, sg_get_llnum(onemb_u));
+
+    }
 
     if (0 == did_something)
         printf("Looks like no tests done, check usage with '-h'\n");

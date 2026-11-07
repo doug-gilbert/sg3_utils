@@ -3531,8 +3531,7 @@ sg_get_llnum(const char * buf)
         buf += n;
         len -= n;
     }
-    /* following cast hack to keep C++ happy */
-    cp = strpbrk(buf, " \t,#-");
+    cp = strpbrk(buf, " \t,#-U");
     if (cp) {
         len = cp - buf;
         n = (int)sizeof(lb) - 1;
@@ -3572,6 +3571,7 @@ sg_get_llnum(const char * buf)
 
         switch (c) {
         case 'C':
+        case 'U':    /* allow trailing U to indicate unmapped for sgl_s */
             return num;
         case 'W':
             return num * 2;

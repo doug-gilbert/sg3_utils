@@ -3,7 +3,7 @@ some description at the top of its ".c" file. All utilities in the src
 directory have their own "man" pages. There is also a sg3_utils man page.
 References to github are to https://github.com/doug-gilbert/sg3_utils
 
-ChangeLog for pre-release sg3_utils-1.49.5 [20261104] [svn: r1154]
+ChangeLog for pre-release sg3_utils-1.49.5 [20261106] [svn: r1155]
   Start with 3 part version number at .5 to leave room for any
   serious bug fixes to use .1 through .4
   - bump version numbers for important files like configure.ac
@@ -33,6 +33,8 @@ ChangeLog for pre-release sg3_utils-1.49.5 [20261104] [svn: r1154]
   - lib/getopt.h: add extern "C" {} guard
   - lib/sg_snt.c: improve SCSI Inquiry SNT processing including
      device identification VPD page
+  - lib: allow sg_get_llnum() to accept a trailing 'U' which can
+    now be used to indicated an unmapped scatter gather element
   - cmake: add USE_CXX option (default OFF)
   - clang/clang++ inspired warning fixes (lots of them)
   - codespell cleanup

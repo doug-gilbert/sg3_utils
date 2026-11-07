@@ -589,7 +589,7 @@ const char * const sg_lib_tapealert_strs[] = {
     "Cleaning requested",
     "Expired cleaning media",
     "Invalid cleaning tape",
-    "Retention requested",                      /* 0x18 */
+    "Retension requested",                      /* 0x18 */
     "Dual port interface error",
     "Cooling fan failing",
     "Power supply failure",
@@ -1651,6 +1651,7 @@ const struct sg_aux_info_t sg_lib_pdt_aux_a[32] = {
     {"unknown", 3, 0, 0, 0},
 };
 
+/* Fixed length: 16 elements */
 const char * const sg_lib_transport_proto_strs[] =
 {
     "Fibre Channel Protocol for SCSI (FCP-5)",  /* now at fcp5r01 */
@@ -2034,6 +2035,7 @@ const struct sg_value_2names_t sg_exit_str_arr[] = {
                               real time signals start at offset SIGRTMIN */
     /* OS signals from 1 to 126 mapped into this range (129 to 254) */
     {255, "Utility returned 255 or higher", "Windows error number?"},
+
     {0xffff, NULL, NULL},       /* end marking sentinel */
 };
 
@@ -2041,28 +2043,24 @@ const struct sg_value_2names_t sg_exit_str_arr[] = {
 
 const struct sg_lib_simple_value_name_t sg_lib_nvme_admin_cmd_arr[] =
 {
-
     /* Vendor specific 0x80 to 0xff */
     {0xffff, NULL},                     /* Sentinel */
 };
 
 const struct sg_lib_simple_value_name_t sg_lib_nvme_nvm_cmd_arr[] =
 {
-
     /* Vendor specific 0x80 to 0xff */
     {0xffff, NULL},                     /* Sentinel */
 };
 
 const struct sg_lib_value_name_t sg_lib_nvme_cmd_status_arr[] =
 {
-
     /* Leave this Sentinel value at end of this array */
     {0x3ff, 0, NULL},
 };
 
 const struct sg_lib_4tuple_u8 sg_lib_scsi_status_sense_arr[] =
 {
-
     /* Leave this Sentinel value at end of this array */
     {0xff, 0xff, 0xff, 0xff},
 };
