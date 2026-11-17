@@ -821,6 +821,10 @@ main(int argc, char * argv[])
         const char * onemb = "1MB";
         const char * onemb_u = "1MBU";
         const char * onemib = "1MiB";
+        const char * oneb = "1B";
+        const char * onec = "1C";
+        const char * multiply = "4x1024";
+        const char * add = "4+1024";
 
         ++did_something;
         printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
@@ -831,8 +835,8 @@ main(int argc, char * argv[])
                one2345678901, sg_get_llnum(one2345678901));
         printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
                one234U, sg_get_llnum(one234U));
-        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
-               one234Z, sg_get_llnum(one234Z));
+        printf("numeric string: %s <expect error>, sg_get_llnum=%"
+               PRId64 "\n", one234Z, sg_get_llnum(one234Z));
         printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
                minus1, sg_get_llnum(minus1));
         printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
@@ -847,7 +851,14 @@ main(int argc, char * argv[])
                onemib, sg_get_llnum(onemib));
         printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
                onemb_u, sg_get_llnum(onemb_u));
-
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               oneb, sg_get_llnum(oneb));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               onec, sg_get_llnum(onec));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               multiply, sg_get_llnum(multiply));
+        printf("numeric string: %s, sg_get_llnum=%" PRId64 "\n",
+               add, sg_get_llnum(add));
     }
 
     if (0 == did_something)

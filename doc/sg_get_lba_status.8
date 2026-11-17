@@ -1,4 +1,4 @@
-.TH SG_GET_LBA_STATUS "8" "2026-06-01" "sg3_utils\-1.49" SG3_UTILS
+.TH SG_GET_LBA_STATUS "8" "2026-11-16" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_get_lba_status \- send SCSI GET LBA STATUS(16 or 32) command
 .SH SYNOPSIS
@@ -6,9 +6,10 @@ sg_get_lba_status \- send SCSI GET LBA STATUS(16 or 32) command
 [\fI\-\-16\fR] [\fI\-\-32\fR] [\fI\-\-blockhex\fR] [\fI\-\-brief\fR]
 [\fI\-\-element\-id=EI\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-inhex=FN\fR] [\fI\-\-json[=JO\fR]] [\fI\-\-js\-file=JFN\fR]
-[\fI\-\-lba=LBA\fR] [\fI\-\-maxlen=LEN\fR] [\fI\-\-raw\fR]
-[\fI\-\-readonly\fR] [\fI\-\-report\-type=RT\fR] [\fI\-\-scan\-len=SL\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fIDEVICE\fR
+[\fI\-\-lba=LBA\fR] [\fI\-\-maxlen=LEN\fR] [\fI\-\-quiet\fR]
+[\fI\-\-raw\fR] [\fI\-\-readonly\fR] [\fI\-\-report\-type=RT\fR]
+[\fI\-\-scan\-len=SL\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fIDEVICE\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 Send the SCSI GET LBA STATUS(16) or GET LBA STATUS(32) command to the
@@ -107,16 +108,26 @@ need not be given. The \fI\-\-json[=JO]\fR option may still be needed to
 set the \fIJO\fR parameter to non\-default values.
 .TP
 \fB\-l\fR, \fB\-\-lba\fR=\fILBA\fR
-where \fILBA\fR is the starting Logical Block Address (LBA) to check the
-provisioning status for. Note that the \fIDEVICE\fR chooses how many
-following blocks that it will return provisioning status for, limited by
-\fI\-\-maxlen=LEN\fR.
+where \fILBA\fR is the
+.B starting
+Logical Block Address (LBA) to check the provisioning status for. Note that
+the \fIDEVICE\fR chooses how many following blocks that it will return
+provisioning status for, limited by \fI\-\-maxlen=LEN\fR.
+.br
+This option is supported for both the 16 and 32 byte variants of the SCSI
+GET LBA STATUS command.
 .TP
 \fB\-m\fR, \fB\-\-maxlen\fR=\fILEN\fR
 where \fILEN\fR is the (maximum) response length in bytes. It is placed in
 the cdb's "allocation length" field. If not given then 24 is used. 24 is
 enough space for the response header and one LBA status descriptor.
 \fILEN\fR should be 8 plus a multiple of 16 (e.g. 24, 40, and 56 are suitable).
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+this option trims down the T10 based strings for the values in the SCSI
+GET LBA STATUS command response. For example the Provisioning status field
+value of 0 yields "mapped (or unknown)" and when this option is given it
+yields "mapped" instead. Even if it is unknown, assume the extent is mapped.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
 output response in binary (to stdout) unless the \fI\-\-inhex=FN\fR option
@@ -158,6 +169,14 @@ print the version string and then exit.
 .SH NOTES
 A LBA extent is a set of contiguous logical blocks whose address is that
 of the lowest LB.
+.PP
+The Completion Condition field in the response was added in sbc4r15.pdf in
+November 2017 and many current implementations don't support it so this
+utility will read 0 for that field. So if that is the case, the
+\fI\-\-quiet\fR is not given, and the response buffer is full, then a
+warning is issued that there may be more LBA extents to report. In that
+case the \fI\-\-maxlen=LEN\fR option may be used to increase the size of
+the response buffer.
 .PP
 In SBC\-3 revision 25 the calculation associated with the Parameter Data
 Length field in the response was modified. Prior to that the byte offset
