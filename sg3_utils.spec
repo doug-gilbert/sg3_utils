@@ -84,7 +84,7 @@ fi
 %{_libdir}/*.a
 
 %changelog
-* Mon Nov 16 2026 - dgilbert at interlog dot com
+* Wed Nov 18 2026 - dgilbert at interlog dot com
 - first additions after 1.49 release
   * sg3_utils-1.49.5
 

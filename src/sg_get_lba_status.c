@@ -34,7 +34,7 @@
  * device.
  */
 
-static const char * version_str = "1.48 20261116";      /* sbc6r02 */
+static const char * version_str = "1.49 20261118";      /* sbc6r02 */
 
 #define MY_NAME "sg_get_lba_status"
 
@@ -48,6 +48,12 @@ static const char * version_str = "1.48 20261116";      /* sbc6r02 */
 
 static uint8_t glbasFixedBuff[DEF_GLBAS_BUFF_LEN];
 
+struct glbas_sum_t {
+    uint64_t mapped;
+    uint64_t de_allocated;
+    uint64_t anchored;
+};
+
 struct opts_t {
     bool do_16;
     bool do_32;
@@ -60,6 +66,7 @@ struct opts_t {
     int do_brief;
     int do_hex;
     int do_quiet;
+    int do_sum;
     int maxlen;
     int rt;
     int verbose;
@@ -69,6 +76,7 @@ struct opts_t {
     const char * in_fn;
     const char * json_arg;
     const char * js_file;
+    struct glbas_sum_t glbas_s;
     sgj_state json_st;
 };
 
@@ -96,6 +104,7 @@ static const struct option long_options[] = {
     {"report_type", required_argument, 0, 't'},
     {"scan-len", required_argument, 0, 's'},
     {"scan_len", required_argument, 0, 's'},
+    {"sum", no_argument, 0, 'u'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
@@ -113,8 +122,8 @@ usage()
             "                          [--maxlen=LEN] [--quiet] [--raw] "
             "[--readonly]\n"
             "                          [--report-type=RT] [--scan-len=SL] "
-            "[--verbose]\n"
-            "                          [--version] DEVICE\n"
+            "[--sum]\n"
+            "                          [--verbose] [--version] DEVICE\n"
             "  where:\n"
             "    --16|-S           use GET LBA STATUS(16) cdb (def)\n"
             "    --32|-T           use GET LBA STATUS(32) cdb\n"
@@ -163,6 +172,8 @@ usage()
             "    --scan-len=SL|-s SL    SL in maximum scan length (unit: "
             "logical blocks)\n"
             "                           (def: 0 which implies no limit)\n"
+            "    --sum|-u          separately sum mapped, de-allocated and "
+            "anchored\n"
             "    --verbose|-v      increase verbosity\n"
             "    --version|-V      print version string and exit\n\n"
             "Performs a SCSI GET LBA STATUS(16) or GET LBA STATUS(32) "
@@ -209,28 +220,41 @@ decode_lba_status_desc(const uint8_t * bp, uint64_t * slbap,
 }
 
 static char *
-get_prov_status_str(int ps, bool quiet, char * b, int blen)
+get_prov_status_str(int ps, bool quiet, char * b, int blen, uint64_t num,
+                    struct glbas_sum_t *gls_s)
 {
     switch (ps) {
     case 0:
+        if (gls_s)
+            gls_s->mapped += num;
         if (quiet)
             sg_scnpr(b, blen, "mapped");
         else
             sg_scnpr(b, blen, "mapped (or unknown)");
         break;
     case 1:
+        if (gls_s)
+            gls_s->de_allocated += num;
         sg_scnpr(b, blen, "deallocated");
         break;
     case 2:
+        if (gls_s)
+            gls_s->anchored += num;
         sg_scnpr(b, blen, "anchored");
         break;
     case 3:
+        if (gls_s)
+            gls_s->mapped += num;
         sg_scnpr(b, blen, "mapped");         /* sbc4r12 */
         break;
     case 4:
+        if (gls_s)
+            gls_s->mapped += num;            /* assumption */
         sg_scnpr(b, blen, "unknown");        /* sbc4r12 */
         break;
     default:
+        if (gls_s)
+            gls_s->mapped += num;            /* assumption */
         sg_scnpr(b, blen, "unknown provisioning status: %d", ps);
         break;
     }
@@ -345,6 +369,9 @@ chk_short_opts(const char sopt_ch, struct opts_t * op)
     case 'T':
         op->do_32 = true;
         break;
+    case 'u':
+        ++op->do_sum;
+        break;
     case 'v':
         op->verbose_given = true;
         ++op->verbose;
@@ -400,7 +427,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "^bBe:hi:j::J:Hl:m:qrRs:St:TvV",
+        c = getopt_long(argc, argv, "^bBe:hi:j::J:Hl:m:qrRs:St:TuvV",
                         long_options, &option_index);
         if (c == -1)
             break;
@@ -480,6 +507,8 @@ main(int argc, char * argv[])
                         MIN_MAXLEN);
                 op->maxlen = DEF_GLBAS_BUFF_LEN;
             }
+            if (0 == (op->maxlen % 16))
+                op->maxlen +=8;
             break;
         case 'q':
             ++op->do_quiet;
@@ -511,6 +540,9 @@ main(int argc, char * argv[])
             break;
         case 'T':
             op->do_32 = true;
+            break;
+        case 'u':
+            ++op->do_sum;
             break;
         case 'v':
             op->verbose_given = true;
@@ -809,7 +841,8 @@ start_response:
                                           blen, false));
                 sgj_js_nv_istr(jsp, jo3p, prov_stat_sn, res, NULL,
                                get_prov_status_str(res, (op->do_quiet > 0),
-                                                   b, blen));
+                                                   b, blen, d_blocks,
+                                                   &op->glbas_s));
                 sgj_js_nv_istr(jsp, jo3p, add_stat_sn, add_status, NULL,
                                get_add_status_str(add_status,
                                              (op->do_quiet > 0), b, blen));
@@ -826,7 +859,8 @@ start_response:
                     n += sg_scn3pr(b, blen, n, " blocks: %10s", d);
                 } else
                     n += sg_scn3pr(b, blen, n, " blocks: %10u", d_blocks);
-                get_prov_status_str(res, (op->do_quiet > 0), d, sizeof(d));
+                get_prov_status_str(res, (op->do_quiet > 0), d, sizeof(d),
+                                    d_blocks, &op->glbas_s);
                 n += sg_scn3pr(b, blen, n, "  %s", d);
                 get_lba_access_str(lba_access, (op->do_quiet > 0), d,
                                    sizeof(d), true);
@@ -842,15 +876,46 @@ start_response:
         if (jsp->pr_as_json)
             sgj_js_nv_o(jsp, jap, NULL /* name */, jo3p);
     }
-    fflush(stdout);     // want these error/warnings
+    fflush(stdout);     // want these error/warnings after stdout output
     n = (num_descs * 16) + 8;
-    if (n < rlen)
-        pr2serr("incomplete trailing LBA status descriptors found\n");
-    else if ((0 == completion_cond) && (op->maxlen == n)) {
+    if (op->verbose > 4)
+        pr2serr("%s: op->maxlen=%d, n=%d, rlen=%d\n", __func__, op->maxlen,
+                n, rlen);
+    if ((0 == completion_cond) && (op->maxlen >= n) &&
+        (op->maxlen <= (n + 8))) {
         if (op->do_quiet < 1)
-            pr2serr("Warning: the Completion Condition was indeterminate "
-                    "and the allocated\nresponse buffer was filled. This "
-                    "suggests there may be more LBA extents\nto report.\n");
+            sgj_pr_hr(jsp, "Warning: the Completion Condition was "
+                           "indeterminate and the allocated\nresponse "
+                           "buffer was filled. This suggests there may be "
+                           "more LBA extents\nto report.\n");
+    } else if (n < rlen)
+        pr2serr("incomplete trailing LBA status descriptors found\n");
+
+    if (op->do_sum || (op->verbose > 3)) {
+        static const char * num_of = "    Number of ";
+        if (op->blockhex > 0) {
+            sgj_pr_hr(jsp, "%smapped blocks: 0x%" PRIx64 "\n", num_of,
+                      op->glbas_s.mapped);
+            sgj_pr_hr(jsp, "%sde-allocated blocks: 0x%" PRIx64 "\n", num_of,
+                      op->glbas_s.de_allocated);
+            sgj_pr_hr(jsp, "%sanchored blocks: 0x%" PRIx64 "\n", num_of,
+                      op->glbas_s.anchored);
+        } else {
+            sgj_pr_hr(jsp, "%smapped blocks: %" PRIu64 "\n", num_of,
+                      op->glbas_s.mapped);
+            sgj_pr_hr(jsp, "%sde-allocated blocks: %" PRIu64 "\n", num_of,
+                      op->glbas_s.de_allocated);
+            sgj_pr_hr(jsp, "%sanchored blocks: %" PRIu64 "\n", num_of,
+                      op->glbas_s.anchored);
+        }
+    }
+    if (jsp->pr_as_json) {
+        sgj_opaque_p jo4p = sgj_named_subobject_r(jsp, jop, "summations");
+
+        sgj_js_nv_ihex(jsp, jo4p, "mapped_blocks", op->glbas_s.mapped);
+        sgj_js_nv_ihex(jsp, jo4p, "de_allocated_blocks",
+                       op->glbas_s.de_allocated);
+        sgj_js_nv_ihex(jsp, jo4p, "anchored_blocks", op->glbas_s.anchored);
     }
     goto fini;
 

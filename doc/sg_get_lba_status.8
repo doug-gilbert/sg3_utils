@@ -1,4 +1,4 @@
-.TH SG_GET_LBA_STATUS "8" "2026-11-16" "sg3_utils\-1.49" SG3_UTILS
+.TH SG_GET_LBA_STATUS "8" "2026-11-17" "sg3_utils\-1.49" SG3_UTILS
 .SH NAME
 sg_get_lba_status \- send SCSI GET LBA STATUS(16 or 32) command
 .SH SYNOPSIS
@@ -8,8 +8,8 @@ sg_get_lba_status \- send SCSI GET LBA STATUS(16 or 32) command
 [\fI\-\-inhex=FN\fR] [\fI\-\-json[=JO\fR]] [\fI\-\-js\-file=JFN\fR]
 [\fI\-\-lba=LBA\fR] [\fI\-\-maxlen=LEN\fR] [\fI\-\-quiet\fR]
 [\fI\-\-raw\fR] [\fI\-\-readonly\fR] [\fI\-\-report\-type=RT\fR]
-[\fI\-\-scan\-len=SL\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
-\fIDEVICE\fR
+[\fI\-\-scan\-len=SL\fR] [\fI\-\-sum\fR]  [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] \fIDEVICE\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 Send the SCSI GET LBA STATUS(16) or GET LBA STATUS(32) command to the
@@ -32,6 +32,8 @@ option is given, then the contents of the file named \fIFN\fR are decoded
 as ASCII hex and then processed if it was the response of this command.
 .SH OPTIONS
 Arguments to long options are mandatory for short options as well.
+The options are arranged in alphabetical order based on the long
+option name (with digits before alphabetical characters).
 .TP
 \fB\-S\fR, \fB\-\-16\fR
 send SCSI GET LBA STATUS(16) command which is the 16 byte variant. In the
@@ -63,6 +65,9 @@ decimal. An exception is when the \fI\-\-brief\fR option is given in which
 case it is shown in hexadecimal. When the option is given once, both cases
 are output in hexadecimal. When the option is given twice, both cases are
 output in decimal.
+.br
+When given together with the \fI\-\-sum\fR option, the trailing block
+summations are output in hexadecimal.
 .TP
 \fB\-e\fR, \fB\-\-element\-id\fR=\fIEI\fR
 where \fIEI\fR is the element identifier of the physical element for which
@@ -115,7 +120,8 @@ the \fIDEVICE\fR chooses how many following blocks that it will return
 provisioning status for, limited by \fI\-\-maxlen=LEN\fR.
 .br
 This option is supported for both the 16 and 32 byte variants of the SCSI
-GET LBA STATUS command.
+GET LBA STATUS command. Warning: some current implementations (in disks
+and SSDs) ignore this field.
 .TP
 \fB\-m\fR, \fB\-\-maxlen\fR=\fILEN\fR
 where \fILEN\fR is the (maximum) response length in bytes. It is placed in
@@ -160,6 +166,16 @@ The default value of \fISL\fR is 0 which should be interpreted by the
 \fIDEVICE\fR as there is no limits to the number of LBAs that shall be
 scanned.
 .TP
+\fB\-u\fR, \fB\-\-sum\fR
+accumulate three separate summations: mapped, de\-allocated and anchored
+blocks. If in doubt, add to mapped summation category (e.g. T10 documents
+are equivocal about provisioning status 0: mapped or unknown; so assume
+those blocks are mapped).
+.br
+Output in decimal on indented lines following the last returned LBA extent
+except if the \fI\-\-blockhex\fR (\-B) option is also given, in which case
+the three summations are output in hexadecimal.
+.TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the level of verbosity, (i.e. debug output). Additional output
 caused by this option is sent to stderr.
@@ -184,6 +200,14 @@ was 8 and in revision 25 it was changed to 4.
 .PP
 For a discussion of logical block provisioning see section 4.7 of sbc4r14.pdf
 at https://www.t10.org (or the corresponding section of a later draft).
+.PP
+Finding SAS disks and SSDs that support the SCSI GET LBA STATUS command can
+be a challenge, even if thin provisioning is supported (e.g. via the SCSI
+WRITE SAME command). The author found a reasonable implementation in a
+non\-obvious place: the Ubuntu/Microsoft WSL Linux virtual
+machine/environment presents four virtual disks: /dev/sda to /dev/sdd (or
+/dev/sg0 to /dev/sg3 inclusive). The latter two virtual disks return
+non\-trivial LBA statuses on both Windows 10 and 11.
 .SH EXAMPLES
 This example uses a "canned" hex file rather than a real \fIDEVICE\fR.
 .PP
@@ -195,6 +219,20 @@ This example uses a "canned" hex file rather than a real \fIDEVICE\fR.
   [1] LBA: 0x0             blocks:  287453952  mapped (or unknown);  LBA accessibility not reported
   [2] LBA: 0x11223300      blocks:         68  deallocated;  LBA access not reported  [may contain unrecovered errors]
   [3] LBA: 0x11223344      blocks:         51  deallocated;  LBA extent inaccessible  [may contain unrecovered errors]
+.PP
+Here is another "canned" response, fetched from Ubuntu/WSL on a Windows 10
+machine with 'sg_get_lba_status -HHH /dev/sg2 > get_lba_sg2_hhh.hex':
+.PP
+   # sg_get_lba_status -i get_lba_sg2_hhh.hex --blockhex --sum --quiet
+.PP
+  [1] LBA: 0x0             blocks:     0x1800  mapped
+  [2] LBA: 0x1800          blocks:      0x800  deallocated
+  [3] LBA: 0x2000          blocks:      0x800  mapped
+  [4] LBA: 0x2800          blocks:   0x3fc800  deallocated
+  [5] LBA: 0x3ff000        blocks:     0x1008  mapped
+      Number of mapped blocks: 0x3008
+      Number of de-allocated blocks: 0x3fd000
+      Number of anchored blocks: 0x0
 .SH EXIT STATUS
 The exit status of sg_get_lba_status is 0 when it is successful. Otherwise
 see the sg3_utils(8) man page.
