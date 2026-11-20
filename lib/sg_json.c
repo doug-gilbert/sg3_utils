@@ -13,6 +13,11 @@
 #include <string.h>
 #include <ctype.h>
 
+/* Following needed to dee if SG_LIB_WIN32 is defined or not */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "sg_pr2serr.h"
 #include "sg_json.h"
 /* Note: does not depend on sg_lib.h or its implementation */

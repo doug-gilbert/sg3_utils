@@ -24,6 +24,11 @@
 #include <string.h>
 #include <ctype.h>
 
+/* To avoid surprises in future conditional compilations */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "sg_json_sg_lib.h"
 #include "sg_pr2serr.h"
 

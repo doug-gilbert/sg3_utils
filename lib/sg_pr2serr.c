@@ -13,6 +13,11 @@
 #include <string.h>
 #include <ctype.h>
 
+/* To avoid surprises in future conditional compilations */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "sg_pr2serr.h"
 
 FILE * sg_warnings_strm = NULL;        /* would like to default to stderr */

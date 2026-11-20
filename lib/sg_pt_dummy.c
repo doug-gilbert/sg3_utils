@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Douglas Gilbert.
+ * Copyright (c) 2021-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -17,6 +17,11 @@
 #include <stdbool.h>
 #include <string.h>
 #include <errno.h>
+
+/* To avoid surprises in future conditional compilations */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "sg_pt.h"
 #include "sg_lib.h"

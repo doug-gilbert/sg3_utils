@@ -15,6 +15,11 @@
 #include <device/CAM.h>
 #include <scsi.h>
 
+/* To avoid surprises in future conditional compilations */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "sg_lib.h"
 #include "sg_pt.h"
 #include "sg_pr2serr.h"

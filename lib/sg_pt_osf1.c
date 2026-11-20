@@ -24,11 +24,16 @@
 #include <string.h>
 #include <errno.h>
 
+/* To avoid surprises in future conditional compilations */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "sg_pt.h"
 #include "sg_lib.h"
 #include "sg_pr2serr.h"
 
-/* Version 2.05 20260623 */
+/* Version 2.06 20261120 */
 
 #define OSF1_MAXDEV 64
 
