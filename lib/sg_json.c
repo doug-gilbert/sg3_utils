@@ -370,7 +370,8 @@ sgj_js2file_estr(sgj_state * jsp, sgj_opaque_p jop, int exit_status,
         return;
     if (jsp->verbose > 3) {
 #if defined(SG_LIB_WIN32)
-        fprintf(fp, "%s: serialization length: %u bytes\n", __func__, len);
+        fprintf(fp, "%s: serialization length: %u bytes\n", __func__,
+                (unsigned int)len);
 #else
         fprintf(fp, "%s: serialization length: %zu bytes\n", __func__, len);
 #endif
@@ -379,7 +380,8 @@ sgj_js2file_estr(sgj_state * jsp, sgj_opaque_p jop, int exit_status,
     if (NULL == b) {
         if (jsp->verbose > 3) {
 #if defined(SG_LIB_WIN32)
-            pr2serr("%s: unable to get %u bytes on heap\n", __func__, len);
+            pr2serr("%s: unable to get %u bytes on heap\n", __func__,
+                    (unsigned int)len);
 #else
             pr2serr("%s: unable to get %zu bytes on heap\n", __func__, len);
 #endif
